@@ -1,0 +1,19 @@
+name: Motion Engine Self-Test
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  engine-selftest:
+    name: Extract and render-test motion-engine v3
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies and run self-test
+        run: bash scripts/setup-motion-engine-wsl.sh
