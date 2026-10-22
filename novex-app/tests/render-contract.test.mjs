@@ -66,7 +66,10 @@ test('profile menu and email registration are reachable from the top-right app h
   assert.match(html, /id="cloudSignup"/);
   assert.match(html, /id="cloudEmailLink"/);
   assert.match(html, /id="cloudResetPassword"/);
-  assert.match((await readFile(new URL('../src/cloud.js', import.meta.url), 'utf8')), /resetPasswordForEmail/);
+  const cloudSource = await readFile(new URL('../src/cloud.js', import.meta.url), 'utf8');
+  assert.match(cloudSource, /resetPasswordForEmail/);
+  assert.match(cloudSource, /updateUser\(\{ password \}\)/);
+  assert.match(html, /id="cloudRecoverySave"/);
 });
 
 test('render progress reports completed and remaining percentages with red-to-green gradient', async () => {
