@@ -58,6 +58,12 @@ test('bundled motion-engine v3 contains seven intact files', async () => {
 });
 
 
+test('startup does not iterate a single querySelector result', () => {
+  assert.doesNotMatch(main, /(?<!\$)\$\('\[data-command\]'\)\.forEach/);
+  assert.match(main, /\$\$\('\[data-command\]'\)\.forEach/);
+  assert.match(main, /\$\('#cloudAccountBtn'\)\.onclick=openCloudDialog/);
+});
+
 test('profile menu and email registration are reachable from the top-right app header', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(html, /id="cloudAccountBtn"[^>]*profile-button/);
