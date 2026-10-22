@@ -132,3 +132,9 @@ test('reference scene analysis feeds detected cut points into segment selection'
   assert.match(main, /const sceneTime=scenePoints\.length\?scenePoints\[occurrence%scenePoints\.length\]:null/);
   assert.match(main, /sceneTime-clipDuration\*\.15/);
 });
+
+test('reference shots receive subtle per-shot cinematic camera movement instead of static crops', () => {
+  assert.match(main, /zoompan=z='min\(1\.025\+on\*0\.0003,1\.06\)'/);
+  assert.match(main, /sin\(on\/18\+\$\{i\}\)\*iw\*0\.005/);
+  assert.match(main, /cos\(on\/24\+\$\{i\}\)\*ih\*0\.005/);
+});
