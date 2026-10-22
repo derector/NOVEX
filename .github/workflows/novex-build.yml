@@ -8,9 +8,6 @@ permissions:
   actions: write
   pages: write
   id-token: write
-concurrency:
-  group: novex-pages
-  cancel-in-progress: false
 jobs:
   web:
     name: Build installable web app
@@ -47,6 +44,9 @@ jobs:
     name: Publish Web site (GitHub Pages)
     needs: web
     runs-on: ubuntu-latest
+    concurrency:
+      group: novex-pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
