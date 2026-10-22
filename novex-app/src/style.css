@@ -349,3 +349,39 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{background:#080f20;
   .studio-grid{display:flex;flex-direction:column}
   .form-column,.preview-column{width:100%}
 }
+
+/* NOVEX identity system v2 — editorial dark, electric cyan, restrained violet */
+:root{--bg:#05070d;--panel:#0b101a;--line:#202c40;--muted:#94a6bf;--text:#f5f8ff;--purple:#7868ff;--green:#6af0ce;--cyan:#50e4ff;--blue:#427bff}
+body{background:radial-gradient(ellipse at 82% -12%,#182957 0,transparent 38%),radial-gradient(ellipse at -8% 55%,#082b3b 0,transparent 35%),#05070d}
+.topbar{background:#05070deF;border-bottom:1px solid #1d2c43}
+.brand{gap:10px}.brand-mark{width:38px;height:38px;border-radius:12px;transform:none;overflow:hidden;background:linear-gradient(145deg,#101d35,#080d18);border:1px solid #28506e;box-shadow:0 0 28px #21d5ff1f}.brand-mark img{width:100%;height:100%;object-fit:cover;transform:scale(1.12)}
+.brand>span:nth-child(2){font-weight:850;letter-spacing:.13em}.brand small{letter-spacing:.2em;color:#829bb8}
+.profile-button{gap:9px!important;padding:6px 12px 6px 7px!important;border-radius:999px!important}
+.profile-avatar{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#0d4564,#322b76);border:1px solid #3a9ec2;color:#9ef3ff;box-shadow:inset 0 0 12px #3bb5d433}
+.profile-avatar svg{width:18px;height:18px}
+.local-badge{border:1px solid #214b56;border-radius:999px;padding:7px 10px;background:#07171c}
+.sidebar{background:#070b13f7;border-right:1px solid #1c2a3d}
+.nav-item{border:1px solid transparent}.nav-item.active{background:linear-gradient(100deg,#0c2836,#11182b);border-color:#28516a;box-shadow:inset 3px 0 #50e4ff,0 6px 22px #0004}
+.sidebar-bottom{background:linear-gradient(135deg,#0b2028,#101326);border-color:#244958}
+.panel{background:linear-gradient(145deg,#0d1623f5,#090e18f7 72%);border-color:#24334a;border-radius:18px;box-shadow:0 22px 60px #0003,inset 0 1px #ffffff09}
+.panel:hover{border-color:#35607b;box-shadow:0 24px 65px #0005,inset 0 1px #ffffff0d}
+.panel-heading{border-bottom-color:#25374d}
+.page-heading h1{font-size:clamp(30px,3.4vw,46px);letter-spacing:-.055em}
+.page-heading h1 em{background:linear-gradient(100deg,#63eaff,#8c9aff 55%,#c4a2ff);-webkit-background-clip:text;background-clip:text}
+.eyebrow,.section-index{color:#6ce7ff}
+.heading-chip{background:#0b1624;border-color:#263f5b;color:#b4c9e4}
+.btn-primary{background:linear-gradient(115deg,#087fa8,#315dff 60%,#7856ed);box-shadow:0 9px 25px #176aff2e}
+.btn-primary:hover{box-shadow:0 12px 34px #176aff55}
+.btn-secondary,.icon-btn{background:#0d1725;border-color:#2a4058}
+.choice-card{background:linear-gradient(145deg,#101b2b,#0a111e);border-color:#263b54}
+.choice-card:has(input:checked){background:linear-gradient(145deg,#102c3c,#15172e);border-color:#49c9ee;box-shadow:0 0 0 1px #49c9ee38,inset 0 0 25px #49c9ee0a}
+input:not([type=checkbox]):not([type=radio]),textarea,select{background:#060c15;border-color:#293e56}
+.preview-stage{border-color:#2b4a66;background:radial-gradient(ellipse at 50% 30%,#172e50,#08111e 62%,#04070c)}
+.preview-controls{background:#09121e;border-color:#263c53}
+.render-progress{background:#09131f;border-color:#263e58}
+.timeline-ruler,.timeline-track{border-color:#233b53}
+.timeline-clip{background:linear-gradient(105deg,#087caa,#3655a9,#6650a4);border-color:#4c9bc9}
+.export-result{background:linear-gradient(100deg,#0b2928,#0c1b22);border-color:#287c70}
+.toast{background:#0d1826;border-color:#2b6686}
+.cloud-card{background:linear-gradient(145deg,#0d1b2a,#080e18);border-color:#2a4b68}
+@media(max-width:560px){.brand small{display:none}.topbar-right{gap:7px}.profile-button{padding:5px 8px 5px 5px!important}.profile-avatar{width:27px;height:27px}.page-heading h1{font-size:30px}.local-badge{display:none}}
