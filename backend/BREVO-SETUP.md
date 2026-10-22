@@ -13,7 +13,7 @@ Official guide: https://developers.brevo.com/docs/supabase-smtp-integration
 
 ## Transactional support messages
 
-The planned Supabase Edge Function `novex-email` sends signed-in users' support messages to a fixed support inbox. It must validate the Supabase user session, restrict subject/body lengths, escape HTML and never accept an arbitrary recipient from the browser.
+The Supabase Edge Function `novex-email` sends signed-in users' support messages to a fixed support inbox. It must validate the Supabase user session, restrict subject/body lengths, escape HTML and never accept an arbitrary recipient from the browser.
 
 Set these secrets in the Supabase project, not GitHub or frontend variables:
 - `BREVO_API_KEY` — Brevo API key for `POST https://api.brevo.com/v3/smtp/email`
