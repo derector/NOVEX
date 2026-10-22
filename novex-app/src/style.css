@@ -82,3 +82,20 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#00c8ff!import
 @keyframes novex-rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 @media(max-width:560px){.panel{border-radius:14px}.page-heading h1{line-height:1.12}.topbar{background:#030914f5}}
+
+
+/* Cloud account dialog */
+.cloud-dialog{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;background:#01050bd9;backdrop-filter:blur(14px);animation:novex-rise .2s ease both}
+.cloud-dialog.hidden{display:none!important}
+.cloud-card{position:relative;width:min(100%,440px);padding:28px;border:1px solid #1b4a70;border-radius:20px;background:linear-gradient(145deg,#0a1c30,#060d19);box-shadow:0 24px 90px #000a}
+.cloud-card h2{font-size:25px;letter-spacing:-.04em;margin:10px 0}
+.cloud-card p{color:#9cb5d0;line-height:1.55}
+.cloud-card label{display:block;color:#dceeff;font-size:12px;margin:16px 0 7px}
+.cloud-card input{width:100%;padding:12px;border:1px solid #19436a;border-radius:10px;background:#030e1d;color:#f1f8ff}
+.cloud-card input:focus{outline:2px solid #00c8ff55;border-color:#00c8ff}
+.cloud-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.cloud-status{min-height:20px;font-size:12px}
+.cloud-status.error{color:#ff8989}
+.cloud-status.success{color:#62e7c0}
+.cloud-note{display:block;color:#738da8;line-height:1.5;margin-top:16px}
+@media(max-width:560px){.cloud-card{padding:22px}.topbar-right{gap:8px}.topbar-right .local-badge{display:none}}
