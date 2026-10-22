@@ -85,8 +85,8 @@ async function ffReady(){
     // same-origin responses to explicit MIME-typed blob URLs to avoid WebView
     // module-import failures caused by Pages MIME/CORS handling.
     const [coreModuleUrl, wasmModuleUrl] = await Promise.all([
-      toBlobURL(coreUrl, 'text/javascript'),
-      toBlobURL(wasmUrl, 'application/wasm')
+      toBlobURL(URL.createObjectURL(coreBlob), 'text/javascript'),
+      toBlobURL(URL.createObjectURL(wasmBlob), 'application/wasm')
     ]);
     await ff.load({coreURL:coreModuleUrl,wasmURL:wasmModuleUrl});
     loaded=true;
