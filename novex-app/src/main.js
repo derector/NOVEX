@@ -88,6 +88,31 @@ async function ffReady(){
     throw new Error('Не удалось загрузить FFmpeg. JS: '+coreUrl+'; WASM: '+wasmUrl+'. '+reason+' Проверь доступность файлов и обнови страницу.');
   }
 }
+
+async function exportKineticTitle({text,width,height,duration,fps=15,writeFrame}){
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas 2D недоступен для титров.');
+ const words=String(text||'NOVEX').replace(/\s+/g,' ').trim().slice(0,120).split(' ');
+ const fontSize=Math.max(28,Math.round(height*.075));ctx.font='800 '+fontSize+'px Arial, sans-serif';
+ const lines=[];let line='';
+ for(const word of words){const candidate=line?line+' '+word:word;if(ctx.measureText(candidate).width>width*.84&&line){lines.push(line);line=word;}else line=candidate;}
+ if(line)lines.push(line);const visible=lines.slice(0,3),lineHeight=fontSize*1.15;
+ const frames=Math.max(1,Math.min(90,Math.ceil(duration*fps)));
+ for(let i=0;i<frames;i++){
+  const t=i/fps,fade=Math.min(1,t/.28,Math.max(0,(duration-t)/.28));
+  const spring=1-.16*Math.exp(-10*t)*Math.cos(13*t);
+  ctx.clearRect(0,0,width,height);ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,fade));
+  ctx.translate(width/2,height*.48);ctx.scale(spring,spring);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='800 '+fontSize+'px Arial, sans-serif';ctx.lineJoin='round';ctx.lineWidth=Math.max(3,fontSize*.09);
+  ctx.strokeStyle='rgba(5,7,18,.9)';ctx.fillStyle='#ffffff';ctx.shadowColor='rgba(76,220,255,.85)';ctx.shadowBlur=fontSize*.55;
+  const y0=-(visible.length-1)*lineHeight/2+Math.sin(Math.min(1,t/.3)*Math.PI/2)*height*.035;
+  visible.forEach((line,j)=>{const y=y0+j*lineHeight;ctx.strokeText(line,0,y);ctx.fillText(line,0,y);});
+  ctx.restore();
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Не удалось создать кадр титра.')),'image/png'));
+  await writeFrame(i,new Uint8Array(await blob.arrayBuffer()));
+ }
+}
+
 $('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,W=p.aspect==='9:16'?Math.round(p.resolution*9/16/2)*2:p.aspect==='1:1'?p.resolution:Math.round(p.resolution*16/9/2)*2,H=p.aspect==='16:9'?Math.round(p.resolution*9/16/2)*2:p.resolution;const entries=[];for(let i=0;i<p.timeline.length;i++){const s=p.timeline[i],f='ref'+i+'.mp4',part='part'+i+'.mp4';progress(5+30*i/p.timeline.length,'Подготавливаю фрагменты…',(i+1)+' / '+p.timeline.length+' · '+s.ref.file.name);if(!s.ref._ff) {s.ref._ff='source'+S.refs.indexOf(s.ref)+'.mp4';await ff.writeFile(s.ref._ff,await fetchFile(s.ref.file));}const start=Math.max(0,s.ref.duration?((s.start%Math.max(1,s.ref.duration*.35))):0),dur=Math.max(.1,s.end-s.start);const res=await ff.exec(['-ss',String(start),'-i',s.ref._ff,'-t',String(dur),'-vf',`scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fps=30,setsar=1,format=yuv420p`,'-an','-c:v','libx264','-preset','ultrafast','-crf','25','-y',part]);if(res!==0)throw Error('Ошибка кодирования фрагмента '+(i+1));entries.push("file '"+part+"'");}await ff.writeFile('concat.txt',new TextEncoder().encode(entries.join('\n')));progress(38,'Собираю монтаж…','Объединяю '+entries.length+' клипов.');if(await ff.exec(['-f','concat','-safe','0','-i','concat.txt','-c','copy','-y','silent.mp4'])!==0)throw Error('Не удалось соединить клипы.');
 const threeDEdit=(S.edits||[]).find(e=>e.type==='add_3d_title');
 if(threeDEdit){
@@ -103,7 +128,21 @@ if(threeDEdit){
  for(let i=0;i<frames;i++)try{await ff.deleteFile('3d_'+String(i).padStart(4,'0')+'.png')}catch{}
  restore();
 }
-const ext=(S.track.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,'');await ff.writeFile('music.'+ext,await fetchFile(S.track));const args=['-i','silent.mp4','-ss',String(r.start),'-t',String(r.duration),'-i','music.'+ext];const lyrics=p.lines.map((l,i)=>(i+1)+'\n'+srt(Math.max(0,l.start-r.start))+' --> '+srt(Math.max(.1,l.end-r.start))+'\n'+l.text).join('\n\n');let vf='null';if(lyrics&&$('#burnLyrics').checked){await ff.writeFile('lyrics.srt',new TextEncoder().encode(lyrics));vf="subtitles=lyrics.srt:force_style='FontSize="+Math.max(18,Math.round(H/38))+",Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=3,Shadow=1,Alignment=2,MarginV="+Math.round(H*.08)+"'";}progress(42,'Добавляю музыку и титры…','Свожу дорожки и готовлю MP4.');args.push('-vf',vf,'-map','0:v:0','-map','1:a:0','-t',String(r.duration),'-c:v','libx264','-preset','ultrafast','-crf',p.resolution>720?'22':'26','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','-movflags','+faststart','-y','export.mp4');if(await ff.exec(args)!==0)throw Error('Не удалось финализировать MP4. Попробуй более короткий отрывок или 480p.');progress(97,'Проверяю результат…','Читаю созданный MP4.');const data=await ff.readFile('export.mp4'),blob=new Blob([data.buffer],{type:'video/mp4'});if(blob.size<1000)throw Error('Файл MP4 пуст или некорректен.');if(S.output)URL.revokeObjectURL(S.output);S.output=URL.createObjectURL(blob);S.outputName='NOVEX_'+new Date().toISOString().replace(/[:.]/g,'-')+'.mp4';const v=$('#previewVideo');v.src=S.output;v.hidden=false;$('#previewStage .preview-placeholder').hidden=true;$('#previewStage').classList.add('has-preview');$('#exportMeta').textContent='MP4 · H.264/AAC · '+size(blob.size)+' · '+W+'×'+H;$('#exportResult').classList.remove('hidden');$('#renderStatus').textContent='ГОТОВО';$('#renderStatus').className='render-status is-done';progress(100,'Экспорт готов','MP4 создан. Нажми «Скачать MP4».');toast('MP4 готов: '+size(blob.size),'success');}catch(e){console.error(e);$('#renderStatus').textContent='ОШИБКА';$('#renderStatus').className='render-status has-error';progress(0,'Рендер не завершён',e?.message||String(e)||'Неизвестная ошибка FFmpeg');toast(e?.message||String(e)||'Неизвестная ошибка FFmpeg','error')}finally{S.busy=false;busy(b,false);}};
+const titleEdits=(S.edits||[]).filter(e=>e.type==='add_kinetic_title'&&String(e.text||'').trim());
+for(let ti=0;ti<titleEdits.length;ti++){
+ const edit=titleEdits[ti],overlayStart=Math.max(0,Number(edit.start)||0);
+ const titleDuration=Math.min(Math.max(.5,Number(edit.duration)||2),Math.max(.1,r.duration-overlayStart));
+ if(overlayStart>=r.duration)continue;
+ const fps=15,frames=Math.max(1,Math.min(90,Math.ceil(titleDuration*fps)));
+ progress(40,'Рендерю кинетические титры…',(ti+1)+' / '+titleEdits.length+' · '+String(edit.text).slice(0,48));
+ await exportKineticTitle({text:edit.text,width:W,height:H,duration:titleDuration,fps,writeFrame:async(i,bytes)=>ff.writeFile('title_'+String(i).padStart(4,'0')+'.png',bytes)});
+ const titleArgs=['-i','silent.mp4','-itsoffset',String(overlayStart),'-framerate',String(fps),'-start_number','0','-i','title_%04d.png','-filter_complex',"[0:v][1:v]overlay=0:0:enable='between(t,"+overlayStart.toFixed(3)+","+(overlayStart+titleDuration).toFixed(3)+")':eof_action=pass:shortest=0,format=yuv420p[v]",'-map','[v]','-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','title-composite.mp4'];
+ if(await ff.exec(titleArgs)!==0)throw Error('Не удалось наложить кинетические титры.');
+ await ff.writeFile('silent.mp4',await ff.readFile('title-composite.mp4'));
+ for(let i=0;i<frames;i++)try{await ff.deleteFile('title_'+String(i).padStart(4,'0')+'.png')}catch{}
+}
+const ext=(S.track.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,'');await ff.writeFile('music.'+ext,await fetchFile(S.track));const args=['-i','silent.mp4','-ss',String(r.start),'-t',String(r.duration),'-i','music.'+ext];const lyrics=p.lines.map((l,i)=>(i+1)+'\n'+srt(Math.max(0,l.start-r.start))+' --> '+srt(Math.max(.1,l.end-r.start))+'\n'+l.text).join('\n\n');let vf='null';if(lyrics&&$('#burnLyrics').checked){await ff.writeFile('lyrics.srt',new TextEncoder().encode(lyrics));vf="subtitles=lyrics.srt:force_style='FontSize="+Math.max(18,Math.round(H/38))+",Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=3,Shadow=1,Alignment=2,MarginV="+Math.round(H*.08)+"'";}const gradeEdit=(S.edits||[]).some(e=>e.type==='grade');if(gradeEdit)vf=(vf==='null'?'':vf+',')+'eq=brightness=0.035:saturation=1.22';
+progress(42,'Добавляю музыку и титры…','Свожу дорожки и готовлю MP4.');args.push('-vf',vf,'-map','0:v:0','-map','1:a:0','-t',String(r.duration),'-c:v','libx264','-preset','ultrafast','-crf',p.resolution>720?'22':'26','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','-movflags','+faststart','-y','export.mp4');if(await ff.exec(args)!==0)throw Error('Не удалось финализировать MP4. Попробуй более короткий отрывок или 480p.');progress(97,'Проверяю результат…','Читаю созданный MP4.');const data=await ff.readFile('export.mp4'),blob=new Blob([data.buffer],{type:'video/mp4'});if(blob.size<1000)throw Error('Файл MP4 пуст или некорректен.');if(S.output)URL.revokeObjectURL(S.output);S.output=URL.createObjectURL(blob);S.outputName='NOVEX_'+new Date().toISOString().replace(/[:.]/g,'-')+'.mp4';const v=$('#previewVideo');v.src=S.output;v.hidden=false;$('#previewStage .preview-placeholder').hidden=true;$('#previewStage').classList.add('has-preview');$('#exportMeta').textContent='MP4 · H.264/AAC · '+size(blob.size)+' · '+W+'×'+H;$('#exportResult').classList.remove('hidden');$('#renderStatus').textContent='ГОТОВО';$('#renderStatus').className='render-status is-done';progress(100,'Экспорт готов','MP4 создан. Нажми «Скачать MP4».');toast('MP4 готов: '+size(blob.size),'success');}catch(e){console.error(e);$('#renderStatus').textContent='ОШИБКА';$('#renderStatus').className='render-status has-error';progress(0,'Рендер не завершён',e?.message||String(e)||'Неизвестная ошибка FFmpeg');toast(e?.message||String(e)||'Неизвестная ошибка FFmpeg','error')}finally{S.busy=false;busy(b,false);}};
 
 // Natural-language motion commands: validated project patches, never eval/model code execution.
 const EDIT_PRESETS={
