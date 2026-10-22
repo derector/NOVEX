@@ -304,3 +304,19 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{background:#080f20;
 .preview-stage.preview-portrait{width:min(100%,calc(min(68vh,720px)*var(--preview-ratio,.5625)))}
 .preview-stage video{width:100%;height:100%;object-fit:contain;object-position:center}
 @media(max-width:560px){.preview-stage{width:min(100%,calc(64vh*var(--preview-ratio,.5625)));min-height:0;max-height:none;aspect-ratio:var(--preview-ratio,.5625)}.preview-stage.preview-landscape{width:100%}.preview-stage.preview-square{width:min(100%,64vh)}.preview-stage.preview-portrait{width:min(100%,calc(64vh*var(--preview-ratio,.5625)))}}
+
+
+/* Profile menu: visible account identity in both web and Android layouts. */
+.topbar-right .profile-button{display:inline-flex;align-items:center;gap:9px;min-height:38px;border-color:#3b3b55;background:linear-gradient(135deg,#171725,#10131e);transition:border-color .22s,transform .22s,box-shadow .22s}
+.topbar-right .profile-button:hover{border-color:#a98cff;box-shadow:0 0 0 3px #a98cff16;transform:translateY(-1px)}
+.profile-avatar{width:25px;height:25px;flex:0 0 25px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(140deg,#48dcff,#8d7cff 58%,#ed8ce9);color:#090b14;box-shadow:0 0 18px #6b8cff30}
+.profile-avatar svg{width:17px;height:17px}
+#cloudAccountLabel{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.progress-percentages{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:10px monospace}
+.progress-percentages #renderPercent{color:#ff6a70}
+.progress-percentages #renderRemaining{color:#b7bdce}
+.progress-bar{height:8px;background:#292c39;border:1px solid #3a3b47}
+.progress-bar i{background:linear-gradient(90deg,#ff435c 0%,#ff8b55 28%,#f4d45d 58%,#8fe77c 82%,#2be0a2 100%);box-shadow:0 0 15px #70e79b26;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.progress-bar i:after{background:#ffffff80}
+.cloud-card h2{letter-spacing:-.035em}
+@media(max-width:700px){.topbar-right .profile-button{padding:5px 7px;gap:5px}.profile-avatar{width:27px;height:27px;flex-basis:27px}#cloudAccountLabel{max-width:72px}.progress-title{align-items:flex-start;flex-wrap:wrap}.progress-percentages{gap:7px}}
