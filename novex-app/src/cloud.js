@@ -15,7 +15,8 @@ export async function cloudSession() {
 export async function cloudAuth(mode, email, password) {
   if (!cloud) throw new Error('Облако не настроено. Нужны VITE_SUPABASE_URL и VITE_SUPABASE_PUBLISHABLE_KEY в GitHub Actions Variables.');
   if (mode === 'signup') {
-    const { data, error } = await cloud.auth.signUp({ email, password });
+    const redirectTo = window.location.origin + import.meta.env.BASE_URL;
+    const { data, error } = await cloud.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
     if (error) throw error;
     return { user: data.user, needsConfirmation: !data.session };
   }
@@ -75,4 +76,11 @@ export async function cloudPasswordReset(email) {
   const redirectTo = window.location.origin + import.meta.env.BASE_URL;
   const { error } = await cloud.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) throw error;
+}
+
+export async function cloudUpdatePassword(password) {
+  if (!cloud) throw new Error('Облако не настроено.');
+  const { data, error } = await cloud.auth.updateUser({ password });
+  if (error) throw error;
+  return data?.user || null;
 }
