@@ -1,0 +1,7 @@
+{
+  "appId": "studio.novex.motion",
+  "appName": "NOVEX Motion Studio",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": { "androidScheme": "https" }
+}

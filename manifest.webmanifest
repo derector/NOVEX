@@ -1,0 +1,10 @@
+{
+  "name": "NOVEX Motion Studio",
+  "short_name": "NOVEX",
+  "description": "Create music videos from animation references.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090a12",
+  "theme_color": "#090a12",
+  "icons": [{"src":"/novex.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

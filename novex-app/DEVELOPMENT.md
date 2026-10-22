@@ -1,0 +1,3 @@
+# NOVEX development notes
+The root `MASTERSKILL.md` (motion-director) and `ANGSKILL.md` (motion-engine) remain the source-of-truth design requirements. The web implementation is a subset and must not be represented as exact parity. Current implementation covers multi-reference import, metadata/frame-sample analysis, BPM heuristic, configurable excerpt, editable lyric text, planning and local FFmpeg-based MP4 output. Remaining gaps are listed in novex-app/README.md.
+Build status has to be assessed by CI artifacts, not estimated from the UI.
