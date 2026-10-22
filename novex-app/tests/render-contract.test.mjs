@@ -163,3 +163,12 @@ test('director rejects unsupported camera commands instead of silently recording
   assert.match(main, /Движение камеры сейчас доступно только для загруженного исходного видео/);
   assert.match(main, /if\(S\.plan\)\{S\.plan=makePlan\(\);S\.plan\.edits=S\.edits\.map/);
 });
+
+test('source-video editing mode can build a plan without reference clips', () => {
+  assert.match(main, /if\(!S\.track\)throw Error\('Сначала добавь музыкальный трек\.'\)/);
+  assert.match(main, /if\(!S\.refs\.length&&!S\.source\)throw Error\('Добавь исходное видео для режима A/);
+  assert.match(main, /let refOrder=S\.source\?\[\]:\[\.\.\.S\.refs\]/);
+  assert.match(main, /if\(!refOrder\.length&&S\.source\)timeline\.push\(\{start:0,end:range\.duration,ref:null/);
+  assert.match(main, /s\.ref\?\.file\?\.name\|\|s\.sourceLabel/);
+  assert.match(main, /referenceName:x\.ref\?\.file\?\.name\|\|x\.sourceLabel/);
+});
