@@ -6,7 +6,7 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const skillPath = path.join(root, '.agents', 'skills', 'motion-engine', 'SKILL.md');
+const skillPath = path.join(root, '.claude', 'skills', 'motion-engine', 'SKILL.md');
 const target = path.join(os.homedir(), '.cache', 'motion-director', 'tool');
 const source = await readFile(skillPath, 'utf8');
 const manifestMatch = source.match(/<!-- manifest: (\{.*?\}) -->/);
