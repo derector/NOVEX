@@ -124,3 +124,11 @@ test('reference montage samples varied portions of full source clips instead of 
   assert.match(main, /tpad=stop_mode=clone:stop_duration=\$\{dur\}/);
   assert.match(main, /mode==='original'\).*refOrder\.sort/s);
 });
+
+test('reference scene analysis feeds detected cut points into segment selection', () => {
+  assert.match(main, /const scenePoints=\[\]/);
+  assert.match(main, /scenePoints\.push\(/);
+  assert.match(main, /scenePoints:\[\.\.\.new Set\(scenePoints\)\]/);
+  assert.match(main, /const sceneTime=scenePoints\.length\?scenePoints\[occurrence%scenePoints\.length\]:null/);
+  assert.match(main, /sceneTime-clipDuration\*\.15/);
+});
