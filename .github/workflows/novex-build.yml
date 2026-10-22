@@ -2,12 +2,15 @@ name: NOVEX Build
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
   workflow_dispatch:
 permissions:
   contents: read
   actions: write
+  pages: write
+  id-token: write
+concurrency:
+  group: novex-pages
+  cancel-in-progress: false
 jobs:
   web:
     name: Build installable web app
@@ -28,6 +31,20 @@ jobs:
           name: NOVEX-Web-Build
           path: novex-app/dist/
           retention-days: 30
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: novex-app/dist/
+  deploy:
+    name: Publish Web site (GitHub Pages)
+    needs: web
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
   android:
     name: Build Android APK
     runs-on: ubuntu-latest
