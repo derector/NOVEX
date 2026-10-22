@@ -19,7 +19,7 @@ python3 -m pip install --break-system-packages numpy opencv-python-headless
 CACHE="$HOME/.cache/motion-director"
 mkdir -p "$CACHE"
 if [ ! -f "$CACHE/package.json" ]; then
-  printf '{"name":"motion-director-cache","private":true}\\n' > "$CACHE/package.json"
+  printf '{"name":"motion-director-cache","private":true}\n' > "$CACHE/package.json"
 fi
 npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap
 "$CACHE/node_modules/.bin/playwright" install --with-deps chromium
