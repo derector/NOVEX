@@ -1,15 +1,16 @@
 # NOVEX Motion Studio
 
-Reference-driven music-video creation studio. The project contains a Vite web app, a Capacitor Android app configuration, CI builds, and the motion-design skills used to guide reference analysis and rendering.
+Reference-driven music-video creation studio. The project contains a Vite web app, a Capacitor Android app, CI builds, and the motion-design skills used to guide reference analysis and rendering.
 
 ## Project map
 
 - `novex-app/` — main Vite + Capacitor app.
 - `.github/workflows/novex-build.yml` — GitHub Actions web build and Android APK build.
 - `MASTERSKILL.md` — master specification for reference-driven motion work.
-- `ANGSKILL.md` — motion-engine skill and bundled rendering guidance.
-- `docs/NOVEX-ROADMAP.md` — product direction, reference/search workflow, implementation priorities, and definition of done.
-- `README-NOVEX.md` — NOVEX project overview.
+- `ANGSKILL.md` — motion engine skill and bundled rendering guidance.
+- `docs/NOVEX-ROADMAP.md` — product direction and implementation priorities.
+- `docs/NOVEX-FULL-SPEC.md` — **full product requirements and acceptance criteria** for the site, Android APK, reference workflow, editor, effects, 3D, export, privacy, CI and release.
+- `README-NOVEX.md` — app feature overview and known limitations.
 - `THIRD-PARTY-NOTICES.md` — third-party notices.
 
 ## Build locally
@@ -43,4 +44,4 @@ Do not treat a queued or failed workflow as a completed build; check the run and
 
 The skills are part of the project and should be consulted before implementing reference-analysis or motion-rendering changes. Search previous project materials before asking for assets again; distinguish observed facts from interpretation; keep source links/provenance for assets found through search; and validate the result against the actual reference before claiming completion.
 
-See [the roadmap](docs/NOVEX-ROADMAP.md) for the full plan and current caveats.
+Start with the [full specification](docs/NOVEX-FULL-SPEC.md), then consult the [roadmap](docs/NOVEX-ROADMAP.md) for priority order and known caveats.
