@@ -331,3 +331,21 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{background:#080f20;
 .profile-modal-avatar{width:54px;height:54px;border-radius:17px;overflow:hidden;border:1px solid #8b81c966;box-shadow:0 0 28px #8175ff20;margin:0 0 14px}
 .profile-modal-avatar img{width:100%;height:100%;display:block;object-fit:cover}
 #cloudResetPassword{margin-top:2px}
+
+
+/* Preview stage correctness: never stack the empty state on top of media. */
+.preview-stage{display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.preview-stage video{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:contain;object-position:center;margin:auto}
+.preview-stage video[hidden],.preview-placeholder[hidden]{display:none!important}
+.preview-placeholder{position:absolute;inset:0;margin:auto;width:100%;height:100%;max-width:none;display:flex;align-items:center;justify-content:center}
+.preview-stage.has-preview .preview-placeholder{display:none!important}
+@media(max-width:680px){
+  .topbar-right .btn-secondary{display:inline-flex}
+  .topbar-right{gap:5px}
+  .topbar-right .btn{padding:7px 8px;font-size:9px;gap:5px}
+  .topbar-right .profile-button{max-width:112px;min-width:0}
+  #cloudAccountLabel{max-width:55px}
+  .preview-column{order:-1}
+  .studio-grid{display:flex;flex-direction:column}
+  .form-column,.preview-column{width:100%}
+}
