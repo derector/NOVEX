@@ -258,3 +258,12 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{background:#080f20;
 @media(max-width:900px){.main{padding:26px 18px 18px}.studio-grid{grid-template-columns:minmax(0,1fr)}.preview-column{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.preview-panel{grid-row:span 2}.page-heading{gap:14px}.sidebar{width:200px}.main{margin-left:200px}}
 @media(max-width:680px){.topbar{padding:0 12px}.topbar-right{gap:7px}.topbar-right .btn{padding:8px 10px}.topbar-right .btn-secondary{display:none}.sidebar{transform:translateX(-105%);transition:transform .28s ease;width:245px;box-shadow:20px 0 60px #0008}.sidebar.open{transform:translateX(0)}.main{margin-left:0;padding:22px 12px 18px}.page-heading{flex-direction:column}.heading-chip{display:none}.progress-steps{gap:7px;font-size:9px}.progress-step{gap:5px}.progress-track{min-width:7px}.panel{padding:16px;border-radius:16px}.preview-column{display:flex}.media-item-rich{gap:8px}.ref-preview{width:72px;height:54px;flex-basis:72px}.media-copy b{font-size:10px}.helper-fab{right:13px;bottom:13px;padding:11px 14px}.helper-panel{right:10px;bottom:70px;width:calc(100vw - 20px);height:min(570px,calc(100dvh - 95px));border-radius:19px}.topbar .brand{font-size:16px}.local-badge{display:none}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Audio audition and accessible seek controls */
+#trackAudio{display:block;width:100%;height:42px;margin-top:10px;border:1px solid #2e416b;border-radius:12px;background:#0a1122;accent-color:#8e7cff}
+#trackAudio[hidden]{display:none}
+.preview-track{height:8px;border-radius:999px;background:#1b2946;overflow:hidden;position:relative;cursor:pointer;touch-action:manipulation}
+.preview-track:after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px #ffffff0a;pointer-events:none}
+#previewSeekFill{height:100%;width:0;background:linear-gradient(90deg,#5ce8ff,#9b7bff,#ff82d5);border-radius:inherit;transition:width .08s linear;pointer-events:none}
+.preview-controls .icon-btn{flex:0 0 38px}
+@media(hover:hover){.preview-track:hover{box-shadow:0 0 0 3px #5ce8ff18}}
