@@ -205,6 +205,7 @@ function renderDirectorPlan(){
 }
 function applyDirectorCommand(raw){
  const patch=commandToPatch(raw);
+ if(patch.type==='camera_motion'&&!S.source)throw Error('Движение камеры сейчас доступно только для загруженного исходного видео. Для монтажа одних референсов команда не применяется — загрузи исходник или выбери другую правку.');
  if(patch.type==='undo'){
   if(!S.editHistory.length)throw Error('Пока нечего отменять.');
   S.edits=S.editHistory.pop();renderDirectorPlan();$('#directorStatus').textContent='Последняя правка отменена';return;
@@ -214,7 +215,7 @@ function applyDirectorCommand(raw){
  patch.id='edit-'+Date.now()+'-'+S.edits.length;
  patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · облёт камеры':patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.label;
  S.edits.push(patch);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX');if(patch.type==='add_subtitles')$('#burnLyrics').checked=true;renderDirectorPlan();$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';
- if(S.plan)S.plan.edits=S.edits.map(x=>({...x}));
+ if(S.plan){S.plan=makePlan();S.plan.edits=S.edits.map(x=>({...x}));showPlan(S.plan);}
 }
 $('#applyEditCommand').onclick=()=>{try{applyDirectorCommand($('#editCommand').value);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
 $$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({'3d':'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.'})[k];if(k==='3d')start3DPreview('NOVEX');});
