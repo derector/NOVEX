@@ -97,7 +97,7 @@ if(threeDEdit){
  progress(40,'Рендерю 3D-слой…',frames+' прозрачных кадров в разрешении '+W+'×'+H);
  const restore=await motion3d.exportFrames({width:W,height:H,frames,fps,start:Math.max(0,threeDEdit.start||0),duration:Math.min(threeDEdit.duration||2.8,r.duration),writeFrame:async(i,bytes)=>ff.writeFile('3d_'+String(i).padStart(4,'0')+'.png',bytes)});
  const overlayStart=Math.max(0,Number(threeDEdit.start)||0),overlayEnd=Math.min(r.duration,overlayStart+(threeDEdit.duration||2.8));
- const overlayArgs=['-i','silent.mp4','-framerate',String(fps),'-start_number','0','-i','3d_%04d.png','-filter_complex',"[0:v][1:v]overlay=0:0:enable='between(t,"+overlayStart.toFixed(3)+","+overlayEnd.toFixed(3)+")':eof_action=pass:shortest=0,format=yuv420p[v]",'-map','[v]','-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','composite.mp4'];
+ const overlayArgs=['-i','silent.mp4','-itsoffset',String(overlayStart),'-framerate',String(fps),'-start_number','0','-i','3d_%04d.png','-filter_complex',"[0:v][1:v]overlay=0:0:enable='between(t,"+overlayStart.toFixed(3)+","+overlayEnd.toFixed(3)+")':eof_action=pass:shortest=0,format=yuv420p[v]",'-map','[v]','-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','composite.mp4'];
  if(await ff.exec(overlayArgs)!==0)throw Error('Не удалось наложить 3D-слой на видео.');
  const composite=await ff.readFile('composite.mp4');await ff.writeFile('silent.mp4',composite);
  for(let i=0;i<frames;i++)try{await ff.deleteFile('3d_'+String(i).padStart(4,'0')+'.png')}catch{}
