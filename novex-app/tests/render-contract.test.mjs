@@ -138,3 +138,22 @@ test('reference shots receive subtle per-shot cinematic camera movement instead 
   assert.match(main, /sin\(on\/18\+\$\{i\}\)\*iw\*0\.005/);
   assert.match(main, /cos\(on\/24\+\$\{i\}\)\*ih\*0\.005/);
 });
+
+test('director commands have real render-path effects instead of silent no-op patches', async () => {
+  const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  assert.match(main, /paceBoost=.*motion_timing/);
+  assert.match(main, /cameraEdit=.*camera_motion/);
+  assert.match(main, /subtitlesEdit=.*add_subtitles/);
+  assert.match(main, /subtitlesEdit&&!p\.lines\.length/);
+  assert.match(main, /if\(patch\.type==='add_subtitles'\)\$\('#burnLyrics'\)\.checked=true/);
+});
+test('NOVEX rebrand assets use the current theme across PWA metadata and icon', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../public/manifest.webmanifest', import.meta.url), 'utf8'));
+  const icon = await readFile(new URL('../public/novex.svg', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.equal(manifest.theme_color, '#05070d');
+  assert.equal(manifest.background_color, '#05070d');
+  assert.match(icon, /linearGradient id="mark"/);
+  assert.match(css, /NOVEX identity system v2/);
+  assert.match(css, /\.profile-avatar/);
+});
