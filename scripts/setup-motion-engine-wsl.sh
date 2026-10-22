@@ -18,11 +18,17 @@ python3 -m pip install --break-system-packages numpy opencv-python-headless
 
 CACHE="$HOME/.cache/motion-director"
 mkdir -p "$CACHE"
-if [ ! -f "$CACHE/package.json" ]; then
+if [ ! -f "$CACHE/package.json" ] || ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$CACHE/package.json" >/dev/null 2>&1; then
   printf '{"name":"motion-director-cache","private":true}\n' > "$CACHE/package.json"
 fi
 npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap
 "$CACHE/node_modules/.bin/playwright" install --with-deps chromium
 
 node scripts/extract-motion-engine.mjs
-node "$CACHE/tool/mo.cjs" doctor --selftest
+python3 -c "import numpy, cv2; print(\"Python OK: numpy \" + numpy.__version__ + \", OpenCV \" + cv2.__version__)"
+DOCTOR_OUTPUT="$(node "$CACHE/tool/mo.cjs" doctor --selftest 2>&1)" || DOCTOR_STATUS=$?
+printf "%s\n" "$DOCTOR_OUTPUT"
+if [ "${DOCTOR_STATUS:-0}" -ne 0 ] || ! grep -q "САМОТЕСТ: пройден" <<< "$DOCTOR_OUTPUT" || grep -q "НЕТ" <<< "$DOCTOR_OUTPUT"; then
+  echo "ОШИБКА: самотест не прошёл или doctor сообщил НЕТ."
+  exit 1
+fi
