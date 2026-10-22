@@ -320,3 +320,14 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{background:#080f20;
 .progress-bar i:after{background:#ffffff80}
 .cloud-card h2{letter-spacing:-.035em}
 @media(max-width:700px){.topbar-right .profile-button{padding:5px 7px;gap:5px}.profile-avatar{width:27px;height:27px;flex-basis:27px}#cloudAccountLabel{max-width:72px}.progress-title{align-items:flex-start;flex-wrap:wrap}.progress-percentages{gap:7px}}
+
+/* Consistent brand mark and clearer project navigation icons. */
+.brand-mark{display:grid;place-items:center;overflow:hidden;border:1px solid #ffffff1a;background:#0b0d17}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
+.nav-icon{width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;color:#9298b1;transition:color .2s,transform .2s}
+.nav-icon svg{width:19px;height:19px;display:block}
+.nav-item:hover .nav-icon,.nav-item.active .nav-icon{color:#a6edff}
+.nav-item:hover .nav-icon{transform:translateY(-1px)}
+.profile-modal-avatar{width:54px;height:54px;border-radius:17px;overflow:hidden;border:1px solid #8b81c966;box-shadow:0 0 28px #8175ff20;margin:0 0 14px}
+.profile-modal-avatar img{width:100%;height:100%;display:block;object-fit:cover}
+#cloudResetPassword{margin-top:2px}
