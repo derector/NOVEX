@@ -115,3 +115,12 @@ test('startup and navigation use querySelectorAll for collection loops', () => {
   assert.match(main, /\$\$\('\.nav-item'\)\.forEach/);
   assert.match(main, /\$\('#cloudAccountBtn'\)\.onclick=openCloudDialog/);
 });
+
+test('reference montage samples varied portions of full source clips instead of repeating the first 35 percent', () => {
+  assert.match(main, /sourceStart/);
+  assert.match(main, /sourceDuration=clipDuration/);
+  assert.match(main, /const start=Math\.max\(0,Number\(s\.sourceStart\)\|\|0\)/);
+  assert.doesNotMatch(main, /s\.start%Math\.max\(1,s\.ref\.duration\*\.35\)/);
+  assert.match(main, /tpad=stop_mode=clone:stop_duration=\$\{dur\}/);
+  assert.match(main, /mode==='original'\).*refOrder\.sort/s);
+});
