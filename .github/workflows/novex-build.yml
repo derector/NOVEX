@@ -29,6 +29,8 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /NOVEX/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - uses: actions/upload-artifact@v4
         with:
           name: NOVEX-Web-Build
@@ -70,6 +72,9 @@ jobs:
           packages: platform-tools platforms;android-35 build-tools;35.0.0
       - run: npm install --no-audit --no-fund
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - run: npx cap add android
       - run: npx cap sync android
       - name: Build debug APK
