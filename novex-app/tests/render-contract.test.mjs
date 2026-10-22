@@ -103,3 +103,12 @@ test('preview hides placeholder when media is active and mobile keeps profile ac
   assert.match(css, /\.preview-stage video\[hidden\],\.preview-placeholder\[hidden\]\{display:none!important\}/);
   assert.match(css, /\.topbar-right \.btn-secondary\{display:inline-flex\}/);
 });
+
+
+test('startup and navigation use querySelectorAll for collection loops', () => {
+  assert.doesNotMatch(main, /(?<!\$)\$\('\.view'\)\.forEach/);
+  assert.doesNotMatch(main, /(?<!\$)\$\('\.nav-item'\)\.forEach/);
+  assert.match(main, /\$\$\('\.view'\)\.forEach/);
+  assert.match(main, /\$\$\('\.nav-item'\)\.forEach/);
+  assert.match(main, /\$\('#cloudAccountBtn'\)\.onclick=openCloudDialog/);
+});
