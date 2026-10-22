@@ -107,7 +107,7 @@ description: "Моушн-графика кодом, на выходе готов
 Движок лежит в отдельном скилле `motion-engine`. Его не нужно вызывать и читать: файлы извлекаются командой.
 
 ```bash
-ENG=$(grep -rls --include=SKILL.md 'MOTION-ENGINE''-FILES' /mnt/skills "$HOME/.claude/skills" .claude/skills 2>/dev/null | head -1)
+ENG=$(grep -rls --include=SKILL.md 'MOTION-ENGINE''-FILES' /mnt/skills "$HOME/.claude/skills" .claude/skills .agents/skills 2>/dev/null | head -1)
 node -e 'const fs=require("fs"),p=require("path"),c=require("crypto"),d=p.join(require("os").homedir(),".cache/motion-director/tool");if(!process.argv[1]){console.log("НЕТ ДВИЖКА: скилл motion-engine не найден");process.exit(1)}const s=fs.readFileSync(process.argv[1],"utf8"),H=JSON.parse((s.match(/<!-- manifest: (\{.*?\}) -->/)||[0,"{}"])[1]);fs.mkdirSync(d,{recursive:true});let n=0;for(const m of s.matchAll(/<!-- file: (\S+) -->\n````\w*\n([\s\S]*?)\n````/g)){fs.writeFileSync(p.join(d,m[1]),m[2]+"\n");n++;const h=c.createHash("sha1").update(m[2].replace(/\s+/g,"")).digest("hex").slice(0,12);console.log(m[1]+": "+(h===H[m[1]]?"цел":"ОТЛИЧАЕТСЯ"))}console.log(n+" файлов, движок v"+(H.v||"?"))' "$ENG" \
   && node ~/.cache/motion-director/tool/mo.cjs doctor --selftest
 ```
