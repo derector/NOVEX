@@ -11,7 +11,9 @@ test('FFmpeg ESM core is loaded through MIME-typed module URLs for WebView compa
   assert.match(main, /toBlobURL\(URL\.createObjectURL\(coreBlob\), 'text\/javascript'\)/);
   assert.match(main, /toBlobURL\(URL\.createObjectURL\(wasmBlob\), 'application\/wasm'\)/);
   assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);
-  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.js/);\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.wasm/);
+  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.js/);
+  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.wasm/);
 });
 
 test('uploaded source footage enters the MP4 render path', () => {
@@ -55,7 +57,10 @@ test('bundled motion-engine v3 contains seven intact files', async () => {
   const manifest = JSON.parse(manifestMatch[1]);
   const agentsCopy = await readFile(new URL('../../.agents/skills/motion-engine/SKILL.md', import.meta.url), 'utf8');
   assert.equal(agentsCopy, skill, 'Claude and agent motion-engine copies must stay in sync');
-  const blockPattern = /<!-- file: (\S+) -->\n````\w*\n([\s\S]*?)\n````/g;
+  const blockPattern = /<!-- file: (\S+) -->
+````\w*
+([\s\S]*?)
+````/g;
   const blocks = [...skill.matchAll(blockPattern)];
   assert.equal(manifest.v, 3);
   assert.equal(blocks.length, 7);
