@@ -46,8 +46,10 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v3
         with:
-          tools: ''
-          packages: platform-tools;platforms;android-35;build-tools;35.0.0
+          tools: platform-tools
+          packages: |
+            platforms;android-35
+            build-tools;35.0.0
       - run: npm install --no-audit --no-fund
       - run: npm run build
       - run: npx cap add android
