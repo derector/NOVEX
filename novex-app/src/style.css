@@ -99,3 +99,82 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#00c8ff!import
 .cloud-status.success{color:#62e7c0}
 .cloud-note{display:block;color:#738da8;line-height:1.5;margin-top:16px}
 @media(max-width:560px){.cloud-card{padding:22px}.topbar-right{gap:8px}.topbar-right .local-badge{display:none}}
+
+
+/* Live Canvas — premium preview surface, tuned for web and Android */
+.preview-panel{
+  position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%,#0b3155 0%,#07182a 42%,#06101e 100%);
+  border-color:#1a4e78;
+  box-shadow:0 22px 65px #0005,inset 0 1px #8deaff12;
+}
+.preview-panel:before{
+  content:"";position:absolute;inset:0 0 auto;height:150px;pointer-events:none;
+  background:linear-gradient(180deg,#00bfff0a,transparent);z-index:0;
+}
+.preview-panel>*{position:relative;z-index:1}
+.preview-panel .panel-heading{align-items:center;padding-bottom:14px;border-bottom:1px solid #164263}
+.preview-panel .section-index{font-size:9px;color:#53d9ff}
+.preview-panel .panel-heading h2{font-size:19px;font-weight:800;letter-spacing:-.045em;margin-top:5px}
+.live-tag{
+  padding:7px 10px;border-radius:999px;border:1px solid #1b6e66;
+  background:#062c2b;color:#65ffdb;font-size:9px;letter-spacing:.13em;
+  box-shadow:inset 0 1px #ffffff0a,0 0 24px #24ffcc0b;
+}
+.live-tag i{width:6px;height:6px;background:#5bffd6;box-shadow:0 0 11px #5bffd6;animation:novex-live-pulse 1.8s ease-in-out infinite}
+.preview-stage{
+  isolation:isolate;aspect-ratio:9/16;min-height:290px;max-height:520px;
+  border-radius:16px;border:1px solid #1b4c73;
+  background:
+    linear-gradient(#15365528 1px,transparent 1px),
+    linear-gradient(90deg,#15365528 1px,transparent 1px),
+    radial-gradient(ellipse at 50% 36%,#12345a 0%,#08182b 47%,#020711 100%);
+  background-size:24px 24px,24px 24px,auto;
+  box-shadow:inset 0 0 45px #0006,0 10px 32px #0003;
+}
+.preview-stage:after{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,#02071366 0%,transparent 18%,transparent 70%,#02071388 100%);
+  border-radius:inherit;
+}
+.preview-stage.has-preview{background:#020711}
+.preview-stage video{position:relative;z-index:1;width:100%;height:100%;object-fit:contain;background:#020711}
+.preview-placeholder{position:relative;z-index:3;padding:24px;gap:15px}
+.preview-orbit{
+  width:76px;height:76px;border:1px solid #248cc2!important;
+  background:linear-gradient(145deg,#0d3859,#17103c)!important;
+  box-shadow:0 0 0 9px #00bfff0a,0 0 0 19px #8d5bff09,0 0 44px #007dff2c,inset 0 1px #ffffff1a;
+  color:#fff;font-size:22px;transition:transform .25s ease,box-shadow .25s ease;
+}
+.preview-placeholder:hover .preview-orbit{transform:translateY(-2px) scale(1.03);box-shadow:0 0 0 9px #00bfff12,0 0 0 19px #8d5bff0d,0 0 54px #007dff45}
+.preview-orbit span{display:grid;place-items:center;width:39px;height:39px;border-radius:50%;background:linear-gradient(135deg,#00cfff,#5c4dff)!important;color:#fff!important;padding-left:3px;box-shadow:0 4px 20px #007dff55}
+.preview-placeholder b{font-size:14px;line-height:1.4;letter-spacing:-.02em;color:#f3faff}
+.preview-placeholder small{max-width:240px;color:#9db7d3;font-size:11px;line-height:1.8}
+.preview-controls{gap:11px;padding:14px 2px 16px}
+.preview-controls .icon-btn{width:34px;height:34px;border-radius:50%;border-color:#24628c;background:linear-gradient(145deg,#0b2b48,#111537);color:#e8f9ff;font-size:11px;box-shadow:0 4px 15px #0003}
+.preview-track{height:5px;background:#153653;border-radius:999px;box-shadow:inset 0 1px 2px #0008}
+#previewSeekFill{border-radius:999px;box-shadow:0 0 12px #168dff66}
+.preview-controls>span{font-size:10px;color:#9ab8d6;font-variant-numeric:tabular-nums}
+.preview-stats{
+  gap:8px;padding:14px 0 2px;border-top:1px solid #164263;
+}
+.preview-stats>div{
+  padding:11px 10px;border:1px solid #164263;border-radius:11px;
+  background:linear-gradient(145deg,#0b2138,#071426);min-width:0;
+}
+.preview-stats small{font-size:8px;color:#83a6c8;letter-spacing:.09em;line-height:1.5}
+.preview-stats b{margin-top:7px;font-size:clamp(13px,1.2vw,17px);font-weight:800;letter-spacing:-.025em;color:#f2f9ff;overflow-wrap:anywhere}
+.preview-stats>div:first-child b{color:#61dfff}
+.preview-stats>div:nth-child(2) b{color:#b5a0ff}
+.preview-stats>div:nth-child(3) b{color:#5bffd6}
+.analysis-panel{border-color:#163b5b}
+@keyframes novex-live-pulse{50%{opacity:.45;box-shadow:0 0 3px #5bffd6}}
+@media(max-width:560px){
+  .preview-panel{padding:14px}
+  .preview-panel .panel-heading h2{font-size:17px}
+  .preview-stage{min-height:270px;max-height:440px;border-radius:13px}
+  .preview-stats{gap:6px}
+  .preview-stats>div{padding:9px 7px;border-radius:9px}
+  .preview-stats small{font-size:7px}
+  .preview-stats b{font-size:13px}
+}
