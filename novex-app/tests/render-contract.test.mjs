@@ -6,11 +6,11 @@ import { readFile } from 'node:fs/promises';
 const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 const motion3d = await readFile(new URL('../src/motion3d.js', import.meta.url), 'utf8');
 
-test('FFmpeg core is loaded through MIME-typed module URLs for WebView compatibility', () => {
+test('FFmpeg ESM core is loaded through MIME-typed module URLs for WebView compatibility', async () => {
   assert.match(main, /import \{ fetchFile, toBlobURL \} from '@ffmpeg\/util'/);
-  assert.match(main, /toBlobURL\(coreUrl, 'text\/javascript'\)/);
-  assert.match(main, /toBlobURL\(wasmUrl, 'application\/wasm'\)/);
-  assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);
+  assert.match(main, /toBlobURL\(URL\.createObjectURL\(coreBlob\), 'text\/javascript'\)/);
+  assert.match(main, /toBlobURL\(URL\.createObjectURL\(wasmBlob\), 'application\/wasm'\)/);
+  assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);\n  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.js/);\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.wasm/);
 });
 
 test('uploaded source footage enters the MP4 render path', () => {
