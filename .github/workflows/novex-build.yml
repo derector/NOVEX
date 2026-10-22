@@ -27,6 +27,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - name: Check JavaScript syntax
         run: node --check src/main.js && node --check src/motion3d.js && node --check src/cloud.js
+      - name: Test render pipeline contracts
+        run: npm test
       - name: Build for GitHub Pages
         run: npm run build && test -s dist/ffmpeg/ffmpeg-core.js && test -s dist/ffmpeg/ffmpeg-core.wasm
         env:
@@ -75,6 +77,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - name: Check JavaScript syntax
         run: node --check src/main.js && node --check src/motion3d.js && node --check src/cloud.js
+      - name: Test render pipeline contracts
+        run: npm test
       - run: npm run build && test -s dist/ffmpeg/ffmpeg-core.js && test -s dist/ffmpeg/ffmpeg-core.wasm
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
