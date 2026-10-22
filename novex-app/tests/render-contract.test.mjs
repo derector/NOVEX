@@ -57,7 +57,7 @@ test('bundled motion-engine v3 contains seven intact files', async () => {
   const manifest = JSON.parse(manifestMatch[1]);
   const agentsCopy = await readFile(new URL('../../.agents/skills/motion-engine/SKILL.md', import.meta.url), 'utf8');
   assert.equal(agentsCopy, skill, 'Claude and agent motion-engine copies must stay in sync');
-  const blockPattern = /<!-- file: (\\S+) -->\\n````\\w*\\n([\\s\\S]*?)\\n````/g;
+  const blockPattern = /<!-- file: (\S+) -->\n````\w*\n([\s\S]*?)\n````/g;
   const blocks = [...skill.matchAll(blockPattern)];
   assert.equal(manifest.v, 3);
   assert.equal(blocks.length, 7);
