@@ -6,6 +6,13 @@ import { readFile } from 'node:fs/promises';
 const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 const motion3d = await readFile(new URL('../src/motion3d.js', import.meta.url), 'utf8');
 
+test('FFmpeg core is loaded through MIME-typed module URLs for WebView compatibility', () => {
+  assert.match(main, /import \{ fetchFile, toBlobURL \} from '@ffmpeg\/util'/);
+  assert.match(main, /toBlobURL\(coreUrl, 'text\/javascript'\)/);
+  assert.match(main, /toBlobURL\(wasmUrl, 'application\/wasm'\)/);
+  assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);
+});
+
 test('uploaded source footage enters the MP4 render path', () => {
   assert.match(main, /if\(S\.source\)\s*\{/);
   assert.match(main, /await ff\.writeFile\(sourceInput,await fetchFile\(S\.source\)\)/);
