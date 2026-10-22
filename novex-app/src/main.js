@@ -171,9 +171,9 @@ function commandToPatch(raw){
   const q=raw.trim().toLowerCase();
   if(!q)throw Error('Напиши, что нужно изменить.');
   if(/\b(отмен|undo|верни предыдущ|откат)\b/.test(q))return {type:'undo',label:'Отменить последнюю правку'};
-  if(/\b(3d|3д|объ[её]мн|тр[её]хмер|камера (?:облет|облёт|вращ)|экструд)/.test(q))return {...EDIT_PRESETS['3d'],text:(raw.match(/(?:текст|надпис|логотип|слово)\s+["«]?([\p{L}\p{N} ._-]{2,32})/iu)||[])[1]?.replace(/[»"]$/,'')||'NOVEX'};
+  if(/\b(3d|3д|объ[её]мн|тр[её]хмер|камера (?:облет|облёт|вращ)|экструд)/.test(q)){const quoted=raw.match(/[«"]([^»"]{1,32})[»"]/);const named=raw.match(/(?:логотип|слово)\s+([\p{L}\p{N}_-]{2,24})/iu);return {...EDIT_PRESETS['3d'],text:(quoted?.[1]||named?.[1]||'NOVEX').trim()};}
   if(/субтитр|подсвечивай слово|караоке/.test(q))return {...EDIT_PRESETS.subtitles};
-  if(/титр|текст|надпис|типограф|букв/.test(q))return {...EDIT_PRESETS.titles,text:raw.trim().slice(0,120)};
+  if(/титр|текст|надпис|типограф|букв/.test(q)){const quoted=raw.match(/[«"]([^»"]{1,120})[»"]/);const named=raw.match(/(?:текст|надпись)\s*[:—-]\s*(.{1,120})$/iu);return {...EDIT_PRESETS.titles,text:(quoted?.[1]||named?.[1]||'NOVEX').trim()};}
   if(/ярче|цвет|свет|свечение|glow|неон/.test(q))return {type:'grade',label:'Свет и цвет',style:{look:'neon-glow'}};
   if(/быстр|динамич|под бит|ритм/.test(q))return {type:'motion_timing',label:'Динамика и ритм',style:{pace:'faster',beatSync:true}};
   if(/плавн|переход|камера|зум|приближ/.test(q))return {type:'camera_motion',label:'Движение камеры',style:{move:/зум|приближ/.test(q)?'dolly-in':'smooth-transition',easing:'cinematic-ease'}};
