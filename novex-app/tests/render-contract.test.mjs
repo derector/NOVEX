@@ -10,7 +10,8 @@ test('FFmpeg ESM core is loaded through MIME-typed module URLs for WebView compa
   assert.match(main, /import \{ fetchFile, toBlobURL \} from '@ffmpeg\/util'/);
   assert.match(main, /toBlobURL\(URL\.createObjectURL\(coreBlob\), 'text\/javascript'\)/);
   assert.match(main, /toBlobURL\(URL\.createObjectURL\(wasmBlob\), 'application\/wasm'\)/);
-  assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);\n  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.js/);\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.wasm/);
+  assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);
+  const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.js/);\n  assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.wasm/);
 });
 
 test('uploaded source footage enters the MP4 render path', () => {
