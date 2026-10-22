@@ -93,3 +93,13 @@ test('render progress reports completed and remaining percentages with red-to-gr
   assert.match(css, /linear-gradient\(90deg,#ff435c 0%,#ff8b55 28%,#f4d45d 58%,#8fe77c 82%,#2be0a2 100%\)/);
   assert.match(main, /renderRemaining/);
 });
+
+
+test('preview hides placeholder when media is active and mobile keeps profile accessible', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(html, /id="previewStage"[\s\S]*id="previewVideo"/);
+  assert.match(css, /\.preview-stage\.has-preview \.preview-placeholder\{display:none!important\}/);
+  assert.match(css, /\.preview-stage video\[hidden\],\.preview-placeholder\[hidden\]\{display:none!important\}/);
+  assert.match(css, /\.topbar-right \.btn-secondary\{display:inline-flex\}/);
+});
