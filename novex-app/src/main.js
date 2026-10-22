@@ -27,10 +27,10 @@ function step(n){['materialsPanel','directionPanel','renderPanel'].forEach((id,i
 function stats(){$('#statRefs').textContent=S.refs.length;$('#statDuration').textContent=S.track?clock(S.duration):'—';$('#statBpm').textContent=S.bpm?Math.round(S.bpm)+' BPM':'—';$('#projectCount').textContent=S.projects.length;}
 function library(){let a=[...S.refs.map(x=>({t:'Референс',n:x.file.name,m:clock(x.duration)+' · '+size(x.file.size)})),...(S.track?[{t:'Аудио',n:S.track.name,m:clock(S.duration)+' · '+size(S.track.size)}]:[]),...(S.source?[{t:'Источник',n:S.source.name,m:size(S.source.size)}]:[])];$('#libraryGrid').innerHTML=a.length?a.map(x=>'<div class="library-item"><span class="library-type">'+esc(x.t)+'</span><b>'+esc(x.n)+'</b><small>'+esc(x.m)+'</small></div>').join(''):'<div class="empty-card"><b>Медиатека пуста</b><p>Добавь файлы в студии.</p></div>';}
 function signals(a){$('#analysisSignals').innerHTML=a.length?a.map(x=>'<div class="signal-row"><span class="signal-dot '+(x.ok?'good':'')+'"></span><div><b>'+esc(x.title)+'</b><small>'+esc(x.detail)+'</small></div><span class="signal-value">'+esc(x.value)+'</span></div>').join(''):'<div class="signal-empty">После анализа появятся параметры материалов.</div>';}
-function refList(){const box=$('#referenceList');box.innerHTML='';S.refs.forEach(x=>{const d=document.createElement('div');d.className='media-item';d.innerHTML='<div class="media-thumb" style="--thumb:'+x.color+'"><span>▶</span></div><div class="media-copy"><b title="'+esc(x.file.name)+'">'+esc(x.file.name)+'</b><small>'+clock(x.duration)+' · '+x.w+'×'+x.h+' · '+size(x.file.size)+'</small><div class="mini-tags"><span>'+(x.a?'Проанализирован':'Добавлен')+'</span></div></div><button class="remove-btn" aria-label="Удалить">×</button>';d.querySelector('button').onclick=()=>{URL.revokeObjectURL(x.url);S.refs=S.refs.filter(y=>y!==x);refList();stats();};box.append(d);});$('#referenceDrop').classList.toggle('has-files',S.refs.length>0);
+function refList(){const box=$('#referenceList');box.innerHTML='';S.refs.forEach((x,index)=>{const d=document.createElement('div');d.className='media-item media-item-rich';d.innerHTML='<button class="ref-preview" type="button" aria-label="Посмотреть '+esc(x.file.name)+'"><video src="'+x.url+'" muted playsinline preload="metadata"></video><span>▶</span></button><div class="media-copy"><b title="'+esc(x.file.name)+'">'+esc(x.file.name)+'</b><small>'+clock(x.duration)+' · '+x.w+'×'+x.h+' · '+size(x.file.size)+'</small><div class="mini-tags"><span>'+(x.a?'✓ Проанализирован':'Референс '+(index+1))+'</span></div><button class="text-button ref-open" type="button">Смотреть видео ↗</button></div><button class="remove-btn" aria-label="Удалить">×</button>';d.querySelector('.ref-preview').onclick=d.querySelector('.ref-open').onclick=()=>{const preview=$('#previewVideo');preview.pause();preview.src=x.url;preview.dataset.referencePreview=x.url;preview.muted=true;preview.hidden=false;$('#previewStage .preview-placeholder').hidden=true;$('#previewStage').classList.add('has-preview');preview.load();preview.play().catch(()=>{});$('#playPreview').textContent='Ⅱ';};d.querySelector('.remove-btn').onclick=()=>{URL.revokeObjectURL(x.url);S.refs=S.refs.filter(y=>y!==x);refList();stats();};box.append(d);});$('#referenceDrop').classList.toggle('has-files',S.refs.length>0);
   if(S.refs.length&&!S.output){
     const preview=$('#previewVideo');
-    if(!preview.dataset.referencePreview||preview.dataset.referencePreview!==S.refs[0].url){
+    if(!preview.dataset.referencePreview||!S.refs.some(x=>x.url===preview.dataset.referencePreview)){
       preview.pause();preview.src=S.refs[0].url;preview.dataset.referencePreview=S.refs[0].url;
       preview.muted=true;preview.hidden=false;$('#previewStage .preview-placeholder').hidden=true;
       $('#previewStage').classList.add('has-preview');preview.load();
@@ -106,3 +106,31 @@ if(cloudConfigured){cloudSession().then(({user})=>{cloudUser=user;if(user){$('#c
 $('#mobileMenu').onclick=()=>$('#sidebar').classList.toggle('open');
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register(import.meta.env.BASE_URL+'sw.js').catch(()=>{}));
 refList();signals([]);stats();
+
+/* NOVEX Buddy: local, privacy-first product help (no files leave the device). */
+const helperKnowledge=[
+ {keys:['начать','старт','проект','как начать'],answer:'Начни с «Материалы»: добавь 1–3 видео в «Референсы анимации», загрузи музыкальный файл и при желании вставь текст. Нажми «Анализировать материалы», выбери режим/формат, затем «Собрать план» и «Собрать MP4». Для первого теста используй короткий трек и один небольшой MP4.'},
+ {keys:['референс','посмотреть','просмотр','видео'],answer:'После загрузки у каждого референса есть мини-превью и кнопка «Смотреть видео». Нажми её — ролик откроется в LIVE CANVAS; можно поставить на паузу и перемотать встроенными контролами. Для анализа файл должен быть видео: MP4, MOV или WEBM.'},
+ {keys:['трек','музык','аудио','слушать','прослушать','звук'],answer:'После выбора аудиофайла под карточкой «Музыкальный трек» появится встроенный аудиоплеер. В нём можно слушать, ставить на паузу и перематывать трек. Для анализа и экспорта нужен аудиофайл MP3/WAV/M4A/AAC; видео вместо трека не подходит.'},
+ {keys:['ffmpeg','wasm','рендер','ошибка','0%','экспорт'],answer:'Если FFmpeg не стартует: 1) обнови страницу; 2) проверь, что сеть не блокирует /NOVEX/ffmpeg/ffmpeg-core.js и ffmpeg-core.wasm; 3) попробуй короткий фрагмент и 480p/720p; 4) на телефоне закрой другие тяжёлые вкладки. Если ошибка повторяется, пришли точный текст ошибки и устройство. Сам факт успешной сборки ещё не доказывает, что рендер проверен на каждом устройстве.'},
+ {keys:['текст','лирик','субтитр','слова'],answer:'Вставь текст в поле «Текст трека». NOVEX делит его на короткие строки равномерно по выбранному фрагменту. Это тестовые таймкоды, не распознавание речи — обязательно проверь совпадение на слух. Для проверки можно вставить любой короткий текст.'},
+ {keys:['bpm','темп','анализ'],answer:'«Анализировать материалы» выбирает несколько кадров каждого референса и оценивает смены сцен/яркость, а для музыки оценивает BPM и энергию. Это быстрые эвристики, а не профессиональная покадровая реконструкция; результаты могут отличаться от ручной оценки.'},
+ {keys:['приват','облако','файл','безопас','загрузка'],answer:'Видео и аудио обрабатываются локально в браузере через FFmpeg WASM. Встроенный Buddy отвечает по справке приложения и не читает содержимое твоих файлов. Облачные проекты хранят данные монтажного плана, а не сами медиафайлы.'},
+ {keys:['план','монтаж','формат','вертикал','разреш'],answer:'На шаге «Режиссура» выбери степень следования референсу, весь трек или фрагмент, формат 9:16 / 1:1 / 16:9 и разрешение. Затем «Собрать план» показывает шкалу VIDEO/AUDIO/TEXT. После проверки нажми «Собрать MP4».'}
+];
+function helperReply(question){
+ const q=question.toLocaleLowerCase('ru-RU');
+ const found=helperKnowledge.find(item=>item.keys.some(k=>q.includes(k)));
+ if(found)return found.answer;
+ if(/привет|йо|здравств|хай/.test(q))return 'Йо! ✦ Спроси про загрузку материалов, прослушивание трека, просмотр референсов, анализ или экспорт. Можешь также нажать быстрые вопросы сверху.';
+ if(/что умеешь|помощ|команд/.test(q))return 'Я знаю основные шаги NOVEX, требования к форматам, локальный анализ, текстовые титры и типовые проблемы FFmpeg. Я пока не подключён к облачной языковой модели и не могу менять проект за тебя, но подскажу следующий шаг.';
+ return 'Пока не нашёл точного ответа в локальной справке. Попробуй уточнить: «как начать проект», «как прослушать трек», «как посмотреть референс» или «ошибка FFmpeg». Если это баг — пришли точный текст ошибки, этап и модель устройства.';
+}
+function helperMessage(text,kind){
+ const box=$('#helperMessages'),node=document.createElement('div');node.className='helper-bubble '+kind;
+ const p=document.createElement('p');p.textContent=text;node.append(p);box.append(node);box.scrollTop=box.scrollHeight;
+}
+$('#helperFab').onclick=()=>{$('#helperPanel').classList.toggle('hidden');if(!$('#helperPanel').classList.contains('hidden'))$('#helperInput').focus()};
+$('#helperClose').onclick=()=>$('#helperPanel').classList.add('hidden');
+$('#helperForm').onsubmit=e=>{e.preventDefault();const input=$('#helperInput'),q=input.value.trim();if(!q)return;helperMessage(q,'user');helperMessage(helperReply(q),'bot');input.value='';};
+$('#helperMessages').addEventListener('click',e=>{const b=e.target.closest('[data-helper-q]');if(!b)return;const q=b.dataset.helperQ;helperMessage(q,'user');helperMessage(helperReply(q),'bot');});
