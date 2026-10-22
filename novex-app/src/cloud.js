@@ -69,3 +69,10 @@ export async function cloudSaveProject(project) {
   if (error) throw error;
   return data;
 }
+
+export async function cloudPasswordReset(email) {
+  if (!cloud) throw new Error('Облако не настроено.');
+  const redirectTo = window.location.origin + import.meta.env.BASE_URL;
+  const { error } = await cloud.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) throw error;
+}
