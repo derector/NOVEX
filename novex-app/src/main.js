@@ -1,6 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import './style.css';
+import { createLogoScene } from './motion3d.js';
 import { cloud, cloudConfigured, cloudSession, cloudAuth, cloudListProjects, cloudSaveProject, cloudEmailLink, cloudSendSupportMessage } from './cloud.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const S={refs:[],track:null,trackUrl:null,source:null,sourceUrl:null,duration:0,bpm:null,envelope:[],analysis:[],plan:null,output:null,outputName:'NOVEX.mp4',projects:[],busy:false,edits:[],editHistory:[]};
@@ -95,11 +96,29 @@ const EDIT_PRESETS={
   'titles':{type:'add_kinetic_title',label:'Кинетический текст',text:'',start:0,duration:2,style:{entrance:'spring-up',exit:'fade-out',easing:'back-out'}},
   'subtitles':{type:'add_subtitles',label:'Субтитры',start:0,duration:0,style:{position:'safe-bottom',highlight:'active-word'}}
 };
+let motion3d=null;
+function start3DPreview(label='NOVEX'){
+ const canvas=$('#motion3dCanvas');
+ if(!canvas)return;
+ try{
+  if(!motion3d)motion3d=createLogoScene(canvas);
+  motion3d.setText(label);
+  motion3d.play();
+  $('#motion3dStatus').textContent='Воспроизведение 3D-сцены';
+  $('#motion3dPlay').textContent='Ⅱ Пауза 3D-превью';
+ }catch(e){$('#motion3dStatus').textContent='WebGL недоступен: '+(e?.message||e);toast('3D-превью не запустилось: '+(e?.message||e),'error');}
+}
+$('#motion3dPlay').onclick=()=>{
+ if(!motion3d){start3DPreview();return;}
+ if(motion3d.isPlaying()){motion3d.pause();$('#motion3dStatus').textContent='Пауза';$('#motion3dPlay').textContent='▶ Продолжить 3D-превью';}
+ else{motion3d.play();$('#motion3dStatus').textContent='Воспроизведение 3D-сцены';$('#motion3dPlay').textContent='Ⅱ Пауза 3D-превью';}
+};
 function commandToPatch(raw){
   const q=raw.trim().toLowerCase();
   if(!q)throw Error('Напиши, что нужно изменить.');
   if(/\\b(отмен|undo|верни предыдущ|откат)\\b/.test(q))return {type:'undo',label:'Отменить последнюю правку'};
   if(/\\b(3d|3д|объ[её]мн|тр[её]хмер|камера (?:облет|облёт|вращ)|экструд)/.test(q))return {...EDIT_PRESETS['3d'],text:(raw.match(/(?:текст|надпис|логотип|слово)\\s+["«]?([\\p{L}\\p{N} ._-]{2,32})/iu)||[])[1]?.replace(/[»"]$/,'')||'NOVEX'};
+
   if(/субтитр|подсвечивай слово|караоке/.test(q))return {...EDIT_PRESETS.subtitles};
   if(/титр|текст|надпис|типограф|букв/.test(q))return {...EDIT_PRESETS.titles,text:raw.trim().slice(0,120)};
   if(/ярче|цвет|свет|свечение|glow|неон/.test(q))return {type:'grade',label:'Свет и цвет',style:{look:'neon-glow'}};
@@ -123,11 +142,11 @@ function applyDirectorCommand(raw){
  S.editHistory.push(S.edits.map(x=>({...x})));
  patch.id='edit-'+Date.now()+'-'+S.edits.length;
  patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · облёт камеры':patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.label;
- S.edits.push(patch);renderDirectorPlan();$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';
+ S.edits.push(patch);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX');renderDirectorPlan();$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';
  if(S.plan)S.plan.edits=S.edits.map(x=>({...x}));
 }
 $('#applyEditCommand').onclick=()=>{try{applyDirectorCommand($('#editCommand').value);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
-$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({3d:'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.'})[k];});
+$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({3d:'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.'})[k];if(k==='3d')start3DPreview('NOVEX');});
 
 function srt(t){const ms=Math.round(Math.max(0,t)*1000),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),z=ms%1000;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(z).padStart(3,'0')}
 $('#downloadBtn').onclick=async()=>{if(!S.output)return;const a=document.createElement('a');a.href=S.output;a.download=S.outputName;a.click();toast('Скачивание MP4 запрошено.','success');};
