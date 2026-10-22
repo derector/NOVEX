@@ -157,3 +157,9 @@ test('NOVEX rebrand assets use the current theme across PWA metadata and icon', 
   assert.match(css, /NOVEX identity system v2/);
   assert.match(css, /\.profile-avatar/);
 });
+
+test('director rejects unsupported camera commands instead of silently recording a no-op', () => {
+  assert.match(main, /patch\.type==='camera_motion'&&!S\.source/);
+  assert.match(main, /Движение камеры сейчас доступно только для загруженного исходного видео/);
+  assert.match(main, /if\(S\.plan\)\{S\.plan=makePlan\(\);S\.plan\.edits=S\.edits\.map/);
+});
