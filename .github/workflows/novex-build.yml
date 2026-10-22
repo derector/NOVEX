@@ -25,7 +25,10 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
-      - run: npm run build
+      - name: Build for GitHub Pages
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /NOVEX/
       - uses: actions/upload-artifact@v4
         with:
           name: NOVEX-Web-Build
