@@ -42,15 +42,15 @@ test('3D scene supports transparent frame export', () => {
 
 test('bundled motion-engine v3 contains seven intact files', async () => {
   const skill = await readFile(new URL('../../.agents/skills/motion-engine/SKILL.md', import.meta.url), 'utf8');
-  const manifestMatch = skill.match(/<!-- manifest: (\\{.*?\\}) -->/);
+  const manifestMatch = skill.match(/<!-- manifest: (\{.*?\}) -->/);
   assert.ok(manifestMatch, 'motion-engine manifest exists');
   const manifest = JSON.parse(manifestMatch[1]);
-  const blockPattern = new RegExp('<!-- file: (\\\\S+) -->\\\\n````\\\\w*\\\\n([\\\\s\\\\S]*?)\\\\n````', 'g');
+  const blockPattern = /<!-- file: (\S+) -->\n````\w*\n([\s\S]*?)\n````/g;
   const blocks = [...skill.matchAll(blockPattern)];
   assert.equal(manifest.v, 3);
   assert.equal(blocks.length, 7);
   for (const [, name, body] of blocks) {
-    const digest = createHash('sha1').update(body.replace(/\\s+/g, '')).digest('hex').slice(0, 12);
+    const digest = createHash('sha1').update(body.replace(/\s+/g, '')).digest('hex').slice(0, 12);
     assert.equal(digest, manifest[name], name + ' checksum must match');
   }
 });
