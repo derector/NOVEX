@@ -28,6 +28,26 @@ export async function cloudAuth(mode, email, password) {
   if (error) throw error;
   return { user: null, needsConfirmation: false };
 }
+export async function cloudEmailLink(email) {
+  if (!cloud) throw new Error('Облако не настроено.');
+  const redirectTo = window.location.origin + import.meta.env.BASE_URL;
+  const { error } = await cloud.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false, emailRedirectTo: redirectTo }
+  });
+  if (error) throw error;
+}
+export async function cloudSendSupportMessage(subject, message) {
+  if (!cloud) throw new Error('Облако не настроено.');
+  const { data: { session } } = await cloud.auth.getSession();
+  if (!session) throw new Error('Сначала войди в аккаунт.');
+  const { data, error } = await cloud.functions.invoke('novex-email', {
+    body: { subject, message }
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
 export async function cloudListProjects() {
   if (!cloud) return [];
   const { data, error } = await cloud.from('novex_projects').select('id,name,summary,project_data,created_at,updated_at').order('updated_at', { ascending: false }).limit(50);
