@@ -123,7 +123,8 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#00c8ff!import
 }
 .live-tag i{width:6px;height:6px;background:#5bffd6;box-shadow:0 0 11px #5bffd6;animation:novex-live-pulse 1.8s ease-in-out infinite}
 .preview-stage{
-  isolation:isolate;aspect-ratio:9/16;min-height:290px;max-height:520px;
+  isolation:isolate;width:min(100%,calc(520px * var(--preview-ratio,.5625)));margin-inline:auto;
+  isolation:isolate;aspect-ratio:var(--preview-ratio,.5625);min-height:0;max-height:none;
   border-radius:16px;border:1px solid #1b4c73;
   background:
     linear-gradient(#15365528 1px,transparent 1px),
@@ -172,7 +173,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#00c8ff!import
 @media(max-width:560px){
   .preview-panel{padding:14px}
   .preview-panel .panel-heading h2{font-size:17px}
-  .preview-stage{min-height:270px;max-height:440px;border-radius:13px}
+  .preview-stage{width:min(100%,calc(64vh * var(--preview-ratio,.5625)));max-height:none;min-height:0;border-radius:13px}
   .preview-stats{gap:6px}
   .preview-stats>div{padding:9px 7px;border-radius:9px}
   .preview-stats small{font-size:7px}
@@ -285,7 +286,7 @@ input:not([type=checkbox]):not([type=radio]),textarea,select{background:#080f20;
 @keyframes novex-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes novex-breathe{0%,100%{box-shadow:0 0 0 11px #a98cff08,0 0 0 23px #a98cff04;transform:scale(1)}50%{box-shadow:0 0 0 15px #a98cff0b,0 0 0 30px #a98cff05;transform:scale(1.025)}}
 @keyframes novex-pulse{0%,100%{opacity:1;box-shadow:0 0 10px #9df5bb5c}50%{opacity:.55;box-shadow:0 0 18px #9df5bb90}}
-@media(max-width:700px){.preview-stage{min-height:180px;max-height:64vh;border-radius:11px}.preview-stage.preview-square{width:min(100%,64vh)}.preview-stage.preview-portrait{width:min(100%,calc(64vh*var(--preview-ratio,.5625)))}.preview-panel{overflow:hidden}}
+@media(max-width:700px){.preview-stage{width:min(100%,calc(64vh * var(--preview-ratio,.5625)));min-height:0;max-height:none;border-radius:11px}.preview-panel{overflow:hidden}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
 /* AI Motion Director */
