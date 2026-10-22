@@ -1,5 +1,5 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { fetchFile } from '@ffmpeg/util';
 import './style.css';
 import { cloud, cloudConfigured, cloudSession, cloudAuth, cloudListProjects, cloudSaveProject, cloudEmailLink, cloudSendSupportMessage } from './cloud.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
