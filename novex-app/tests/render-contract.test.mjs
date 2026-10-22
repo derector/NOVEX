@@ -56,3 +56,22 @@ test('bundled motion-engine v3 contains seven intact files', async () => {
     assert.equal(digest, manifest[name], name + ' checksum must match');
   }
 });
+
+
+test('profile menu and email registration are reachable from the top-right app header', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="cloudAccountBtn"[^>]*profile-button/);
+  assert.match(html, /id="cloudTitle">Профиль NOVEX/);
+  assert.match(html, /id="cloudEmail" type="email"/);
+  assert.match(html, /id="cloudSignup"/);
+  assert.match(html, /id="cloudEmailLink"/);
+});
+
+test('render progress reports completed and remaining percentages with red-to-green gradient', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(html, /id="renderPercent">0% готово/);
+  assert.match(html, /id="renderRemaining">100% осталось/);
+  assert.match(css, /linear-gradient\(90deg,#ff435c 0%,#ff8b55 28%,#f4d45d 58%,#8fe77c 82%,#2be0a2 100%\)/);
+  assert.match(main, /renderRemaining/);
+});
