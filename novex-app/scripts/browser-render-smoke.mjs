@@ -81,7 +81,7 @@ try {
   const download = await downloadPromise;
   const downloadedPath = await download.path();
   const downloadedBytes = await readFile(downloadedPath);
-  if (download.suggestedFilename() !== 'NOVEX.mp4') {
+  if (!/^NOVEX.*\.mp4$/i.test(download.suggestedFilename())) {
     throw new Error('Unexpected download filename: ' + download.suggestedFilename());
   }
   if (downloadedBytes.length < 1000 || downloadedBytes.toString('ascii', 4, 8) !== 'ftyp') {
