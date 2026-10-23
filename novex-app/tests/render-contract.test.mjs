@@ -295,6 +295,8 @@ test('video or music remains the only base audio source; animation SFX are mixed
   assert.match(main, /args\.push\('-map','1:a:0','-af'/);
   assert.match(main, /motionAudio\.synthesizeAudio\(\{sampleRate:24000,masterGain:\.24\}\)/);
   assert.match(main, /motionAudio\.hit\(cueAt\(threeDEdit\.start\),'l'\)/);
+  assert.match(main, /motionTransitionCues\.push\(offset\)/);
+  assert.match(main, /for\(const at of motionTransitionCues\)motionAudio\.sfx\('whoosh',at/);
   assert.match(main, /motionAudio\.sfx\('pop',cueAt\(edit\.start\)/);
   assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
   assert.doesNotMatch(main, /);
