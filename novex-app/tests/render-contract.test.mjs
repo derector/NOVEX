@@ -301,7 +301,7 @@ test('multi-reference MP4 export uses smooth crossfades and preserves target dur
   assert.match(main, /const transition=Math\.max\(1\/30,Math\.floor\(Math\.min\(\.35,\.\.\.segmentDurations\.map\(d=>d\*\.45\)\)\*30\)\/30\)/);
   assert.match(main, /xfade=transition=fade:duration=/);
   assert.match(main, /const next='x'\+i,offset=Math\.max\(0,elapsed-transition\*\(i-1\)-transition\)/);
-  assert.match(main, /tpad=stop_mode=clone:stop_duration=\+padding\.toFixed\(6\)/);
+  assert.match(main, /tpad=stop_mode=clone:stop_duration='\+padding\.toFixed\(6\)/);
   assert.match(main, /Не удалось собрать плавные переходы между клипами/);
   assert.match(main, /if\(segmentDurations\.length===1\)/);
 });
