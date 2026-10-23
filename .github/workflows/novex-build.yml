@@ -116,8 +116,8 @@ jobs:
   android-smoke:
     name: Install and launch Android app in emulator
     needs: android
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
     steps:
       - name: Download APK from this build
         uses: actions/download-artifact@v4
@@ -127,13 +127,15 @@ jobs:
       - name: Boot emulator and smoke-test NOVEX
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 28
           target: default
-          arch: x86_64
+          arch: x86
           profile: pixel_2
-          cores: 4
+          cores: 2
+          ram-size: 2048
+          heap-size: 512
           emulator-boot-timeout: 900
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot-load -no-snapshot-save
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot-load -no-snapshot-save -memory 2048
           disable-animations: true
           script: |
             adb logcat -c
