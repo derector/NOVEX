@@ -424,3 +424,10 @@ test('director capability note accurately describes implemented export effects',
   assert.match(html, /точная синхронизация слов автоматически не выполняются/);
   assert.doesNotMatch(html, /Остальные команды пока добавляют правки в план; их визуальный экспорт ещё не реализован/);
 });
+
+
+test('source transcript checkbox contributes source text to the subtitle render pipeline', () => {
+  assert.match(main, /const transcript=\$\('#sourceTranscript'\)\.value\.trim\(\);if\(transcript&&\$\('#useSourceTranscript'\)\.checked\)texts\.push\(transcript\)/);
+  assert.match(main, /const subtitlesEdit=\(S\.edits\|\|\[\]\)\.some\(e=>e\.type==='add_subtitles'\)/);
+  assert.match(main, /if\(lyrics&&\(\$\('#burnLyrics'\)\.checked\|\|\$\('#useSourceTranscript'\)\.checked\|\|subtitlesEdit\)\)/);
+});
