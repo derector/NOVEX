@@ -244,3 +244,11 @@ test('default Supabase SMTP restriction gives a setup-specific message', () => {
 });
 
 test('source audio option mixes original audio with the music track instead of replacing it', () => { assert.match(main,/args\.push\('-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\)/); assert.match(main,/\[1:a:0\]aresample=48000,volume=0\.65\[src\]/); assert.match(main,/\[2:a:0\]aresample=48000,volume=0\.85\[music\]/); assert.match(main,/amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0\.95\[aout\]/); assert.match(main,/Смешиваю исходный звук с музыкой/); });
+
+
+test('audio uploads release the previous object URL and report unreadable files', () => {
+  assert.match(main, /if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\)/);
+  assert.match(main, /Не удалось прочитать аудиофайл\. Попробуй MP3 или WAV/);
+  assert.match(main, /au\.onerror=\(\)=>reject\(new Error\(/);
+  assert.match(main, /au\.hidden=true;\$\('#trackName'\)\.textContent='Загрузи трек'/);
+});
