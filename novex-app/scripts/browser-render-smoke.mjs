@@ -25,15 +25,27 @@ try {
   browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') pageErrors.push('console: ' + message.text()); });
 
   await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.locator('#referenceInput').setInputFiles('/tmp/novex-smoke-reference.mp4');
+  await page.locator('#referenceInput').setInputFiles('/tmp/novex-smoke-reference.webm');
   await page.locator('#trackInput').setInputFiles('/tmp/novex-smoke-track.wav');
-  await page.waitForFunction(() =>
-    document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference.mp4') &&
-    document.querySelector('#trackName')?.textContent === 'novex-smoke-track.wav',
-    null, { timeout: 20000 }
-  );
+  try {
+    await page.waitForFunction(() =>
+      document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference.webm') &&
+      document.querySelector('#trackName')?.textContent === 'novex-smoke-track.wav',
+      null, { timeout: 20000 }
+    );
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      references: document.querySelector('#referenceList')?.innerText || '',
+      track: document.querySelector('#trackName')?.textContent || '',
+      notices: [...document.querySelectorAll('.toast,.toast-message,[role="alert"]')].map(el => el.innerText),
+      selectedVideo: document.querySelector('#referenceInput')?.files?.[0]?.name || '',
+      selectedAudio: document.querySelector('#trackInput')?.files?.[0]?.name || ''
+    }));
+    throw new Error('Media upload did not complete: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
+  }
 
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });

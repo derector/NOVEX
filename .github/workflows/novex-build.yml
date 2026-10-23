@@ -41,7 +41,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Generate tiny media fixtures for real MP4 export
         run: |
-          ffmpeg -hide_banner -loglevel error -y -f lavfi -i "color=c=0x553b86:s=320x180:r=30:d=3" -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart /tmp/novex-smoke-reference.mp4
+          ffmpeg -hide_banner -loglevel error -y -f lavfi -i "color=c=0x553b86:s=320x180:r=30:d=3" -an -c:v libvpx -deadline realtime -cpu-used 8 -pix_fmt yuv420p /tmp/novex-smoke-reference.webm
           ffmpeg -hide_banner -loglevel error -y -f lavfi -i "sine=frequency=440:sample_rate=48000:duration=3" -c:a pcm_s16le /tmp/novex-smoke-track.wav
       - name: Run browser render smoke test
         run: node scripts/browser-render-smoke.mjs
