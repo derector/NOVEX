@@ -182,7 +182,7 @@ test('source video rendering seeks to the selected source offset', () => {
 test('saved source-only plans can be reopened when the source and music are reselected', () => {
   assert.match(main, /const sourceOk=!!d\.sourceName&&!!S\.source&&S\.source\.name===d\.sourceName/);
   assert.match(main, /\(!matched\.length&&!sourceOk\)/);
-  assert.match(main, /sourceStart:x\.sourceStart\|\|0,referenceName:x\.ref\?\.file\?\.name\|\|null/);
+  assert.match(main, /sourceStart:x\.sourceStart\|\|0,referenceName:x\.ref\?\.file\?\.name\|\|x\.sourceLabel\|\|S\.source\?\.name/);
 });
 
 test('preview and app shell are constrained to the viewport on mobile', async () => {
