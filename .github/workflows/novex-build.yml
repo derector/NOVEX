@@ -119,6 +119,11 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:
+      - name: Enable KVM group permissions for Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       - name: Download APK from this build
         uses: actions/download-artifact@v4
         with:
