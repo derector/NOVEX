@@ -29,7 +29,7 @@ const prompt=[
  'CURRENT MOTION ENGINE:\n'+engine,
  'CURRENT MOTION DIRECTOR API:\n'+director,
  'CURRENT PROCEDURAL AUDIO MODULE:\n'+audio,
- 'CURRENT APP SOURCE (up to 36000 chars):\n'+main.slice(0,95000),
+ 'CURRENT APP SOURCE (up to 36000 chars):\n'+main.slice(0,120000),
  'CURRENT CONTRACT TESTS (up to 16000 chars):\n'+tests.slice(0,30000),
  'PACKAGE CONFIGURATION:\n'+pkg,
  'REFERENCE REPOSITORY PROVENANCE:\n'+manifest,
