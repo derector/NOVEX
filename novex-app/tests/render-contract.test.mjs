@@ -501,3 +501,15 @@ test('local project metadata survives reload and cloud refresh preserves local-o
   assert.match(main, /const local=loadLocalProjects\(\)/);
   assert.match(main, /localStorage\.setItem\(LOCAL_PROJECTS_KEY,JSON\.stringify/);
 });
+
+
+test('Android export writes the MP4 to persistent app Documents and opens the native share sheet', () => {
+  assert.match(main, /import \\{ Capacitor \\} from '@capacitor\\/core'/);
+  assert.match(main, /import \\{ Directory, Filesystem \} from '@capacitor\\/filesystem'/);
+  assert.match(main, /import \\{ Share \} from '@capacitor\\/share'/);
+  assert.match(main, /if\\(Capacitor\\.isNativePlatform\\(\\)\\)/);
+  assert.match(main, /Filesystem\\.writeFile\\(\\{path:'NOVEX\\/'\\+filename,data,directory:Directory\\.Documents,recursive:true\\}\\)/);
+  assert.match(main, /Share\\.share\\(\\{title:'NOVEX Motion Studio'/);
+  assert.match(main, /a\\.download=S\\.outputName/);
+  assert.match(main, /blob\\.size>120\\*1024\\*1024/);
+});

@@ -1,4 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import './style.css';
 import { createLogoScene } from './motion3d.js';
@@ -9,6 +12,14 @@ const ff=new FFmpeg();let loaded=false,timer;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clock=n=>{n=Math.max(0,Math.floor(n||0));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')};
 const size=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.round(n/1024)+' KB';
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(reader.error||new Error('Не удалось прочитать MP4 для сохранения.'));
+    reader.onload=()=>{const result=String(reader.result||'');const comma=result.indexOf(',');if(comma<0)reject(new Error('Не удалось подготовить MP4 к сохранению.'));else resolve(result.slice(comma+1));};
+    reader.readAsDataURL(blob);
+  });
+}
 const radio=n=>document.querySelector('input[name="'+n+'"]:checked')?.value;
 let cloudUser = null;
 const LOCAL_PROJECTS_KEY='novex.localProjects.v1';
@@ -360,7 +371,29 @@ $('#applyEditCommand').onclick=()=>{try{applyDirectorCommand($('#editCommand').v
 $$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({'3d':'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.'})[k];if(k==='3d')start3DPreview('NOVEX');});
 
 function srt(t){const ms=Math.round(Math.max(0,t)*1000),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),z=ms%1000;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(z).padStart(3,'0')}
-$('#downloadBtn').onclick=async()=>{if(!S.output)return;const a=document.createElement('a');a.href=S.output;a.download=S.outputName;a.click();toast('Скачивание MP4 запрошено.','success');};
+$('#downloadBtn').onclick=async()=>{
+  if(!S.output)return;
+  if(Capacitor.isNativePlatform()){
+    const button=$('#downloadBtn');
+    const filename=String(S.outputName||'NOVEX.mp4').replace(/[\\/:*?"<>|]/g,'_');
+    busy(button,true,'Сохраняем…');
+    try{
+      const blob=await (await fetch(S.output)).blob();
+      if(blob.size>120*1024*1024)throw new Error('Файл больше 120 МБ. Чтобы безопасно сохранить его на Android, уменьши длительность или разрешение экспорта.');
+      const data=await blobToBase64(blob);
+      const saved=await Filesystem.writeFile({path:'NOVEX/'+filename,data,directory:Directory.Documents,recursive:true});
+      try{
+        await Share.share({title:'NOVEX Motion Studio',text:'Готовый MP4: '+filename,url:saved.uri,dialogTitle:'Сохранить или поделиться видео'});
+        toast('MP4 сохранён в Documents/NOVEX.','success');
+      }catch(error){
+        toast('MP4 сохранён в Documents/NOVEX, но системное меню отправки не открылось: '+(error?.message||error),'warn');
+      }
+    }catch(error){toast('Не удалось сохранить MP4 на устройстве: '+(error?.message||error),'error');}
+    finally{busy(button,false);}
+    return;
+  }
+  const a=document.createElement('a');a.href=S.output;a.download=S.outputName;a.click();toast('Скачивание MP4 запрошено.','success');
+};
 $('#playPreview').onclick=()=>{const v=$('#previewVideo');if(v.hidden){if(!S.output&&S.refs.length){playReferenceAt(0,true,false);return;}const previewUrl=S.output||((S.source&&$('#useSourceVideo').checked)?S.sourceUrl:S.refs[0]?.url);if(!previewUrl)return toast('Сначала добавь исходное видео или референс.','warn');v.src=previewUrl;v.hidden=false;$('#previewStage .preview-placeholder').hidden=true;$('#previewStage').classList.add('has-preview');fitPreviewStage()}if(v.paused){v.play().catch(()=>{});$('#playPreview').textContent='Ⅱ'}else{v.pause();$('#playPreview').textContent='▶'}};
 function fitPreviewStage(){const v=$('#previewVideo'),stage=$('#previewStage');if(!stage)return;const ratio=v.videoWidth>0&&v.videoHeight>0?v.videoWidth/v.videoHeight:Number(stage.style.getPropertyValue('--preview-ratio'))||9/16;const maxHeight=Math.min(520,Math.max(180,window.innerHeight*.64));const parentWidth=stage.parentElement?.clientWidth||520;const available=Math.max(1,Math.min(parentWidth,stage.parentElement?.getBoundingClientRect().width||parentWidth));const width=Math.max(1,Math.min(available,920,maxHeight*ratio));stage.style.width='min('+width+'px, 100%)';stage.style.maxWidth='100%';stage.style.setProperty('--preview-ratio',String(ratio));stage.style.aspectRatio=ratio+' / 1';stage.classList.toggle('preview-landscape',ratio>1.15);stage.classList.toggle('preview-square',ratio>=.85&&ratio<=1.15);stage.classList.toggle('preview-portrait',ratio<.85);}
 $('#previewVideo').onloadedmetadata=fitPreviewStage;window.addEventListener('resize',fitPreviewStage);
