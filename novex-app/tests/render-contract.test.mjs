@@ -555,3 +555,11 @@ test('browser smoke verifies saved source/audio settings after a full reload', a
   assert.match(smoke, /document\.querySelector\('#useSourceVideo'\)\?\.checked === true/);
   assert.match(smoke, /source\/audio settings restoration/);
 });
+
+test('motion sound effects are synthesized deterministically and mixed into the exported MP4',()=>{
+  assert.ok(main.includes("createMotionDirector({duration:r.duration,fps:30})"));
+  assert.ok(main.includes("motionAudio.synthesizeAudio({sampleRate:24000,masterGain:.24})"));
+  assert.ok(main.includes("ff.writeFile('motion-sfx.wav'"));
+  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
+  assert.ok(main.includes("audioMode==='mix'"));
+});
