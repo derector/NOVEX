@@ -12,20 +12,23 @@ if [ "$NODE_MAJOR" -lt 22 ]; then
   exit 1
 fi
 
-if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v pip3 >/dev/null 2>&1; then
-  sudo timeout 180s apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=30
-  sudo timeout 300s apt-get install -y ffmpeg python3-pip
-fi
-if ! python3 -c 'import numpy, cv2' >/dev/null 2>&1; then
-  timeout 300s python3 -m pip install numpy opencv-python-headless
-fi
-
 CACHE="$HOME/.cache/motion-director"
 mkdir -p "$CACHE"
 if [ ! -f "$CACHE/package.json" ] || ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$CACHE/package.json" >/dev/null 2>&1; then
   printf '{"name":"motion-director-cache","private":true}\n' > "$CACHE/package.json"
 fi
-timeout 300s npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap
+timeout 300s npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap ffmpeg-static
+ln -sf "$(node -p "require('$CACHE/node_modules/ffmpeg-static')")" "$CACHE/node_modules/.bin/ffmpeg"
+export PATH="$CACHE/node_modules/.bin:$PATH"
+
+if ! command -v pip3 >/dev/null 2>&1; then
+  sudo timeout 180s apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=30
+  sudo timeout 300s apt-get install -y python3-pip
+fi
+if ! python3 -c 'import numpy, cv2' >/dev/null 2>&1; then
+  timeout 300s python3 -m pip install numpy opencv-python-headless
+fi
+
 timeout 300s "$CACHE/node_modules/.bin/playwright" install chromium
 
 node scripts/extract-motion-engine.mjs

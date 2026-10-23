@@ -36,9 +36,9 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://jtkpydprgqccxxkqcvou.supabase.co' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HbBlyHbGCY6SFmoo9qL1eg_p6jOYVEO' }}
       - name: Install Chromium for browser render smoke test
-        run: npm install --no-save --package-lock=false playwright && npx playwright install --only-shell chromium
-      - name: Verify preinstalled FFmpeg for media fixtures
-        run: command -v ffmpeg && ffmpeg -version
+        run: npm install --no-save --package-lock=false playwright ffmpeg-static && npx playwright install --only-shell chromium && echo "$(dirname "$(node -p \"require('ffmpeg-static')\")")" >> "$GITHUB_PATH"
+      - name: Verify FFmpeg for media fixtures
+        run: ffmpeg -version
       - name: Generate tiny media fixtures for real MP4 export
         run: |
           ffmpeg -hide_banner -loglevel error -y -f lavfi -i "color=c=0x553b86:s=320x180:r=30:d=3" -an -c:v libvpx -deadline realtime -cpu-used 8 -pix_fmt yuv420p /tmp/novex-smoke-reference.webm
