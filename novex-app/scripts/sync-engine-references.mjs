@@ -7,7 +7,7 @@ const cache=path.join(root,'.cache','motion-skills','references','engine-reposit
 const apiHeaders={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'NOVEX-Motion-Reference-Sync'};
 export const DEFAULT_REPOSITORIES=[
   'motion-canvas/motion-canvas',
-  'remotion-dev/remotion',
+  'motiondivision/motion',
   'pmndrs/react-three-fiber'
 ];
 const rawRepos=(process.env.NOVEX_ENGINE_REPOS||DEFAULT_REPOSITORIES.join(',')).split(',').map(x=>x.trim()).filter(Boolean);
