@@ -4,7 +4,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import './style.css';
-import { createMotionEngine } from './motion-engine.js';
+import { createMotionDirector } from './motion-director.js';
 import { createLogoScene } from './motion3d.js';
 import { cloud, cloudConfigured, cloudSession, cloudAuth, cloudListProjects, cloudSaveProject, cloudEmailLink, cloudPasswordReset, cloudUpdatePassword, cloudSendSupportMessage, cloudVerifyEmailCode } from './cloud.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -241,7 +241,7 @@ async function exportKineticTitle({text,width,height,duration,fps=15,writeFrame}
  for(const word of words){const candidate=line?line+' '+word:word;if(ctx.measureText(candidate).width>width*.84&&line){lines.push(line);line=word;}else line=candidate;}
  if(line)lines.push(line);const visible=lines.slice(0,3),lineHeight=fontSize*1.15;
  const frames=Math.max(1,Math.min(90,Math.ceil(duration*fps)));
- const engine=createMotionEngine({duration,fps});
+ const engine=createMotionDirector({duration,fps});
  engine.track('opacity',{start:0,duration:.28,from:0,to:1,ease:'power2Out'});
  engine.track('opacity',{start:Math.max(0,duration-.28),duration:.28,from:1,to:0,ease:'power2In'});
  engine.track('scale',{start:0,duration:.42,from:.82,to:1,ease:'backOut'});
