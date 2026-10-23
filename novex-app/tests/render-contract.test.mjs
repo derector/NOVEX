@@ -356,7 +356,7 @@ test('starting a new render releases stale export URLs and clears only the old e
 
 
 test('reset stops audio playback and releases the audio element source', () => {
-  assert.match(main, /function reset\(\)\{if\(S\.busy\)return toast\('Дождись завершения рендера\.','warn'\);const au=\$\('#trackAudio'\);au\.pause\(\);au\.removeAttribute\('src'\);au\.load\(\);au\.hidden=true/);
+  assert.match(main, /function reset\(\)\{if\(S\.busy\)return toast\('Дождись завершения рендера\.','warn'\);const au=\$\('#trackAudio'\),sourceAudio=\$\('#sourceAudioPreview'\);au\.pause\(\);au\.removeAttribute\('src'\);au\.load\(\);au\.hidden=true;sourceAudio\.pause\(\);sourceAudio\.removeAttribute\('src'\);sourceAudio\.load\(\);sourceAudio\.hidden=true/);
   assert.match(main, /if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\)/);
 });
 
@@ -366,7 +366,7 @@ test('replacing the source video revokes the previous object URL only after the 
 
 
 test('successful audio replacement reuses the validated URL and updates track metadata', () => {
-  assert.match(main, /au\.src=nextUrl;au\.hidden=false;au\.load\(\)/);
+  assert.match(main, /au\.src=nextUrl;au\.volume=\(Number\(\$\('#musicAudioVolume'\)\.value\)\|\|85\)\/100;au\.hidden=false;au\.load\(\)/);
   assert.match(main, /\$\('#trackName'\)\.textContent=f\.name;\$\('#trackMeta'\)\.textContent=clock\(S\.duration\)\+' · '\+size\(f\.size\)/);
   assert.match(main, /e\.target\.value='';stats\(\);library\(\);toast\('Трек загружен\.'\)/);
 });
@@ -440,7 +440,7 @@ test('source transcript option rejects an empty transcript instead of silently o
 
 test('source-only mode can be selected before analysis when a source video is uploaded', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="useSourceVideo"/);
+  assert.match(html, /<div id="sourceTranscriptWrap" class="source-transcript hidden"><label class="check-row"><input type="checkbox" id="useSourceVideo">/);
   assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="sourceTranscript"[\s\S]*?name="audioMode"[\s\S]*?value="mix"/);
   assert.equal((html.match(/id="useSourceVideo"/g) || []).length, 1);
 });
