@@ -68,6 +68,26 @@ try {
       video.currentTime < 1;
   }, null, { timeout: 15000 });
 
+  await page.locator('#referenceList .remove-btn').nth(1).click();
+  await page.waitForFunction(() => {
+    const video = document.querySelector('#previewVideo');
+    return video?.dataset.referenceIndex === '0' &&
+      video.dataset.referencePlaylist === 'true' &&
+      video.dataset.referencePreview?.includes('novex-smoke-reference.webm') &&
+      video.readyState >= 2;
+  }, null, { timeout: 15000 });
+  await page.locator('#referenceList .remove-btn').first().click();
+  await page.waitForFunction(() => {
+    const video = document.querySelector('#previewVideo');
+    return video?.hidden && !video.dataset.referencePlaylist &&
+      !video.dataset.referenceIndex && !video.dataset.referencePreview &&
+      !video.getAttribute('src') &&
+      !document.querySelector('#previewStage .preview-placeholder')?.hidden;
+  }, null, { timeout: 10000 });
+  await page.locator('#referenceInput').evaluate(input => { input.value = ''; });
+  await page.locator('#referenceInput').setInputFiles(['/tmp/novex-smoke-reference.webm', '/tmp/novex-smoke-reference-2.webm']);
+  await page.waitForFunction(() => document.querySelectorAll('#referenceList .media-item-rich').length === 2, null, { timeout: 15000 });
+
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileLayout = await page.evaluate(() => ({
     viewport: window.innerWidth,
@@ -121,8 +141,20 @@ try {
     throw new Error('Downloaded file is empty or not an MP4 container.');
   }
 
+  await page.locator('.nav-item[data-view="projects"]').click();
+  await page.waitForFunction(() => document.querySelectorAll('#projectsGrid .project-card').length === 1, null, { timeout: 10000 });
+  if (!(await page.locator('#projectsGrid').innerText()).includes('novex-smoke-track')) {
+    throw new Error('Created project is not listed before reload.');
+  }
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.locator('.nav-item[data-view="projects"]').click();
+  await page.waitForFunction(() => document.querySelectorAll('#projectsGrid .project-card').length === 1, null, { timeout: 10000 });
+  if (!(await page.locator('#projectsGrid').innerText()).includes('novex-smoke-track')) {
+    throw new Error('Local project metadata did not survive page reload.');
+  }
+
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — two reference uploads, loaded sequential preview handoff, mobile viewport, analysis, plan, FFmpeg MP4 export, stream/metadata validation and download.');
+  console.log('BROWSER RENDER SMOKE: PASS — two-reference playlist handoff/removal, mobile viewport, persistent project metadata, analysis, plan, FFmpeg MP4 export, stream/metadata validation and download.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

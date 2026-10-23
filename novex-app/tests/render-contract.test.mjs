@@ -405,3 +405,13 @@ test('removing reference clips preserves active playlist index and clears empty 
   assert.match(main, /v\.dataset\.referenceIndex=String\(S\.refs\.findIndex\(y=>y\.url===v\.dataset\.referencePreview\)\)/);
   assert.match(main, /if\(!S\.refs\.length\)\{v\.pause\(\);v\.removeAttribute\('src'\);v\.load\(\);delete v\.dataset\.referencePlaylist;delete v\.dataset\.referenceIndex;delete v\.dataset\.referencePreview/);
 });
+
+
+test('local project metadata survives reload and merges with cloud projects', () => {
+  assert.ok(main.includes("const LOCAL_PROJECTS_KEY='novex-projects-v1'"));
+  assert.ok(main.includes("projects:readLocalProjects()"));
+  assert.ok(main.includes("localStorage.setItem(LOCAL_PROJECTS_KEY,JSON.stringify(S.projects.filter(p=>!p.cloud).slice(0,15)))"));
+  assert.ok(main.includes("S.projects.unshift(project);S.projects=S.projects.slice(0,15);persistLocalProjects();stats()"));
+  assert.ok(main.includes("const localProjects = S.projects.filter(p => !p.cloud)"));
+  assert.ok(main.includes("localProjects.filter(p => !cloudProjects.some(c => c.name === p.name && c.summary === p.summary))"));
+});
