@@ -313,6 +313,43 @@ async function validateExportMedia(blob,W,H,duration){
   });
  }finally{video.pause();video.removeAttribute('src');video.load();URL.revokeObjectURL(url);}
 }
+
+async function exportMotionGraphic({graphic='ring',width,height,duration,fps=30,color='#6ce7ff',writeFrame}){
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas 2D недоступен для графических акцентов.');
+ const frames=Math.max(1,Math.min(180,Math.ceil(duration*fps))),minSide=Math.min(width,height);
+ const timeline=createMotionDirector({duration,fps});
+ timeline.track('progress',{start:0,duration:Math.min(.48,duration),from:0,to:1,ease:'expoOut'});
+ timeline.track('opacity',{start:0,duration:.08,from:0,to:1,ease:'power2Out'});
+ timeline.track('opacity',{start:Math.max(0,duration-.24),duration:.24,from:1,to:0,ease:'power2In'});
+ for(let i=0;i<frames;i++){
+  const t=i/fps,state=timeline.sampleAt(t),p=Math.max(0,Math.min(1,state.progress??1));
+  ctx.clearRect(0,0,width,height);ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,state.opacity??1));
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=Math.max(3,minSide*.006);ctx.lineCap='round';ctx.lineJoin='round';
+  if(graphic==='underline'){
+   const x1=width*.17,x2=x1+(width*.66*p),y=height*.57;
+   ctx.beginPath();ctx.moveTo(x1,y);
+   for(let x=x1+12;x<x2;x+=12)ctx.lineTo(x,y+Math.sin((x-x1)/18)*minSide*.006);
+   ctx.lineTo(x2,y);ctx.stroke();
+  }else if(graphic==='arrow'){
+   const x1=width*.24,y1=height*.64,x2=x1+width*.48*p,y2=height*.38;
+   ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(width*.42,height*.61,x2,y2);ctx.stroke();
+   const angle=Math.atan2(y2-height*.61,x2-width*.42),head=minSide*.035;
+   ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(angle-.48),y2-head*Math.sin(angle-.48));ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(angle+.48),y2-head*Math.sin(angle+.48));ctx.stroke();
+  }else if(graphic==='burst'){
+   const cx=width*.5,cy=height*.48,r0=minSide*.08,r1=r0+minSide*.24*p;
+   for(let k=0;k<12;k++){const a=k*Math.PI/6;ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);ctx.lineTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);ctx.stroke();}
+  }else{
+   const cx=width*.5,cy=height*.48,r=minSide*(graphic==='circle'?.22:.09+.19*p);
+   ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+   if(graphic==='ring'){ctx.beginPath();ctx.arc(cx,cy,r+minSide*.035,0,Math.PI*2);ctx.stroke();}
+  }
+  ctx.restore();
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Не удалось получить PNG графического акцента.')),'image/png'));
+  await writeFrame(i,new Uint8Array(await blob.arrayBuffer()));
+ }
+}
+
 $('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}clearPreviousExportPreview();S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,baseSize=Math.max(2,Math.round(p.resolution/2)*2),W=p.aspect==='9:16'?Math.max(2,Math.round(baseSize*9/16/2)*2):p.aspect==='1:1'?baseSize:Math.max(2,Math.round(baseSize*16/9/2)*2),H=baseSize;let sourceAudioInput=null,sourceAudioSeek=0;
 if(S.source&&$('#useSourceVideo').checked){
  const sourceExt=(S.source.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
