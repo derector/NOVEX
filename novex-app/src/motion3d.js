@@ -54,6 +54,8 @@ export function createLogoScene(canvas){
   isPlaying(){return playing;},
   renderAt(t){draw(Math.max(0,Number(t)||0));},
   async exportFrames({width,height,frames,fps=30,start=0,duration=2.8,writeFrame}){
+   const wasPlaying=playing;
+   if(wasPlaying){playing=false;cancelAnimationFrame(raf);}
    const oldW=canvas.width,oldH=canvas.height;
    const oldStyleW=canvas.style.width,oldStyleH=canvas.style.height;
    renderer.setClearColor(0x000000,0);
@@ -63,7 +65,7 @@ export function createLogoScene(canvas){
    camera.updateProjectionMatrix();
    try{
     for(let i=0;i<frames;i++){
-     const t=start+Math.min(duration,(i/fps)/Math.max(.001,duration)*duration);
+     const t=start+Math.min(Math.max(0,duration),i/fps);
      draw(t);
      const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Не удалось получить PNG-кадр 3D')),'image/png'));
      const bytes=new Uint8Array(await blob.arrayBuffer());
@@ -74,6 +76,7 @@ export function createLogoScene(canvas){
     renderer.setSize(Math.max(1,canvas.clientWidth),Math.max(1,canvas.clientHeight),false);
     camera.aspect=Math.max(1,canvas.clientWidth)/Math.max(1,canvas.clientHeight);
     camera.position.z=camera.aspect<1.15?10.2:8.6;camera.updateProjectionMatrix();draw(0);
+    if(wasPlaying&&!disposed){playing=true;started=performance.now();raf=requestAnimationFrame(tick);}
    }
    return ()=>{renderer.setClearColor(0x000000,0);};
   },
