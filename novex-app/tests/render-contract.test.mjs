@@ -539,6 +539,14 @@ test('saved projects restore source-video mode, audio mode and both volume level
 });
 
 
+test('browser smoke exercises the New Project reset after source/audio settings are enabled', async () => {
+  const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
+  assert.match(smoke, /Exercise the New Project reset after source\/mix settings have been enabled/);
+  assert.match(smoke, /page\.locator\('#newProjectTop'\)\.click\(\)/);
+  assert.match(smoke, /modes\.filter\(el => el\.value !== 'music'\)\.every\(el => el\.disabled\)/);
+  assert.match(smoke, /Uncaught browser errors after New Project reset/);
+});
+
 test('browser smoke verifies saved source/audio settings after a full reload', async () => {
   const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
   assert.match(smoke, /sourceAudioVolume/);
