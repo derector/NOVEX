@@ -4,6 +4,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import './style.css';
+import { createMotionEngine } from './motion-engine.js';
 import { createLogoScene } from './motion3d.js';
 import { cloud, cloudConfigured, cloudSession, cloudAuth, cloudListProjects, cloudSaveProject, cloudEmailLink, cloudPasswordReset, cloudUpdatePassword, cloudSendSupportMessage, cloudVerifyEmailCode } from './cloud.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -240,15 +241,20 @@ async function exportKineticTitle({text,width,height,duration,fps=15,writeFrame}
  for(const word of words){const candidate=line?line+' '+word:word;if(ctx.measureText(candidate).width>width*.84&&line){lines.push(line);line=word;}else line=candidate;}
  if(line)lines.push(line);const visible=lines.slice(0,3),lineHeight=fontSize*1.15;
  const frames=Math.max(1,Math.min(90,Math.ceil(duration*fps)));
+ const engine=createMotionEngine({duration,fps});
+ engine.track('opacity',{start:0,duration:.28,from:0,to:1,ease:'power2Out'});
+ engine.track('opacity',{start:Math.max(0,duration-.28),duration:.28,from:1,to:0,ease:'power2In'});
+ engine.track('scale',{start:0,duration:.42,from:.82,to:1,ease:'backOut'});
+ engine.track('rise',{start:0,duration:.3,from:height*.035,to:0,ease:'power2Out'});
+ engine.hook('frame',({time})=>({lineProgress:visible.map((_,j)=>Math.max(0,Math.min(1,(time-j*.06)/.28)))}));
  for(let i=0;i<frames;i++){
-  const t=i/fps,fade=Math.min(1,t/.28,Math.max(0,(duration-t)/.28));
-  const spring=1-.16*Math.exp(-10*t)*Math.cos(13*t);
+  const t=i/fps,state=engine.sampleAt(t),fade=state.opacity??1,spring=state.scale??1;
   ctx.clearRect(0,0,width,height);ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,fade));
-  ctx.translate(width/2,height*.48);ctx.scale(spring,spring);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.translate(width/2,height*.48+(state.rise??0));ctx.scale(spring,spring);ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.font='800 '+fontSize+'px Arial, sans-serif';ctx.lineJoin='round';ctx.lineWidth=Math.max(3,fontSize*.09);
   ctx.strokeStyle='rgba(5,7,18,.9)';ctx.fillStyle='#ffffff';ctx.shadowColor='rgba(76,220,255,.85)';ctx.shadowBlur=fontSize*.55;
   const y0=-(visible.length-1)*lineHeight/2+Math.sin(Math.min(1,t/.3)*Math.PI/2)*height*.035;
-  visible.forEach((line,j)=>{const y=y0+j*lineHeight;ctx.strokeText(line,0,y);ctx.fillText(line,0,y);});
+  visible.forEach((line,j)=>{const p=state.lineProgress?.[j]??1,y=y0+j*lineHeight+(1-p)*fontSize*.45;ctx.globalAlpha=Math.max(0,Math.min(1,fade*p));ctx.strokeText(line,0,y);ctx.fillText(line,0,y);});
   ctx.restore();
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Не удалось создать кадр титра.')),'image/png'));
   await writeFrame(i,new Uint8Array(await blob.arrayBuffer()));
