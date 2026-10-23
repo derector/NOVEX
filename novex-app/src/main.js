@@ -349,7 +349,7 @@ async function exportMotionGraphic({graphic='ring',width,height,duration,fps=30,
  }
 }
 
-$('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}clearPreviousExportPreview();S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,baseSize=Math.max(2,Math.round(p.resolution/2)*2),W=p.aspect==='9:16'?Math.max(2,Math.round(baseSize*9/16/2)*2):p.aspect==='1:1'?baseSize:Math.max(2,Math.round(baseSize*16/9/2)*2),H=baseSize;let sourceAudioInput=null,sourceAudioSeek=0;
+$('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}clearPreviousExportPreview();S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,baseSize=Math.max(2,Math.round(p.resolution/2)*2),W=p.aspect==='9:16'?Math.max(2,Math.round(baseSize*9/16/2)*2):p.aspect==='1:1'?baseSize:Math.max(2,Math.round(baseSize*16/9/2)*2),H=baseSize;let sourceAudioInput=null,sourceAudioSeek=0;const motionTransitionCues=[];
 if(S.source&&$('#useSourceVideo').checked){
  const sourceExt=(S.source.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
  const sourceInput='source-video.'+sourceExt;sourceAudioInput=sourceInput;
@@ -358,7 +358,7 @@ if(S.source&&$('#useSourceVideo').checked){
  const sourceDuration=Number(S.sourceMeta?.duration)||r.duration;const sourceSeek=Math.max(0,Math.min(r.start,Math.max(0,sourceDuration-0.1)));sourceAudioSeek=sourceSeek;const sourceArgs=['-ss',String(sourceSeek),'-i',sourceInput,'-vf',`tpad=stop_mode=clone:stop_duration=${r.duration},scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p`,'-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','silent.mp4'];
  if(await ff.exec(sourceArgs)!==0)throw Error('Не удалось подготовить исходное видео. Попробуй MP4/H.264 или более короткий файл.');
 }else{
-const segmentDurations=[],motionTransitionCues=[];
+const segmentDurations=[];
 for(let i=0;i<p.timeline.length;i++){
  const s=p.timeline[i],part='part'+i+'.mp4';
  const start=Math.max(0,Number(s.sourceStart)||0),dur=Math.max(.1,s.end-s.start);
