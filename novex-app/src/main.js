@@ -431,7 +431,8 @@ progress(42,'Добавляю музыку, эффекты и титры…',mot
 const EDIT_PRESETS={
   '3d':{type:'add_3d_title',label:'3D-логотип',text:'NOVEX',start:0,duration:2.8,style:{geometry:'extruded-text',material:'chrome',camera:'slow-orbit',lighting:'cinematic-rim',depth:1}},
   'titles':{type:'add_kinetic_title',label:'Кинетический текст',text:'',start:0,duration:2,style:{entrance:'spring-up',exit:'fade-out',easing:'back-out'}},
-  'subtitles':{type:'add_subtitles',label:'Субтитры',start:0,duration:0,style:{position:'safe-bottom',highlight:'active-word'}}
+  'subtitles':{type:'add_subtitles',label:'Субтитры',start:0,duration:0,style:{position:'safe-bottom',highlight:'active-word'}},
+  'graphic':{type:'add_motion_graphic',label:'Графический акцент',graphic:'ring',start:0,duration:1.2,color:'#6ce7ff',style:{entrance:'draw-on',exit:'fade-out',easing:'expo-out'}}
 };
 let motion3d=null;
 function start3DPreview(label='NOVEX'){
@@ -455,6 +456,7 @@ function commandToPatch(raw){
   if(!q)throw Error('Напиши, что нужно изменить.');
   if(/\b(отмен|undo|верни предыдущ|откат)\b/.test(q))return {type:'undo',label:'Отменить последнюю правку'};
   if(/\b(3d|3д|объ[её]мн|тр[её]хмер|камера (?:облет|облёт|вращ)|экструд)/.test(q)){const quoted=raw.match(/[«"]([^»"]{1,32})[»"]/);const named=raw.match(/(?:логотип|слово)\s+([\p{L}\p{N}_-]{2,24})/iu);return {...EDIT_PRESETS['3d'],text:(quoted?.[1]||named?.[1]||'NOVEX').trim()};}
+  if(/кольц|обвод|подчерк|стрелк|вспыш|лучи|графическ/.test(q)){const graphic=/подчерк/.test(q)?'underline':/стрелк/.test(q)?'arrow':/вспыш|лучи/.test(q)?'burst':/обвод/.test(q)?'circle':'ring';return {...EDIT_PRESETS.graphic,graphic,label:({underline:'Волновое подчёркивание',arrow:'Анимированная стрелка',burst:'Вспышка и лучи',circle:'Обводка',ring:'Кольцевой акцент'})[graphic]};}
   if(/субтитр|подсвечивай слово|караоке/.test(q))return {...EDIT_PRESETS.subtitles};
   if(/титр|текст|надпис|типограф|букв/.test(q)){const quoted=raw.match(/[«"]([^»"]{1,120})[»"]/);const named=raw.match(/(?:текст|надпись)\s*[:—-]\s*(.{1,120})$/iu);return {...EDIT_PRESETS.titles,text:(quoted?.[1]||named?.[1]||'NOVEX').trim()};}
   if(/ярче|цвет|свет|свечение|glow|неон/.test(q))return {type:'grade',label:'Свет и цвет',style:{look:'neon-glow'}};
@@ -478,7 +480,7 @@ function applyDirectorCommand(raw){
  if(!S.plan&&!S.refs.length&&!S.source)throw Error('Сначала добавь исходное видео или референс, затем можно планировать правки.');
  S.editHistory.push(S.edits.map(x=>({...x})));
  patch.id='edit-'+Date.now()+'-'+S.edits.length;
- patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · облёт камеры':patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.label;
+ patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · облёт камеры':patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.type==='add_motion_graphic'?'Графика: '+patch.graphic+' · '+patch.duration+' с':patch.label;
  S.edits.push(patch);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX');if(patch.type==='add_subtitles')$('#burnLyrics').checked=true;renderDirectorPlan();$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';
  if(S.plan){S.plan=makePlan();S.plan.edits=S.edits.map(x=>({...x}));showPlan(S.plan);}
 }
