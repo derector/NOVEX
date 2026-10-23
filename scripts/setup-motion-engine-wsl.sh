@@ -12,17 +12,21 @@ if [ "$NODE_MAJOR" -lt 22 ]; then
   exit 1
 fi
 
-sudo apt-get update
-sudo apt-get install -y ffmpeg python3-pip
-python3 -m pip install --break-system-packages numpy opencv-python-headless
+if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v pip3 >/dev/null 2>&1; then
+  sudo timeout 180s apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=30
+  sudo timeout 300s apt-get install -y ffmpeg python3-pip
+fi
+if ! python3 -c 'import numpy, cv2' >/dev/null 2>&1; then
+  timeout 300s python3 -m pip install --break-system-packages numpy opencv-python-headless
+fi
 
 CACHE="$HOME/.cache/motion-director"
 mkdir -p "$CACHE"
 if [ ! -f "$CACHE/package.json" ] || ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$CACHE/package.json" >/dev/null 2>&1; then
   printf '{"name":"motion-director-cache","private":true}\n' > "$CACHE/package.json"
 fi
-npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap
-"$CACHE/node_modules/.bin/playwright" install --with-deps chromium
+timeout 300s npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap
+timeout 300s "$CACHE/node_modules/.bin/playwright" install --with-deps chromium
 
 node scripts/extract-motion-engine.mjs
 python3 -c "import numpy, cv2; print(\"Python OK: numpy \" + numpy.__version__ + \", OpenCV \" + cv2.__version__)"
