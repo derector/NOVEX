@@ -370,3 +370,11 @@ test('successful audio replacement reuses the validated URL and updates track me
   assert.match(main, /\$\('#trackName'\)\.textContent=f\.name;\$\('#trackMeta'\)\.textContent=clock\(S\.duration\)\+' · '\+size\(f\.size\)/);
   assert.match(main, /e\.target\.value='';stats\(\);library\(\);toast\('Трек загружен\.'\)/);
 });
+
+
+test('media metadata probing has a timeout and releases failed temporary media URLs', () => {
+  assert.match(main, /Истекло время чтения '\+file\.name|Истекло время чтения \+file\.name/);
+  assert.match(main, /const timer=setTimeout\(\(\)=>finish\(new Error\('Истекло время чтения аудиофайла/);
+  assert.match(main, /v\.removeAttribute\('src'\);v\.load\(\);URL\.revokeObjectURL\(u\);throw e/);
+  assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(nextUrl\)/);
+});

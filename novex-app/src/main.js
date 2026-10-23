@@ -39,7 +39,7 @@ function refList(){const box=$('#referenceList');box.innerHTML='';S.refs.forEach
   }
   stats();library();
 }
-async function probe(file){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='metadata';v.muted=true;v.src=u;try{await new Promise((resolve,reject)=>{v.onloadedmetadata=resolve;v.onerror=()=>reject(new Error('Невозможно прочитать '+file.name));});return {id:crypto.randomUUID?.()||String(Math.random()),file,url:u,duration:Number.isFinite(v.duration)?v.duration:0,w:v.videoWidth,h:v.videoHeight,color:['#553b86','#246779','#77552d','#6b3554'][S.refs.length%4]};}catch(e){URL.revokeObjectURL(u);throw e;}}
+async function probe(file){const u=URL.createObjectURL(file),v=document.createElement('video');v.preload='metadata';v.muted=true;v.src=u;try{await new Promise((resolve,reject)=>{const finish=err=>{clearTimeout(timer);v.onloadedmetadata=null;v.onerror=null;err?reject(err):resolve()};const timer=setTimeout(()=>finish(new Error('Истекло время чтения '+file.name)),15000);v.onloadedmetadata=()=>finish();v.onerror=()=>finish(new Error('Невозможно прочитать '+file.name));});return {id:crypto.randomUUID?.()||String(Math.random()),file,url:u,duration:Number.isFinite(v.duration)?v.duration:0,w:v.videoWidth,h:v.videoHeight,color:['#553b86','#246779','#77552d','#6b3554'][S.refs.length%4]};}catch(e){v.removeAttribute('src');v.load();URL.revokeObjectURL(u);throw e;}}
 async function addRefs(files){for(const f of [...files])if(f.type.startsWith('video/')||/\.(mp4|mov|m4v|webm|mkv)$/i.test(f.name)){try{S.refs.push(await probe(f));}catch(e){toast(e.message,'error');}}refList();if(files.length)toast('Референсы добавлены.');}
 $('#referenceInput').onchange=e=>addRefs(e.target.files);
 const drop=$('#referenceDrop');drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag-over')};drop.ondragleave=()=>drop.classList.remove('drag-over');drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag-over');addRefs(e.dataTransfer.files)};
@@ -47,9 +47,9 @@ $('#trackInput').onchange=async e=>{
  const f=e.target.files[0];if(!f)return;
  const nextUrl=URL.createObjectURL(f),candidate=document.createElement('audio');candidate.preload='metadata';candidate.src=nextUrl;
  try{
-  await new Promise((resolve,reject)=>{candidate.onloadedmetadata=resolve;candidate.onerror=()=>reject(new Error('Не удалось прочитать аудиофайл. Попробуй MP3 или WAV.'));candidate.load();});
+  await new Promise((resolve,reject)=>{const finish=err=>{clearTimeout(timer);candidate.onloadedmetadata=null;candidate.onerror=null;err?reject(err):resolve()};const timer=setTimeout(()=>finish(new Error('Истекло время чтения аудиофайла. Попробуй MP3 или WAV.')),15000);candidate.onloadedmetadata=()=>finish();candidate.onerror=()=>finish(new Error('Не удалось прочитать аудиофайл. Попробуй MP3 или WAV.'));candidate.load();});
  }catch(err){
-  URL.revokeObjectURL(nextUrl);e.target.value='';
+  candidate.removeAttribute('src');candidate.load();URL.revokeObjectURL(nextUrl);e.target.value='';
   toast(err.message,'error');return;
  }
  const au=$('#trackAudio'),duration=Number.isFinite(candidate.duration)?candidate.duration:0;
