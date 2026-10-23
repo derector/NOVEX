@@ -261,3 +261,9 @@ test('reference preview recovers visibly when a selected video fails to load', (
   assert.match(main, /Не удалось открыть видео '\+item\.file\.name/);
   assert.match(main, /v\.classList\.remove\('preview-fade-out'\);\$\('#playPreview'\)\.textContent='▶'/);
 });
+
+
+test('failed audio replacement clears stale duration and refreshes dependent UI', () => {
+  assert.match(main, /S\.trackUrl=null;S\.track=null;S\.duration=0;au\.removeAttribute\('src'\)/);
+  assert.match(main, /\$\('#fullDurationLabel'\)\.textContent='Вся длительность · 00:00';stats\(\);library\(\);toast\(err\.message,'error'\)/);
+});
