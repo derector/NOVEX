@@ -278,5 +278,8 @@ test('source audio mixing falls back to music-only export when the source has no
   assert.ok(main.includes("const mixSourceRequested=$('#mixSourceAudio').checked"));
   assert.ok(main.includes("await ff.exec(['-hide_banner','-i',sourceAudioInput])"));
   assert.ok(main.includes("useSourceAudio=/\\bAudio:\\s/i.test(probeLog)"));
+  assert.ok(main.includes("finally{ff.off('log',capture);}"));
+  assert.ok(main.includes("if(useSourceAudio){args.push('-filter_complex'"));
+  assert.ok(main.includes("}else args.push('-map','1:a:0')"));
   assert.ok(main.includes('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.'));
 });
