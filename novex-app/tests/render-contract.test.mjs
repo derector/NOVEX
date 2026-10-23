@@ -283,7 +283,7 @@ test('reference preview advances only when multiple videos are queued', () => {
 
 
 test('source audio mixing falls back to music-only export when the source has no audio stream', () => {
-  assert.ok(main.includes("const mixSourceRequested=$('#mixSourceAudio').checked"));
+  assert.ok(main.includes("const audioMode=radio('audioMode')||'music',mixSourceRequested=audioMode!=='music'"));
   assert.ok(main.includes("await ff.exec(['-hide_banner','-i',sourceAudioInput])"));
   assert.ok(main.includes("useSourceAudio=/\\bAudio:\\s/i.test(probeLog)"));
   assert.ok(main.includes("finally{ff.off('log',capture);}"));
@@ -409,7 +409,7 @@ test('removing reference clips preserves active playlist index and clears empty 
 
 test('source audio mixing maps the source and music streams through normalized, limited amix', () => {
   assert.match(main, /if\(useSourceAudio\)args\.push\('-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\)/);
-  assert.match(main, /\[1:a:0\]aresample=48000,volume=0\.65\[src\];\[2:a:0\]aresample=48000,volume=0\.85\[music\];\[src\]\[music\]amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0\.95\[aout\]/);
+  assert.match(main, /\[1:a:0\]aresample=48000,volume='\+sourceGain\+'\[src\];\[2:a:0\]aresample=48000,volume='\+musicGain\+'\[music\];\[src\]\[music\]amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0\.95\[aout\]/);
   assert.match(main, /args\.push\('-filter_complex',[\s\S]*?'-map','\[aout\]'\)/);
   assert.match(main, /sourceAudioSeek=sourceSeek/);
   assert.match(main, /await validateExportMedia\(blob,W,H,r\.duration\)/);
@@ -441,6 +441,21 @@ test('source transcript option rejects an empty transcript instead of silently o
 test('source-only mode can be selected before analysis when a source video is uploaded', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="useSourceVideo"/);
-  assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="sourceTranscript"[\s\S]*?id="mixSourceAudio"/);
+  assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="sourceTranscript"[\s\S]*?name="audioMode"[\s\S]*?value="mix"/);
   assert.equal((html.match(/id="useSourceVideo"/g) || []).length, 1);
+});
+
+
+test('audio controls expose music/original/mix modes, source preview and adjustable export levels', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(html, /id="trackAudio" controls preload="metadata" aria-label="Прослушать музыкальный трек"/);
+  assert.match(html, /id="sourceAudioPreview" controls preload="metadata" aria-label="Прослушать оригинальный звук видео"/);
+  for (const mode of ['music', 'original', 'mix']) assert.match(html, new RegExp('name="audioMode" value="' + mode + '"'));
+  assert.match(html, /id="sourceAudioVolume" type="range"/);
+  assert.match(html, /id="musicAudioVolume" type="range"/);
+  assert.match(main, /audioMode==='original'&&useSourceAudio/);
+  assert.match(main, /audioMode==='mix'\)\{args\.push\('-filter_complex'/);
+  assert.match(main, /sourceAudioPreview'\)\.onerror/);
+  assert.match(css, /\.audio-volume-grid input\[type="range"\]/);
 });
