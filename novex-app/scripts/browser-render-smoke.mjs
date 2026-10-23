@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { chromium } from 'playwright';
 
@@ -62,6 +63,18 @@ try {
     return video && !video.hidden && video.videoWidth === 854 && video.videoHeight === 480 &&
       Number.isFinite(video.duration) && video.duration > 2.5 && video.duration < 3.5;
   }, null, { timeout: 15000 });
+
+  const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+  await page.locator('#downloadBtn').click();
+  const download = await downloadPromise;
+  const downloadedPath = await download.path();
+  const downloadedBytes = await readFile(downloadedPath);
+  if (download.suggestedFilename() !== 'NOVEX.mp4') {
+    throw new Error('Unexpected download filename: ' + download.suggestedFilename());
+  }
+  if (downloadedBytes.length < 1000 || downloadedBytes.toString('ascii', 4, 8) !== 'ftyp') {
+    throw new Error('Downloaded file is empty or not an MP4 container.');
+  }
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
   console.log('BROWSER RENDER SMOKE: PASS — uploaded video + audio, analysis, plan, FFmpeg MP4 export, stream/metadata validation, preview playback metadata.');
