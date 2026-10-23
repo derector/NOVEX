@@ -100,8 +100,15 @@ async function ffReady(){
     const failedModule=moduleUrls.find(x=>x.status==='rejected');
     if(failedModule)throw failedModule.reason;
     const [coreModuleUrl,wasmModuleUrl]=moduleUrls.map(x=>x.value);
-    await ff.load({coreURL:coreModuleUrl,wasmURL:wasmModuleUrl});
-    loaded=true;
+    try{
+      await ff.load({coreURL:coreModuleUrl,wasmURL:wasmModuleUrl});
+      loaded=true;
+    }finally{
+      // FFmpeg has fetched/initialized both resources once load resolves.
+      // Release the typed URLs too, even if initialization fails.
+      URL.revokeObjectURL(coreModuleUrl);
+      URL.revokeObjectURL(wasmModuleUrl);
+    }
   }catch(e){
     const reason=e?.message||String(e)||'неизвестная ошибка';
     throw new Error('Не удалось загрузить FFmpeg. JS: '+coreUrl+'; WASM: '+wasmUrl+'. '+reason+' Проверь доступность файлов и обнови страницу.');
