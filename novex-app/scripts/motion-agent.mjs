@@ -8,8 +8,8 @@ if(!key)throw new Error('Set OPENAI_API_KEY as a GitHub Actions secret to enable
 if(!task)throw new Error('Supply a concrete implementation task.');
 const root=process.cwd();
 const read=async p=>{try{return await readFile(path.join(root,p),'utf8')}catch{return '[not present]'}};
-const [engine,director,audio,main,tests,pkg,spec,manifest]=await Promise.all([
- read('src/motion-engine.js'),read('src/motion-director.js'),read('src/motion-audio.js'),read('src/main.js'),read('tests/render-contract.test.mjs'),read('package.json'),read('../docs/NOVEX-FULL-SPEC.md'),read('.cache/motion-skills/manifest.json')
+const [engine,director,audio,main,tests,pkg,spec,manifest,engineManifest]=await Promise.all([
+ read('src/motion-engine.js'),read('src/motion-director.js'),read('src/motion-audio.js'),read('src/main.js'),read('tests/render-contract.test.mjs'),read('package.json'),read('../docs/NOVEX-FULL-SPEC.md'),read('.cache/motion-skills/manifest.json'),read('.cache/motion-skills/engine-repositories.json')
 ]);
 let references='';
 async function collect(dir){
@@ -33,7 +33,7 @@ const prompt=[
  'CURRENT CONTRACT TESTS (up to 16000 chars):\n'+tests.slice(0,30000),
  'PACKAGE CONFIGURATION:\n'+pkg,
  'REFERENCE REPOSITORY PROVENANCE:\n'+manifest,
- 'APPROVED SKILL REFERENCE TEXT:\n'+references.slice(0,18000),
+ 'APPROVED SKILL REFERENCE TEXT:\n'+references.slice(0,30000),
  'Return only valid JSON with shape {"summary":"brief Russian summary","files":[{"path":"src/file.js","content":"complete replacement file"}]}. Do not use markdown fences. Do not claim tests passed. Only return complete UTF-8 file contents, no diffs.'
 ].join('\n\n---\n\n');
 const response=await fetch('https://api.openai.com/v1/responses',{
