@@ -191,3 +191,19 @@ test('preview and app shell are constrained to the viewport on mobile', async ()
   assert.match(css, /\.preview-stage video\{max-width:100%;max-height:100%;object-fit:contain\}/);
   assert.match(css, /backdrop-filter:blur\(24px\) saturate\(150%\)/);
 });
+
+
+test('the supplied motion director source files are present and cross-linked', async () => {
+  const root = new URL('../../', import.meta.url);
+  const overview = await readFile(new URL('README_OVERVIEW.md', root), 'utf8');
+  const rules = await readFile(new URL('DIRECTOR_RULES.md', root), 'utf8');
+  const rulesAlias = await readFile(new URL('DIRECTOR_RUILES.md', root), 'utf8');
+  const api = await readFile(new URL('REFERENCE_M_API.md', root), 'utf8');
+  const engine = await readFile(new URL('motion_pack/engine/motion.js', root), 'utf8');
+  assert.match(overview, /Motion Director/);
+  assert.match(rules, /Режим B|режим B/i);
+  assert.equal(rulesAlias, rules);
+  assert.match(api, /M\.win/);
+  assert.match(api, /M\.draw/);
+  assert.match(engine, /^\/\* motion\.js v3/);
+});

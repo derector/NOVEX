@@ -315,3 +315,12 @@ NOVEX Motion Studio — локально-ориентированная студ
 - [ ] Проверены профильные сценарии в реально настроенном Supabase либо корректный режим «не настроено».
 - [ ] Проверены мобильная раскладка, логотип/иконка, доступность и reduced motion.
 - [ ] В отчёте перечислены подтверждённые проверки, непроверенные сценарии и оставшиеся блокеры; ни один непроверенный пункт не объявляется завершённым.
+
+
+## 19. Motion Director source package (2026-10-23)
+
+The user-provided source documents are preserved in the repository: `README_OVERVIEW.md`, `DIRECTOR_RULES.md` (canonical spelling) and `DIRECTOR_RUILES.md` (requested spelling alias), `REFERENCE_M_API.md`, and the supplied `motion_pack/engine/motion.js` v3 source. The original `MASTERSKILL.md` and `ANGSKILL.md` remain the primary workflow and engine package references.
+
+**Integration status:** the source package is now versioned and regression-checked for presence and key API entries. It is not yet wired as the active renderer for the existing Vite/Capacitor FFmpeg-WASM export path. The supplied engine expects GSAP and motion-director runtime conventions (including a stage DOM contract and render-frame hooks); do not label it as active in production until those dependencies, deterministic frame capture, audio composition, and MP4 output have passed an integration smoke test. Existing NOVEX export and the motion-director source package are distinct paths until that gate passes.
+
+Next release gates: (1) package and license-check the required animation plugins, (2) define an explicit adapter from NOVEX project/timeline to motion.js stage and `M.*` API, (3) render a short deterministic test clip, (4) probe the resulting MP4 for dimensions/fps/duration/video+audio codecs, (5) run frame-jump and audio sync checks, and (6) verify Android WebView memory limits.

@@ -45,3 +45,12 @@ Do not treat a queued or failed workflow as a completed build; check the run and
 The skills are part of the project and should be consulted before implementing reference-analysis or motion-rendering changes. Search previous project materials before asking for assets again; distinguish observed facts from interpretation; keep source links/provenance for assets found through search; and validate the result against the actual reference before claiming completion.
 
 Start with the [full specification](docs/NOVEX-FULL-SPEC.md), then consult the [roadmap](docs/NOVEX-ROADMAP.md) for priority order and known caveats.
+
+
+## Motion Director reference files
+
+- [README_OVERVIEW.md](README_OVERVIEW.md) — end-to-end workflow overview.
+- [DIRECTOR_RULES.md](DIRECTOR_RULES.md) — canonical director rules.
+- [DIRECTOR_RUILES.md](DIRECTOR_RUILES.md) — filename alias retained for the originally requested spelling.
+- [REFERENCE_M_API.md](REFERENCE_M_API.md) — `M.*` animation API reference.
+- [motion.js v3 engine source](motion_pack/engine/motion.js) — preserved source; see the full spec for integration status.
