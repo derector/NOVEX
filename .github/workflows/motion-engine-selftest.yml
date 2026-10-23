@@ -18,5 +18,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/motion-director/node_modules
+            ~/.cache/ms-playwright
+          key: motion-engine-${{ runner.os }}-${{ hashFiles('scripts/setup-motion-engine-wsl.sh') }}
+          restore-keys: |
+            motion-engine-${{ runner.os }}-
       - name: Install dependencies and run self-test
+        timeout-minutes: 15
         run: bash scripts/setup-motion-engine-wsl.sh
