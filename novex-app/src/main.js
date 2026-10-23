@@ -183,11 +183,11 @@ function clearPreviousExportPreview(){
 
 async function validateExportMedia(blob,W,H,duration){
  let probeLog='';
- const capture=({message=''})=>{probeLog+=message+'\\n';};
+ const capture=({message=''})=>{probeLog+=message+'\n';};
  ff.on('log',capture);
  try{await ff.exec(['-hide_banner','-i','export.mp4']);}catch{}
  finally{ff.off('log',capture);}
- if(!/\\bVideo:\\s/i.test(probeLog)||!/\\bAudio:\\s/i.test(probeLog))
+ if(!/\bVideo:\s/i.test(probeLog)||!/\bAudio:\s/i.test(probeLog))
   throw Error('MP4 не прошёл проверку потоков: ожидаются и видео, и аудио. '+probeLog.slice(-360));
  const url=URL.createObjectURL(blob),video=document.createElement('video');
  video.preload='metadata';video.muted=true;video.playsInline=true;

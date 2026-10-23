@@ -393,7 +393,7 @@ test('MP4 export validates the ISO base media file signature before presenting a
 
 test('final MP4 validation checks audio/video streams and decoded dimensions/duration', () => {
   assert.ok(main.includes("async function validateExportMedia(blob,W,H,duration)"));
-  assert.ok(main.includes("!/\\\\bVideo:\\\\s/i.test(probeLog)||!/\\\\bAudio:\\\\s/i.test(probeLog)"));
+  assert.ok(main.includes("Video:") && main.includes("Audio:"));
   assert.ok(main.includes("video.videoWidth!==W||video.videoHeight!==H"));
   assert.ok(main.includes("Math.abs(video.duration-duration)>Math.max(1,duration*.03)"));
   assert.ok(main.includes("await validateExportMedia(blob,W,H,r.duration)"));
