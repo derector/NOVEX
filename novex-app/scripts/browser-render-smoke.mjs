@@ -28,6 +28,14 @@ try {
   page.on('console', message => { if (message.type() === 'error') pageErrors.push('console: ' + message.text()); });
 
   await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  const design = await page.evaluate(() => ({
+    lime: getComputedStyle(document.documentElement).getPropertyValue('--lime').trim(),
+    heroAnimation: getComputedStyle(document.querySelector('#view-studio .page-heading h1')).animationName,
+    previewColor: getComputedStyle(document.querySelector('.preview-panel')).color
+  }));
+  if (design.lime !== '#d6ff5f' || design.heroAnimation !== 'title-reveal' || design.previewColor !== 'rgb(245, 245, 241)') {
+    throw new Error('Editorial theme did not apply to the live app: ' + JSON.stringify(design));
+  }
   await page.locator('#referenceInput').setInputFiles(['/tmp/novex-smoke-reference.webm', '/tmp/novex-smoke-reference-2.webm']);
   await page.locator('#trackInput').setInputFiles('/tmp/novex-smoke-track.wav');
   try {
@@ -54,6 +62,16 @@ try {
     return audio && !audio.hidden && audio.readyState >= 1 &&
       Number.isFinite(audio.duration) && audio.duration > 2.5;
   }, null, { timeout: 15000 });
+  await page.locator('#lyrics').fill('Тихий свет приходит к нам сегодня вечером и открывает все дороги для нового движения');
+  await page.locator('#syncLyrics').click();
+  const lyricResult = await page.evaluate(() => ({
+    lines: document.querySelector('#lyrics').value.split('\n').filter(Boolean),
+    status: document.querySelector('#lyricsStatus').textContent
+  }));
+  if (lyricResult.lines.length < 2 || !lyricResult.status.includes('строк готовы')) {
+    throw new Error('Lyrics split control did not create editable lines: ' + JSON.stringify(lyricResult));
+  }
+  await page.locator('#lyrics').fill('');
   const musicPlayer = await page.evaluate(async () => {
     const audio = document.querySelector('#trackAudio');
     await audio.play();
@@ -72,6 +90,12 @@ try {
     return video && video.videoWidth === 320 && video.dataset.referenceIndex === '0' &&
       video.dataset.referencePlaylist === 'true';
   }, null, { timeout: 15000 });
+  await page.evaluate(() => document.querySelector('#previewVideo').pause());
+  await page.locator('.preview-track').focus();
+  await page.keyboard.press('End');
+  await page.waitForFunction(() => document.querySelector('.preview-track')?.getAttribute('aria-valuenow') === '100');
+  await page.keyboard.press('Home');
+  await page.waitForFunction(() => document.querySelector('.preview-track')?.getAttribute('aria-valuenow') === '0');
   await page.evaluate(async () => {
     const video = document.querySelector('#previewVideo');
     video.playbackRate = 8;
@@ -96,6 +120,13 @@ try {
       mobileLayout.profileRight > mobileLayout.viewport + 1) {
     throw new Error('Mobile layout overflows viewport: ' + JSON.stringify(mobileLayout));
   }
+  await page.locator('#mobileMenu').click();
+  await page.waitForFunction(() => document.querySelector('#sidebar')?.classList.contains('open') && document.querySelector('#mobileMenu')?.getAttribute('aria-expanded') === 'true');
+  await page.locator('#sidebarBackdrop').click({ position: { x: 380, y: 180 } });
+  await page.waitForFunction(() => !document.querySelector('#sidebar')?.classList.contains('open') && document.querySelector('#sidebarBackdrop')?.hidden);
+  await page.locator('#mobileMenu').click();
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#sidebar')?.classList.contains('open') && document.activeElement?.id === 'mobileMenu');
   await page.setViewportSize({ width: 1280, height: 900 });
 
   await page.locator('#analyzeBtn').click();
@@ -221,7 +252,7 @@ try {
 
   await page.locator('#sourceTranscript').fill('Source dialogue for subtitle render smoke test.');
   await page.locator('#useSourceVideo').check();
-  await page.locator('input[name="audioMode"][value="source"]').check();
+  await page.locator('.segmented label').filter({ has: page.locator('input[name="audioMode"][value="source"]') }).click();
   await page.locator('#useSourceTranscript').check();
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
@@ -287,7 +318,7 @@ try {
   }, null, { timeout: 10000 });
   if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export with automatic animation SFX, transcript subtitles, independent music/source audio player playback, MP4 export/download and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — editorial theme and animated type, real lyrics splitting, keyboard preview seek, mobile menu backdrop/Escape, multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export with automatic animation SFX, transcript subtitles, independent music/source audio playback, two MP4 exports and download metadata.');
 
 } finally {
   if (browser) await browser.close();

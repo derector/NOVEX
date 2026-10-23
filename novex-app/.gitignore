@@ -5,6 +5,7 @@ android/
 *.mp4
 .env*
 .vercel/
+public/ffmpeg/
 
 # Downloaded skill references are local agent context, not app assets.
 .cache/motion-skills/

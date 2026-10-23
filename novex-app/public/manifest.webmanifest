@@ -1,11 +1,11 @@
 {
-  "name": "NOVEX — Motion Studio",
+  "name": "NOVEX — студия движения",
   "short_name": "NOVEX",
-  "description": "Локальная студия музыкального монтажа, кинетических титров и MP4-экспорта.",
+  "description": "Локальный видеомонтаж под музыку: референсы, кинетические титры и MP4-экспорт.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#05070d",
-  "theme_color": "#05070d",
+  "background_color": "#f4f1ea",
+  "theme_color": "#f4f1ea",
   "orientation": "any",
   "icons": [
     {

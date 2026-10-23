@@ -1,1 +1,30 @@
-const B=new URL(self.registration.scope).pathname;const C='novex-shell-v3';const core=[B,B+'index.html',B+'manifest.webmanifest',B+'novex.svg'];self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(core).catch(()=>{})));self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))));self.clients.claim()});self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin||new URL(e.request.url).pathname.startsWith(B+'ffmpeg/'))return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(r.ok&&e.request.mode==='navigate')caches.open(C).then(k=>k.put(B+'index.html',r.clone()));return r}).catch(()=>caches.match(B+'index.html'))))});
+const basePath = new URL(self.registration.scope).pathname;
+const cacheName = 'novex-shell-v4';
+const core = [basePath, basePath + 'index.html', basePath + 'manifest.webmanifest', basePath + 'novex.svg'];
+
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(cacheName).then(cache => cache.addAll(core).catch(() => {})));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== cacheName).map(key => caches.delete(key))
+    ))
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', event => {
+  const requestUrl = new URL(event.request.url);
+  if (event.request.method !== 'GET' || requestUrl.origin !== location.origin || requestUrl.pathname.startsWith(basePath + 'ffmpeg/')) return;
+  event.respondWith(
+    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+      if (response.ok && event.request.mode === 'navigate') {
+        caches.open(cacheName).then(cache => cache.put(basePath + 'index.html', response.clone()));
+      }
+      return response;
+    }).catch(() => caches.match(basePath + 'index.html')))
+  );
+});

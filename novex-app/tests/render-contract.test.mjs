@@ -99,7 +99,7 @@ test('profile menu and email registration are reachable from the top-right app h
 
 test('render progress reports completed and remaining percentages with red-to-green gradient', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../src/editorial-motion.css', import.meta.url), 'utf8');
   assert.match(html, /id="renderPercent">0% готово/);
   assert.match(html, /id="renderRemaining">100% осталось/);
   assert.match(css, /linear-gradient\(90deg,#ff435c 0%,#ff8b55 28%,#f4d45d 58%,#8fe77c 82%,#2be0a2 100%\)/);
@@ -109,11 +109,11 @@ test('render progress reports completed and remaining percentages with red-to-gr
 
 test('preview hides placeholder when media is active and mobile keeps profile accessible', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../src/editorial-motion.css', import.meta.url), 'utf8');
   assert.match(html, /id="previewStage"[\s\S]*id="previewVideo"/);
-  assert.match(css, /\.preview-stage\.has-preview \.preview-placeholder\{display:none!important\}/);
-  assert.match(css, /\.preview-stage video\[hidden\],\.preview-placeholder\[hidden\]\{display:none!important\}/);
-  assert.match(css, /\.topbar-right \.btn-secondary\{display:inline-flex\}/);
+  assert.match(css, /\.preview-stage\.has-preview \.preview-placeholder,[\s\S]*?display:\s*none !important/);
+  assert.match(css, /\.profile-button\s*\{[^}]*max-width:\s*120px/);
+  assert.match(css, /\.sidebar-backdrop\.open\s*\{[^}]*visibility:\s*visible/);
 });
 
 
@@ -156,12 +156,17 @@ test('director commands have real render-path effects instead of silent no-op pa
 test('NOVEX rebrand assets use the current theme across PWA metadata and icon', async () => {
   const manifest = JSON.parse(await readFile(new URL('../public/manifest.webmanifest', import.meta.url), 'utf8'));
   const icon = await readFile(new URL('../public/novex.svg', import.meta.url), 'utf8');
-  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
-  assert.equal(manifest.theme_color, '#05070d');
-  assert.equal(manifest.background_color, '#05070d');
-  assert.match(icon, /linearGradient id="mark"/);
-  assert.match(css, /NOVEX identity system v2/);
+  const css = await readFile(new URL('../src/editorial-motion.css', import.meta.url), 'utf8');
+  const sw = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
+  assert.equal(manifest.theme_color, '#f4f1ea');
+  assert.equal(manifest.background_color, '#f4f1ea');
+  assert.match(icon, /#d6ff5f/);
+  assert.match(icon, /#ff6e52/);
+  assert.match(css, /Editorial Motion Lab/);
+  assert.match(css, /--lime:\s*#d6ff5f/);
   assert.match(css, /\.profile-avatar/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(sw, /novex-shell-v4/);
 });
 
 test('director rejects unsupported camera commands instead of silently recording a no-op', () => {
@@ -300,7 +305,7 @@ test('invalid audio replacement preserves the last valid track and player', () =
 
 
 test('reference preview advances only when multiple videos are queued', () => {
-  assert.match(main, /\$\('#previewVideo'\)\.onended=\(\)=>\{const v=\$\('#previewVideo'\);if\(v\.dataset\.referencePlaylist==='true'&&S\.refs\.length>1\)\{const current=Number\(v\.dataset\.referenceIndex\)\|\|0;playReferenceAt\(current\+1,true,true\);return;\}\$\('#playPreview'\)\.textContent='▶';\};/);
+  assert.match(main, /\$\('#previewVideo'\)\.onended=\(\)=>\{const video=\$\('#previewVideo'\);if\(video\.dataset\.referencePlaylist==='true'&&S\.refs\.length>1\)\{const current=Number\(video\.dataset\.referenceIndex\)\|\|0;playReferenceAt\(current\+1,true,true\);return;\}setPreviewPlayButton\(false\);updatePreviewSeek\(\);\};/);
 });
 
 
@@ -352,15 +357,17 @@ test('mobile navigation exposes state and closes with Escape', async () => {
   assert.match(html, /id="mobileMenu"[^>]*aria-label="Открыть меню навигации"/);
   assert.match(html, /id="mobileMenu"[^>]*aria-controls="sidebar"/);
   assert.match(html, /id="mobileMenu"[^>]*aria-expanded="false"/);
-  assert.match(main, /const open=\$\('#sidebar'\)\.classList\.toggle\('open'\);\$\('#mobileMenu'\)\.setAttribute\('aria-expanded',String\(open\)\)/);
-  assert.match(main, /e\.key==='Escape'[\s\S]*\$\('#mobileMenu'\)\.focus\(\)/);
-  assert.match(main, /\$\('#sidebar'\)\.classList\.remove\('open'\);\$\('#mobileMenu'\)\.setAttribute\('aria-expanded','false'\)/);
+  assert.match(html, /id="sidebarBackdrop"[^>]*aria-hidden="true"/);
+  assert.match(main, /function setMobileMenu\(open,restoreFocus=false\)/);
+  assert.match(main, /backdrop\.hidden=!open/);
+  assert.match(main, /\$\('#sidebarBackdrop'\)\.onclick=\(\)=>setMobileMenu\(false,true\)/);
+  assert.match(main, /e\.key!=='Escape'[\s\S]*setMobileMenu\(false,true\)/);
 });
 
 test('keyboard focus indicators remain visible, including forced-colors mode', async () => {
-  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
-  assert.match(css, /:where\(a,button,input,textarea,select,\[tabindex\]\):focus-visible\{outline:2px solid #6ce7ff;outline-offset:3px\}/);
-  assert.match(css, /@media\(forced-colors:active\)[\s\S]*outline:2px solid CanvasText/);
+  const css = await readFile(new URL('../src/editorial-motion.css', import.meta.url), 'utf8');
+  assert.match(css, /:where\(a, button, input, textarea, select, \[tabindex\]\):focus-visible\s*\{\s*outline: 3px solid var\(--cobalt\);\s*outline-offset: 3px/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*outline: 2px solid CanvasText/);
 });
 
 
@@ -388,7 +395,9 @@ test('reset stops audio playback and releases the audio element source', () => {
 });
 
 test('replacing the source video revokes the previous object URL only after the new video is probed', () => {
-  assert.match(main, /const p=await probe\(f\),audioPreview=\$\('#sourceAudioPreview'\);audioPreview\.pause\(\);audioPreview\.removeAttribute\('src'\);audioPreview\.load\(\);if\(S\.sourceUrl\)URL\.revokeObjectURL\(S\.sourceUrl\);S\.source=f;S\.sourceUrl=p\.url/);
+  assert.match(main, /const p=await probe\(f\),audioPreview=\$\('#sourceAudioPreview'\);audioPreview\.pause\(\);audioPreview\.removeAttribute\('src'\);audioPreview\.load\(\);\s*if\(S\.sourceUrl\)URL\.revokeObjectURL\(S\.sourceUrl\);S\.source=f;S\.sourceUrl=p\.url/);
+  assert.match(main, /e\.target\.value='';stats\(\);library\(\)/);
+  assert.match(main, /catch\(err\)\{e\.target\.value='';toast\(err\.message,'error'\);\}/);
 });
 
 
@@ -594,4 +603,17 @@ test('reference list restores first uploaded clip when preview is blank, includi
   assert.match(main, /const hasPlayableOutput=Boolean\(S\.output&&preview\.getAttribute\('src'\)&&!preview\.hidden\)/);
   assert.match(main, /if\(!activeReference&&!hasPlayableOutput\)\{\s*playReferenceAt\(0,true,false\)/);
   assert.match(main, /#referenceList/);
+});
+
+
+test('Chromium smoke covers redesigned visuals and working accessible controls', async () => {
+  const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(smoke, /Editorial theme did not apply/);
+  assert.match(smoke, /#syncLyrics/);
+  assert.match(smoke, /lyricsStatus/);
+  assert.match(smoke, /aria-valuenow/);
+  assert.match(smoke, /#sidebarBackdrop/);
+  assert.match(smoke, /page\.keyboard\.press\('Escape'\)/);
+  assert.match(html, /role="button" tabindex="0" aria-controls="referenceInput"/);
 });
