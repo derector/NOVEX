@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: novex-build-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 permissions:
   contents: read
   actions: write
@@ -37,7 +37,9 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HbBlyHbGCY6SFmoo9qL1eg_p6jOYVEO' }}
       - name: Install Chromium for browser render smoke test
         run: npm install --no-save --package-lock=false playwright && npx playwright install --only-shell chromium
-      - name: Verify preinstalled FFmpeg for media fixtures
+      - name: Install FFmpeg for deterministic media fixtures
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Verify FFmpeg for media fixtures
         run: ffmpeg -version
       - name: Generate tiny media fixtures for real MP4 export
         run: |
