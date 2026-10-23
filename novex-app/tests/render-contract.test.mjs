@@ -240,3 +240,5 @@ test('default Supabase SMTP restriction gives a setup-specific message', () => {
   assert.match(main, /email address not authorized/);
   assert.match(main, /пользовательский SMTP в Supabase по backend\/BREVO-SETUP\.md/);
 });
+
+test('source audio option mixes original audio with the music track instead of replacing it', () => { assert.match(main,/args\.push\('-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\)/); assert.match(main,/\[1:a:0\]aresample=48000,volume=0\.65\[src\]/); assert.match(main,/\[2:a:0\]aresample=48000,volume=0\.85\[music\]/); assert.match(main,/amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0\.95\[aout\]/); assert.match(main,/Смешиваю исходный звук с музыкой/); });
