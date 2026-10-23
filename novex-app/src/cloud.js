@@ -39,6 +39,14 @@ export async function cloudEmailLink(email) {
   });
   if (error) throw error;
 }
+export async function cloudVerifyEmailCode(email, token) {
+  if (!cloud) throw new Error('Облако не настроено.');
+  const { data, error } = await cloud.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) throw error;
+  if (!data?.user) throw new Error('Код принят, но Supabase не вернул пользователя. Проверь настройки Email OTP.');
+  return { user: data.user, session: data.session };
+}
+
 export async function cloudSendSupportMessage(subject, message) {
   if (!cloud) throw new Error('Облако не настроено.');
   const { data: { session } } = await cloud.auth.getSession();

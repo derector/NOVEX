@@ -18,7 +18,7 @@ test('FFmpeg ESM core is loaded through MIME-typed module URLs for WebView compa
 });
 
 test('uploaded source footage enters the MP4 render path', () => {
-  assert.match(main, /if\(S\.source\)\s*\{/);
+  assert.match(main, /if\(S\.source&&\$\('#useSourceVideo'\)\.checked\)\{/);
   assert.match(main, /await ff\.writeFile\(sourceInput,await fetchFile\(S\.source\)\)/);
   assert.match(main, /tpad=stop_mode=clone/);
   assert.match(main, /'silent\.mp4'/);
@@ -168,13 +168,14 @@ test('director rejects unsupported camera commands instead of silently recording
 test('source-video editing mode can build a plan without reference clips', () => {
   assert.match(main, /if\(!S\.track\)throw Error\('Сначала добавь музыкальный трек\.'\)/);
   assert.match(main, /if\(!S\.refs\.length&&!S\.source\)throw Error\('Добавь исходное видео для режима A/);
-  assert.match(main, /let refOrder=S\.source\?\[\]:\[\.\.\.S\.refs\]/);
+  assert.match(main, /let refOrder=useSourceVideo\?\[\]:\[\.\.\.S\.refs\]/);
   assert.match(main, /if\(!refOrder\.length&&S\.source\)timeline\.push\(\{start:0,end:range\.duration,ref:null/);
   assert.match(main, /s\.ref\?\.file\?\.name\|\|s\.sourceLabel/);
   assert.match(main, /referenceName:x\.ref\?\.file\?\.name\|\|x\.sourceLabel/);
 });
 
 
+test('email OTP flow verifies codes and hidden form sections do not block submission', async () => { const cloud=await readFile(new URL('../src/cloud.js',import.meta.url),'utf8'); const html=await readFile(new URL('../index.html',import.meta.url),'utf8'); assert.match(cloud,/cloud\.auth\.verifyOtp\(\{ email, token, type: 'email' \}\)/); assert.match(main,/cloudVerifyEmailCode\(email,token\)/); assert.match(html,/id="cloudOtpWrap" class="cloud-support hidden"/); assert.doesNotMatch(html,/id="cloudRecoveryPassword"[^>]*required/); assert.doesNotMatch(html,/id="cloudSupportSubject"[^>]*required/); });
 test('source video rendering seeks to the selected source offset', () => {
   assert.match(main, /const sourceSeek=Math\.max\(0,Math\.min\(r\.start/);
   assert.match(main, /const sourceArgs=\['-ss',String\(sourceSeek\),'-i',sourceInput/);
@@ -186,6 +187,7 @@ test('saved source-only plans can be reopened when the source and music are rese
   assert.match(main, /sourceStart:x\.sourceStart\|\|0,referenceName:x\.ref\?\.file\?\.name\|\|x\.sourceLabel\|\|S\.source\?\.name/);
 });
 
+test('source-only analysis evaluates the selected source video', () => { assert.match(main,/if\(S\.source&&\$\('#useSourceVideo'\)\.checked\)\{try\{const x=\{file:S\.source,url:S\.sourceUrl/); assert.match(main,/Видео-источник · '\+x\.file\.name/); });
 test('preview and app shell are constrained to the viewport on mobile', async () => {
   const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
   assert.match(css, /html,body,#app\{width:100%;max-width:100%;min-width:0;min-height:100%;overflow-x:clip\}/);
