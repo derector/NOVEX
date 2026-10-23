@@ -84,10 +84,22 @@ async function ffReady(){
     // FFmpeg 0.12 loads its core as an ES module inside a worker. Convert the
     // same-origin responses to explicit MIME-typed blob URLs to avoid WebView
     // module-import failures caused by Pages MIME/CORS handling.
-    const [coreModuleUrl, wasmModuleUrl] = await Promise.all([
-      toBlobURL(URL.createObjectURL(coreBlob), 'text/javascript'),
-      toBlobURL(URL.createObjectURL(wasmBlob), 'application/wasm')
-    ]);
+    const coreSourceUrl=URL.createObjectURL(coreBlob),wasmSourceUrl=URL.createObjectURL(wasmBlob);
+    let moduleUrls;
+    try{
+      moduleUrls=await Promise.allSettled([
+        toBlobURL(coreSourceUrl,'text/javascript'),
+        toBlobURL(wasmSourceUrl,'application/wasm')
+      ]);
+    }finally{
+      // These intermediate URLs are only fetch sources for toBlobURL. The
+      // typed module URLs returned below are the ones FFmpeg needs to load.
+      URL.revokeObjectURL(coreSourceUrl);
+      URL.revokeObjectURL(wasmSourceUrl);
+    }
+    const failedModule=moduleUrls.find(x=>x.status==='rejected');
+    if(failedModule)throw failedModule.reason;
+    const [coreModuleUrl,wasmModuleUrl]=moduleUrls.map(x=>x.value);
     await ff.load({coreURL:coreModuleUrl,wasmURL:wasmModuleUrl});
     loaded=true;
   }catch(e){
