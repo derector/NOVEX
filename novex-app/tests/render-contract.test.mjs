@@ -247,9 +247,9 @@ test('default Supabase SMTP restriction gives a setup-specific message', () => {
 
 
 test('audio uploads validate replacement before releasing the current track', () => {
-  assert.match(main, /candidate\.onerror=\(\)=>reject\(new Error\(/);
+  assert.match(main, /candidate\.onerror=\(\)=>finish\(new Error\(/);
   assert.match(main, /Не удалось прочитать аудиофайл\. Попробуй MP3 или WAV/);
-  assert.match(main, /URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return/);
+  assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return/);
   assert.match(main, /au\.pause\(\);if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);\s*S\.track=f;S\.trackUrl=nextUrl/);
   assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);\s*au\.pause\(\)/);
 });
@@ -271,7 +271,7 @@ test('reference preview recovers visibly when a selected video fails to load', (
 
 test('invalid audio replacement preserves the last valid track and player', () => {
   assert.match(main, /const nextUrl=URL\.createObjectURL\(f\),candidate=document\.createElement\('audio'\);candidate\.preload='metadata';candidate\.src=nextUrl/);
-  assert.match(main, /catch\(err\)\{\s*URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return;\s*\}/);
+  assert.match(main, /catch\(err\)\{\s*candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return;\s*\}/);
   assert.match(main, /const au=\$\('#trackAudio'\),duration=Number\.isFinite\(candidate\.duration\)\?candidate\.duration:0/);
   assert.match(main, /au\.pause\(\);if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);\s*S\.track=f;S\.trackUrl=nextUrl;S\.duration=duration/);
 });
