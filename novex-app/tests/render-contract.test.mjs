@@ -496,8 +496,8 @@ test('local project metadata survives reload and cloud refresh preserves local-o
   assert.match(main, /const LOCAL_PROJECTS_KEY='novex\.localProjects\.v1'/);
   assert.match(main, /function loadLocalProjects\(\)/);
   assert.match(main, /function persistLocalProjects\(\)/);
-  assert.match(main, /S\\.projects=loadLocalProjects\(\)/);
-  assert.match(main, /persistLocalProjects\(\);stats\\(\\)/);
+  assert.match(main, /S\.projects=loadLocalProjects\(\)/);
+  assert.match(main, /persistLocalProjects\(\);stats\(\)/);
   assert.match(main, /const local=loadLocalProjects\(\)/);
   assert.match(main, /localStorage\.setItem\(LOCAL_PROJECTS_KEY,JSON\.stringify/);
 });
