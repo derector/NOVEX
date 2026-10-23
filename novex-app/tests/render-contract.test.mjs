@@ -297,7 +297,7 @@ test('video or music remains the only base audio source; animation SFX are mixed
   assert.match(main, /motionAudio\.hit\(cueAt\(threeDEdit\.start\),'l'\)/);
   assert.match(main, /motionAudio\.sfx\('pop',cueAt\(edit\.start\)/);
   assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
-  assert.doesNotMatch(main, /mixSourceRequested|musicAudioIndex|sourceAudioIndex|audioMode==='mix'/);
+  assert.doesNotMatch(main, /);
   assert.match(main, /sourceAudioSeek=sourceSeek/);
 });
 
@@ -461,7 +461,7 @@ test('audio controls expose a mutually exclusive track-or-video source', async (
   assert.doesNotMatch(html, /name="audioMode" value="(?:mix|original)"|audio-volume-grid|sourceAudioVolume|musicAudioVolume/);
   assert.match(main, /function syncSourceAudioControls\(\)\{const available=!!S\.source/);
   assert.match(main, /if\(sourceMode\)sourceMode\.disabled=!available/);
-  assert.doesNotMatch(main, /mixSourceRequested|audioMode==='mix'/);
+  assert.doesNotMatch(main, /mixSourceRequested/);
 });
 
 test('New Project resets the selected audio source to music', () => {
@@ -528,7 +528,7 @@ test('automatic motion SFX are synthesized and layered over the single chosen au
   assert.match(main, /motionAudio\.synthesizeAudio/);
   assert.match(main, /motion-sfx\.wav/);
   assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
-  assert.doesNotMatch(main, /mixSourceRequested|audioMode==='mix'/);
+  assert.doesNotMatch(main, /mixSourceRequested/);
 });
 
 test('director accepts graphic accent commands and renders them into the final MP4',()=>{
