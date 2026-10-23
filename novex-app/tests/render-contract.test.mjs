@@ -504,12 +504,12 @@ test('local project metadata survives reload and cloud refresh preserves local-o
 
 
 test('Android export writes the MP4 to persistent app Documents and opens the native share sheet', () => {
-  assert.match(main, /import \\{ Capacitor \\} from '@capacitor\\/core'/);
-  assert.match(main, /import \\{ Directory, Filesystem \} from '@capacitor\\/filesystem'/);
-  assert.match(main, /import \\{ Share \} from '@capacitor\\/share'/);
-  assert.match(main, /if\\(Capacitor\\.isNativePlatform\\(\\)\\)/);
-  assert.match(main, /Filesystem\\.writeFile\\(\\{path:'NOVEX\\/'\\+filename,data,directory:Directory\\.Documents,recursive:true\\}\\)/);
-  assert.match(main, /Share\\.share\\(\\{title:'NOVEX Motion Studio'/);
-  assert.match(main, /a\\.download=S\\.outputName/);
-  assert.match(main, /blob\\.size>120\\*1024\\*1024/);
+  assert.ok(main.includes("import { Capacitor } from '@capacitor/core';"));
+  assert.ok(main.includes("import { Directory, Filesystem } from '@capacitor/filesystem';"));
+  assert.ok(main.includes("import { Share } from '@capacitor/share';"));
+  assert.ok(main.includes("if(Capacitor.isNativePlatform())"));
+  assert.ok(main.includes("Filesystem.writeFile({path:'NOVEX/'+filename,data,directory:Directory.Documents,recursive:true})"));
+  assert.ok(main.includes("Share.share({title:'NOVEX Motion Studio'"));
+  assert.ok(main.includes("a.download=S.outputName"));
+  assert.ok(main.includes("blob.size>120*1024*1024"));
 });
