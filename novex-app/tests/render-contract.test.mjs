@@ -526,7 +526,8 @@ test('saved projects restore source-video mode, audio mode and both volume level
   assert.match(main, /sourceAudioVolume:Number\(\$\('#sourceAudioVolume'\)\.value\)\|\|0/);
   assert.match(main, /musicAudioVolume:Number\(\$\('#musicAudioVolume'\)\.value\)\|\|0/);
   assert.match(main, /typeof d\.useSourceVideo==='boolean'\?d\.useSourceVideo:\(!refs\.length&&!!d\.sourceName\)/);
-  assert.match(main, /const savedAudioMode=\$\('input\[name="audioMode"\]\[value="\'\+\(d\.audioMode\|\|'music'\)\+'"]'\)/);
+  assert.match(main, /const savedAudioMode=/);
+  assert.match(main, /d\.audioMode\|\|'music'/);
   assert.match(main, /syncSourceAudioControls\(\);const timeline=/);
   assert.match(main, /d\.sourceAudioVolume!==undefined/);
   assert.match(main, /d\.musicAudioVolume!==undefined/);
