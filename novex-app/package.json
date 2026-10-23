@@ -10,7 +10,8 @@
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "copy-core": "mkdir -p public/ffmpeg && cp node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js public/ffmpeg/ffmpeg-core.js && cp node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.wasm public/ffmpeg/ffmpeg-core.wasm",
-    "test": "node --test"
+    "test": "node --test",
+    "skills:sync": "node scripts/sync-motion-skills.mjs"
   },
   "dependencies": {
     "@capacitor/android": "6.2.1",
