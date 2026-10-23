@@ -469,6 +469,7 @@ test('music volume is available with a track, while source modes activate only f
   assert.match(html, /id="musicAudioVolume" type="range" min="0" max="100" step="1" value="85" disabled/);
   assert.ok(main.includes("$('#audioExportControls').hidden=false;$('#musicAudioVolume').disabled=false"));
   assert.ok(main.includes("function syncSourceAudioControls(){const enabled=!!S.source&&$('#useSourceVideo').checked"));
+  assert.match(main, /\$\$\('input\[name="audioMode"\]'\)\.filter\(x=>x\.value!=='music'\)/);
   assert.ok(main.includes("$('#useSourceVideo').onchange=syncSourceAudioControls"));
   assert.ok(main.includes("$('#audioExportControls').hidden=true;$('#musicAudioVolume').disabled=true"));
 });
