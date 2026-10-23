@@ -549,6 +549,7 @@ test('3D camera paths and cinematic effect presets are configurable and exposed 
   assert.match(motion3d, /setOptions\(options=\{\}\)/);
   for (const mode of ['orbit', 'dolly-in', 'dolly-out', 'whip-pan']) assert.ok(motion3d.includes(mode), 'missing camera path ' + mode);
   for (const effect of ['cinematic-particles', 'energy-rings', 'light-streaks']) assert.ok(motion3d.includes(effect), 'missing 3D effect ' + effect);
+  assert.match(motion3d, /new THREE\.LineSegments\(streakGeometry,streakMaterial\)/);
   for (const preset of ['data-command="orbit"', 'data-command="rings"', 'data-command="streaks"']) assert.ok(html.includes(preset), 'missing Director preset ' + preset);
   assert.match(main, /motion3d\.setOptions\(threeDEdit\.style\|\|\{\}\)/);
 });
