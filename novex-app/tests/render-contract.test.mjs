@@ -312,3 +312,11 @@ test('keyboard focus indicators remain visible, including forced-colors mode', a
   assert.match(css, /:where\(a,button,input,textarea,select,\[tabindex\]\):focus-visible\{outline:2px solid #6ce7ff;outline-offset:3px\}/);
   assert.match(css, /@media\(forced-colors:active\)[\s\S]*outline:2px solid CanvasText/);
 });
+
+
+test('workspace navigation uses a named landmark and announces the active view', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /<nav class="sidebar" id="sidebar" aria-label="Основная навигация">/);
+  assert.match(html, /class="nav-item active" data-view="studio" aria-current="page"/);
+  assert.match(main, /if\(current\)x\.setAttribute\('aria-current','page'\);else x\.removeAttribute\('aria-current'\)/);
+});
