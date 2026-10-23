@@ -26,3 +26,6 @@ Every generated patch has a visible diff and must pass CI/review before merge.
 - `M.sfx`, `M.hit`, `M.onFrame`, `M.renderAt`, `M.seekFrame`, `M.compile`, and `M.check` for sound cue scheduling, hooks, frame state, exportable plans, and timing validation.
 
 The director returns deterministic frame-state descriptors; the actual audio synthesis and DOM/SVG renderer remain separate integration stages.
+
+
+Procedural audio: Motion Director can synthesize scheduled SFX cues into deterministic PCM WAV using generated oscillators and envelopes. MP4 export mixes this sound-effects track with the selected music and/or original audio.
