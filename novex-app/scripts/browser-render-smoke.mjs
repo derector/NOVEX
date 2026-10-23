@@ -73,8 +73,9 @@ try {
     const video = document.querySelector('#previewVideo');
     return video?.dataset.referenceIndex === '0' &&
       video.dataset.referencePlaylist === 'true' &&
-      video.dataset.referencePreview?.includes('novex-smoke-reference.webm') &&
-      video.readyState >= 2;
+      document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference.webm') &&
+      !document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference-2.webm') &&
+      video.readyState >= 2 && video.currentSrc === video.dataset.referencePreview;
   }, null, { timeout: 15000 });
   await page.locator('#referenceList .remove-btn').first().click();
   await page.waitForFunction(() => {
