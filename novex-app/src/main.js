@@ -53,6 +53,7 @@ $('#trackInput').onchange=async e=>{
   toast(err.message,'error');return;
  }
  const au=$('#trackAudio'),duration=Number.isFinite(candidate.duration)?candidate.duration:0;
+ candidate.removeAttribute('src');candidate.load();
  au.pause();if(S.trackUrl)URL.revokeObjectURL(S.trackUrl);
  S.track=f;S.trackUrl=nextUrl;S.duration=duration;
  au.src=nextUrl;au.hidden=false;au.load();
