@@ -532,3 +532,13 @@ test('saved projects restore source-video mode, audio mode and both volume level
   assert.match(main, /d\.sourceAudioVolume!==undefined/);
   assert.match(main, /d\.musicAudioVolume!==undefined/);
 });
+
+
+test('browser smoke verifies saved source/audio settings after a full reload', async () => {
+  const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
+  assert.match(smoke, /sourceAudioVolume/);
+  assert.match(smoke, /musicAudioVolume/);
+  assert.match(smoke, /audioMode === 'mix'/);
+  assert.match(smoke, /useSourceVideo\)\?\.checked === true/);
+  assert.match(smoke, /source\/audio settings restoration/);
+});
