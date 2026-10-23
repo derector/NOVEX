@@ -408,7 +408,7 @@ test('removing reference clips preserves active playlist index and clears empty 
 
 
 test('source audio mixing maps the source and music streams through normalized, limited amix', () => {
-  assert.match(main, /if\(useSourceAudio\)\{args\.push\('-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\)/);
+  assert.match(main, /if\(useSourceAudio\)args\.push\('-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\)/);
   assert.match(main, /\[1:a:0\]aresample=48000,volume=0\.65\[src\];\[2:a:0\]aresample=48000,volume=0\.85\[music\];\[src\]\[music\]amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0\.95\[aout\]/);
   assert.match(main, /args\.push\('-filter_complex',[\s\S]*?'-map','\[aout\]'\)/);
   assert.match(main, /sourceAudioSeek=sourceSeek/);
