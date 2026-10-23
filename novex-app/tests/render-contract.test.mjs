@@ -184,10 +184,15 @@ test('source video rendering seeks to the selected source offset', () => {
   assert.match(main, /const sourceArgs=\['-ss',String\(sourceSeek\),'-i',sourceInput/);
 });
 
-test('saved source-only plans can be reopened when the source and music are reselected', () => {
-  assert.match(main, /sourceName:S\.source\?\.name\|\|null/);
+test('saved projects persist media in IndexedDB and restore reference, track and source files after reload', () => {
+  assert.match(main, /const MEDIA_DB_NAME='novex\.projectMedia\.v1'/);
+  assert.match(main, /function openMediaDb\(/);
+  assert.match(main, /async function saveProjectMedia\(/);
+  assert.match(main, /async function readProjectMedia\(/);
+  assert.match(main, /async function restoreProjectMedia\(project,referenceNames\)/);
+  assert.match(main, /saveProjectMedia\(project\)\.then/);
   assert.match(main, /const sourceOk=!!d\.sourceName&&!!S\.source&&S\.source\.name===d\.sourceName/);
-  assert.match(main, /\(!matched\.length&&!sourceOk\)/);
+  assert.match(main, /const restored=await restoreProjectMedia\(p,refs\)/);
   assert.match(main, /\.filter\(x=>x\.ref\|\|sourceOk\)/);
 });
 
