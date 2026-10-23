@@ -6,7 +6,7 @@ When editing NOVEX, read the relevant skill before implementation:
 - .agents/skills/novex-render-quality/SKILL.md after any render or preview changes.
 
 ## Architecture truth
-The current app is a Vite vanilla-JS app with a client-side FFmpeg.wasm export path. Its montage plan is heuristic. It is not yet a connected general-purpose LLM editor, and the existing FFmpeg render path does not yet composite Three.js 3D scenes into exported MP4. Do not describe those capabilities as implemented until code and tests prove them.
+The current app is a Vite vanilla-JS app with a client-side FFmpeg.wasm export path. Its montage plan is heuristic and it is not a connected general-purpose LLM editor. A Three.js frame-export path is implemented and composited by FFmpeg; keep the real Chromium 3D-export smoke test as a release gate and do not mark the path verified unless that test passes.
 
 ## Change policy
 - Preserve user footage unless a request explicitly asks to edit the cut.

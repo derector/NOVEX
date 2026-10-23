@@ -22,7 +22,7 @@ try {
   }
   if (!ready) throw new Error('Vite preview did not become ready at ' + baseURL);
 
-  browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+  browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.on('pageerror', error => pageErrors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') pageErrors.push('console: ' + message.text()); });
@@ -137,6 +137,14 @@ try {
   await page.locator('#useSourceTranscript').check();
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
+  await page.locator('#editCommand').fill('Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.');
+  await page.locator('#applyEditCommand').click();
+  await page.waitForFunction(() => {
+    const status = document.querySelector('#motion3dStatus')?.textContent || '';
+    return status.includes('Воспроизведение 3D-сцены') || status.includes('WebGL недоступен');
+  }, null, { timeout: 15000 });
+  const motionStatus = (await page.locator('#motion3dStatus').innerText()).trim();
+  if (!motionStatus.includes('Воспроизведение 3D-сцены')) throw new Error('3D preview did not initialize: ' + motionStatus);
   await page.locator('#burnLyrics').uncheck();
   await page.locator('.segmented label').filter({ has: page.locator('input[name="resolution"][value="480"]') }).click();
   await page.locator('#planBtn').click();
@@ -162,7 +170,7 @@ try {
   }, null, { timeout: 15000 });
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, MP4 export/download, source-only edit, AAC source-audio mixing, transcript subtitles and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, source-only edit, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, MP4 export/download and output metadata.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

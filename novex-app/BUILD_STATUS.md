@@ -4,31 +4,28 @@ Updated: 2026-10-23
 
 ## Verified by GitHub Actions
 
-- Workflow run #74 completed successfully: [run details](https://github.com/derector/NOVEX/actions/runs/39859249808).
-- Vite web build completed, including checks that the FFmpeg JavaScript and WASM files are present.
-- GitHub Pages deployment job completed successfully.
-- Android Gradle debug APK build completed successfully and the workflow uploaded the `NOVEX-Android-APK` artifact (about 15.2 MB).
-- Web build artifact `NOVEX-Web-Build` and Pages artifact were also uploaded.
+- Latest successful run #39900578837: [run details](https://github.com/derector/NOVEX/actions/runs/39900578837).
+- Vite web build and FFmpeg WASM asset checks passed.
+- Real Chromium render smoke passed for sequential multi-reference preview, mobile viewport, source-only editing, AAC source-audio mixing, transcript subtitle export, MP4 metadata validation, and download.
+- GitHub Pages deployment completed successfully.
+- Android Gradle debug APK built and was uploaded as `NOVEX-Android-APK` (about 15.2 MB).
+- Android emulator installed and launched `studio.novex.motion`; the app remained in the foreground and the runtime check found no fatal exception.
+- `Motion Engine Self-Test` passed.
 
-## Latest rendering changes awaiting CI verification
+## Changes awaiting verification in the next run
 
-- Uploaded source video can now be used as the base footage instead of always assembling a montage from reference clips.
-- Added transparent Canvas-generated kinetic-title frames that are composited into the exported MP4.
-- Added a color/brightness adjustment to the export path for the corresponding director command.
-- Improved title command parsing so a generic kinetic-title request defaults to the visible word `NOVEX`, while quoted or explicitly named text is used as the title.
+- Deterministic Three.js frame capture: pause the live preview during frame capture, render explicit timestamps, and composite the transparent frames into the final MP4.
+- The Chromium smoke now requests a real 3D logo export as part of the source-video/audio/subtitle scenario. Do not mark the 3D path verified until that run passes.
 
-The latest rendering commits trigger a new Actions run. Do not treat these changes as verified until that run completes successfully.
+## Remaining limits
 
-## Still not verified end-to-end
-
-- Installing and launching the APK on a physical Android device.
-- Uploading sample media and completing a real MP4 export in desktop and mobile browsers.
-- Confirming the source-video, title-overlay, 3D-overlay, subtitles, and color-grade paths against representative files.
+- Physical Android device QA has not been performed.
+- Android emulator smoke verifies installation and launch, not a complete MP4 export inside Android WebView.
 - Exact reference-video matching, automatic lyric transcription/timing, and all planned motion/transition effects are not complete or guaranteed.
 
 ## Build and architecture notes
 
 - The canonical application source is under `novex-app/`; the repository root also contains project documentation and legacy files.
-- The app currently uses FFmpeg WebAssembly for MP4 export. Large/long renders can be limited by browser or WebView memory.
+- The app uses FFmpeg WebAssembly for MP4 export. Large/long renders can be limited by browser or WebView memory.
 - The Android artifact is a debug APK for testing, not a signed production release.
 - Do not claim device-level QA or pixel-perfect reference matching based on a successful compilation alone.
