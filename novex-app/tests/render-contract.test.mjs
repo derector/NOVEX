@@ -172,3 +172,22 @@ test('source-video editing mode can build a plan without reference clips', () =>
   assert.match(main, /s\.ref\?\.file\?\.name\|\|s\.sourceLabel/);
   assert.match(main, /referenceName:x\.ref\?\.file\?\.name\|\|x\.sourceLabel/);
 });
+
+
+test('source video rendering seeks to the selected source offset', () => {
+  assert.match(main, /const sourceSeek=Math\.max\(0,Math\.min\(r\.start/);
+  assert.match(main, /const sourceArgs=\['-ss',String\(sourceSeek\),'-i',sourceInput/);
+});
+
+test('saved source-only plans can be reopened when the source and music are reselected', () => {
+  assert.match(main, /const sourceOk=!!d\.sourceName&&!!S\.source&&S\.source\.name===d\.sourceName/);
+  assert.match(main, /\(!matched\.length&&!sourceOk\)/);
+  assert.match(main, /sourceStart:x\.sourceStart\|\|0,referenceName:x\.ref\?\.file\?\.name\|\|null/);
+});
+
+test('preview and app shell are constrained to the viewport on mobile', async () => {
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /html,body,#app\{width:100%;max-width:100%;min-width:0;min-height:100%;overflow-x:clip\}/);
+  assert.match(css, /\.preview-stage video\{max-width:100%;max-height:100%;object-fit:contain\}/);
+  assert.match(css, /backdrop-filter:blur\(24px\) saturate\(150%\)/);
+});
