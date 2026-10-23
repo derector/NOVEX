@@ -463,7 +463,8 @@ test('audio controls expose music/original/mix modes, source preview and adjusta
   assert.match(html, /id="sourceAudioVolume" type="range"/);
   assert.match(html, /id="musicAudioVolume" type="range"/);
   assert.match(main, /audioMode==='original'&&useSourceAudio/);
-  assert.match(main, /audioMode==='mix'\)\{args\.push\('-filter_complex'/);
+  assert.match(main, /audioMode==='mix'&&useSourceAudio/);
+  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
   assert.match(main, /sourceAudioPreview'\)\.onerror/);
   assert.match(css, /\.audio-volume-grid input\[type="range"\]/);
 });
