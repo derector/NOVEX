@@ -242,6 +242,18 @@ try {
       document.querySelector('#musicAudioVolume')?.value === '62';
   }, null, { timeout: 20000 });
 
+  // Exercise the New Project reset after source/mix settings have been enabled.
+  await page.locator('#newProjectTop').click();
+  await page.waitForFunction(() => {
+    const modes = [...document.querySelectorAll('input[name="audioMode"]')];
+    return document.querySelector('#trackName')?.textContent === 'Загрузи трек' &&
+      document.querySelector('#sourceVideoName')?.textContent === 'Добавить видео-источник' &&
+      document.querySelector('#useSourceVideo')?.checked === false &&
+      document.querySelector('input[name="audioMode"]:checked')?.value === 'music' &&
+      modes.filter(el => el.value !== 'music').every(el => el.disabled) &&
+      document.querySelector('#musicAudioVolume')?.disabled === true;
+  }, null, { timeout: 10000 });
+  if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
   console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project and media restoration across reload, source-only edit, source/audio settings restoration, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, music and source-audio player playback, MP4 export/download and output metadata.');
 
