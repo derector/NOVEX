@@ -544,3 +544,9 @@ test('browser render smoke exercises the animated graphic overlay export path',a
   assert.match(smoke,/Добавь графический акцент-кольцо с плавным появлением/);
   assert.match(smoke,/directorPlan.*Кольцевой акцент/);
 });
+
+
+test('video audio selection does not require replacing reference visuals with source-video visuals', () => {
+  assert.match(main, /if\(\(radio\('audioMode'\)\|\|'music'\)==='source'&&!S\.source\)/);
+  assert.doesNotMatch(main, /Выбран звук «Оригинал» или «Смешать»/);
+});
