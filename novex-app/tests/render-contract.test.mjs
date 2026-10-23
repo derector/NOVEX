@@ -223,3 +223,17 @@ test('account errors explain the actionable Supabase configuration cause', () =>
   assert.match(main, /Добавь URL сайта NOVEX и адрес приложения в Auth/);
   assert.match(main, /cloudStatus\(cloudErrorMessage\(err,'signup'\),'error'\)/);
 });
+
+
+test('signup distinguishes Supabase obfuscated existing users from newly created accounts', async () => {
+  const cloud = await readFile(new URL('../src/cloud.js', import.meta.url), 'utf8');
+  assert.match(cloud, /data\.user\?\.identities\) && data\.user\.identities\.length === 0/);
+  assert.match(cloud, /alreadyRegistered/);
+  assert.match(main, /if\(result\.alreadyRegistered\)/);
+  assert.match(main, /Аккаунт с этой почтой уже существует/);
+});
+
+test('default Supabase SMTP restriction gives a setup-specific message', () => {
+  assert.match(main, /email address not authorized/);
+  assert.match(main, /пользовательский SMTP в Supabase по backend\/BREVO-SETUP\.md/);
+});

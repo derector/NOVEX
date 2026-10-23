@@ -18,7 +18,8 @@ export async function cloudAuth(mode, email, password) {
     const redirectTo = window.location.origin + import.meta.env.BASE_URL;
     const { data, error } = await cloud.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
     if (error) throw error;
-    return { user: data.user, needsConfirmation: !data.session };
+    const alreadyRegistered = Array.isArray(data.user?.identities) && data.user.identities.length === 0;
+    return { user: data.user, needsConfirmation: !data.session && !alreadyRegistered, alreadyRegistered };
   }
   if (mode === 'login') {
     const { data, error } = await cloud.auth.signInWithPassword({ email, password });
