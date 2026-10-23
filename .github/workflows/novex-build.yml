@@ -1,7 +1,7 @@
 name: NOVEX Build
 on:
   push:
-    branches: [main]
+    branches: [main, 'qa/**']
   workflow_dispatch:
 concurrency:
   group: novex-build-${{ github.ref }}
@@ -57,6 +57,7 @@ jobs:
         with:
           path: novex-app/dist/
   deploy:
+    if: github.ref == 'refs/heads/main'
     name: Publish Web site (GitHub Pages)
     needs: web
     runs-on: ubuntu-latest
