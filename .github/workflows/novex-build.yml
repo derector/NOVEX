@@ -26,7 +26,7 @@ jobs:
           node-version: 22
       - run: npm ci --no-audit --no-fund
       - name: Check JavaScript syntax
-        run: node --check src/main.js && node --check src/timeline.js && node --check src/motion-engine.js && node --check src/motion-audio.js && node --check src/motion-director.js && node --check src/motion3d.js && node --check src/cloud.js && node --check scripts/sync-motion-skills.mjs && node --check scripts/sync-engine-references.mjs && node --check scripts/motion-agent.mjs && node --check scripts/browser-render-smoke.mjs
+        run: node --check src/main.js && node --check src/audio-analysis.js && node --check src/timeline.js && node --check src/motion-engine.js && node --check src/motion-audio.js && node --check src/motion-director.js && node --check src/motion3d.js && node --check src/cloud.js && node --check scripts/sync-motion-skills.mjs && node --check scripts/sync-engine-references.mjs && node --check scripts/motion-agent.mjs && node --check scripts/browser-render-smoke.mjs
       - name: Test render pipeline contracts
         run: npm test
       - name: Build for GitHub Pages
