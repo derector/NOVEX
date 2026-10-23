@@ -518,3 +518,16 @@ test('Android export writes the MP4 to persistent app Documents and opens the na
   assert.ok(main.includes("a.download=S.outputName"));
   assert.ok(main.includes("blob.size>120*1024*1024"));
 });
+
+
+test('saved projects restore source-video mode, audio mode and both volume levels', () => {
+  assert.match(main, /useSourceVideo:\!\!\(S\.source&&\$\('#useSourceVideo'\)\.checked\)/);
+  assert.match(main, /audioMode:radio\('audioMode'\)\|\|'music'/);
+  assert.match(main, /sourceAudioVolume:Number\(\$\('#sourceAudioVolume'\)\.value\)\|\|0/);
+  assert.match(main, /musicAudioVolume:Number\(\$\('#musicAudioVolume'\)\.value\)\|\|0/);
+  assert.match(main, /typeof d\.useSourceVideo==='boolean'\?d\.useSourceVideo:\(!refs\.length&&!!d\.sourceName\)/);
+  assert.match(main, /const savedAudioMode=\$\('input\[name="audioMode"\]\[value="\'\+\(d\.audioMode\|\|'music'\)\+'"]'\)/);
+  assert.match(main, /syncSourceAudioControls\(\);const timeline=/);
+  assert.match(main, /d\.sourceAudioVolume!==undefined/);
+  assert.match(main, /d\.musicAudioVolume!==undefined/);
+});
