@@ -11,7 +11,7 @@
     "android:open": "cap open android",
     "copy-core": "mkdir -p public/ffmpeg && cp node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js public/ffmpeg/ffmpeg-core.js && cp node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.wasm public/ffmpeg/ffmpeg-core.wasm",
     "test": "node --test",
-    "skills:sync": "node scripts/sync-motion-skills.mjs",
+    "skills:sync": "node scripts/sync-motion-skills.mjs && node scripts/sync-engine-references.mjs",
     "motion:agent": "node scripts/motion-agent.mjs"
   },
   "dependencies": {
