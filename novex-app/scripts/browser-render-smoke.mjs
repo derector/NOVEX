@@ -121,6 +121,18 @@ try {
     throw new Error('Downloaded file is empty or not an MP4 container.');
   }
 
+  // Verify locally saved project metadata survives a complete browser reload.
+  await page.locator('[data-view="projects"]').click();
+  await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
+  const savedProjectName = (await page.locator('#projectsGrid .project-card b').first().innerText()).trim();
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.locator('[data-view="projects"]').click();
+  await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
+  const restoredProjectName = (await page.locator('#projectsGrid .project-card b').first().innerText()).trim();
+  if (!savedProjectName || restoredProjectName !== savedProjectName) {
+    throw new Error('Local project metadata did not survive reload: ' + JSON.stringify({ savedProjectName, restoredProjectName }));
+  }
+
   // Exercise the source-only edit path, real source-audio mixing, and transcript captions.
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('#sourceVideoInput').setInputFiles('/tmp/novex-smoke-source.mp4');
@@ -170,7 +182,7 @@ try {
   }, null, { timeout: 15000 });
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, source-only edit, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, MP4 export/download and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project persistence across reload, source-only edit, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, MP4 export/download and output metadata.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

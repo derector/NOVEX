@@ -490,3 +490,14 @@ test('browser render smoke exercises the real 3D export path with software WebGL
   assert.match(smoke, /3D preview did not initialize/);
   assert.match(smoke, /real Three\.js 3D frame capture\/compositing/);
 });
+
+
+test('local project metadata survives reload and cloud refresh preserves local-only projects', () => {
+  assert.match(main, /const LOCAL_PROJECTS_KEY='novex\\.localProjects\\.v1'/);
+  assert.match(main, /function loadLocalProjects\\(\\)/);
+  assert.match(main, /function persistLocalProjects\\(\\)/);
+  assert.match(main, /S\\.projects=loadLocalProjects\\(\\)/);
+  assert.match(main, /persistLocalProjects\\(\\);stats\\(\\)/);
+  assert.match(main, /const local=loadLocalProjects\\(\\)/);
+  assert.match(main, /localStorage\\.setItem\\(LOCAL_PROJECTS_KEY,JSON\\.stringify/);
+});

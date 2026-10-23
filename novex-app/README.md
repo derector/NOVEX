@@ -8,7 +8,8 @@ NOVEX is a mobile-first editor for composing short music videos from supplied re
 - Editable lyrics/transcript text and estimated caption timecodes.
 - Full track or excerpt, aspect ratio, export resolution, faithful/inspired/original cut sequencing.
 - Sequential montage preview, timeline, local FFmpeg H.264/AAC MP4 export and download/share button.
-- Local project metadata, PWA shell and Capacitor Android integration.
+- Local project metadata persists across reloads; cloud and local-only project lists coexist. Media files remain in the browser session and must be reselected to reopen a plan after reload.
+- PWA shell and Capacitor Android integration.
 
 ## Build
 Requires Node 22, Android SDK for APK, and network access to npm:
