@@ -1,5 +1,5 @@
 const basePath = new URL(self.registration.scope).pathname;
-const cacheName = 'novex-shell-v4';
+const cacheName = 'novex-shell-v5';
 const core = [basePath, basePath + 'index.html', basePath + 'manifest.webmanifest', basePath + 'novex.svg'];
 
 self.addEventListener('install', event => {

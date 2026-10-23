@@ -28,13 +28,30 @@ try {
   page.on('console', message => { if (message.type() === 'error') pageErrors.push('console: ' + message.text()); });
 
   await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  const design = await page.evaluate(() => ({
-    lime: getComputedStyle(document.documentElement).getPropertyValue('--lime').trim(),
-    heroAnimation: getComputedStyle(document.querySelector('#view-studio .page-heading h1')).animationName,
-    previewColor: getComputedStyle(document.querySelector('.preview-panel')).color
-  }));
-  if (design.lime !== '#d6ff5f' || design.heroAnimation !== 'title-reveal' || design.previewColor !== 'rgb(245, 245, 241)') {
-    throw new Error('Editorial theme did not apply to the live app: ' + JSON.stringify(design));
+  const design = await page.evaluate(() => {
+    const drop = document.querySelector('#referenceDrop').getBoundingClientRect();
+    const cta = document.querySelector('#referenceDrop .drop-cta').getBoundingClientRect();
+    const orbit = document.querySelector('.preview-orbit');
+    const orbitBox = orbit.getBoundingClientRect();
+    const icon = orbit.querySelector('span').getBoundingClientRect();
+    const ring = getComputedStyle(orbit, '::before');
+    return {
+      lime: getComputedStyle(document.documentElement).getPropertyValue('--lime').trim(),
+      bodyColor: getComputedStyle(document.body).backgroundColor,
+      heroAnimation: getComputedStyle(document.querySelector('#view-studio .page-heading h1')).animationName,
+      previewColor: getComputedStyle(document.querySelector('.preview-panel')).color,
+      ctaCenterError: Math.abs((cta.left + cta.width / 2) - (drop.left + drop.width / 2)),
+      ctaWithinDrop: cta.left >= drop.left && cta.right <= drop.right && cta.top >= drop.top && cta.bottom <= drop.bottom,
+      orbitPosition: getComputedStyle(orbit).position,
+      ringPosition: ring.position,
+      iconCenterError: Math.abs((icon.left + icon.width / 2) - (orbitBox.left + orbitBox.width / 2))
+    };
+  });
+  if (design.lime !== '#c8ff55' || design.bodyColor !== 'rgb(7, 11, 19)' ||
+      design.heroAnimation !== 'title-reveal' || design.previewColor !== 'rgb(231, 244, 255)' ||
+      design.ctaCenterError > 1 || !design.ctaWithinDrop || design.orbitPosition !== 'relative' ||
+      design.ringPosition !== 'absolute' || design.iconCenterError > 2) {
+    throw new Error('Dark theme, centered upload CTA or play-ring alignment failed: ' + JSON.stringify(design));
   }
   await page.locator('#referenceInput').setInputFiles(['/tmp/novex-smoke-reference.webm', '/tmp/novex-smoke-reference-2.webm']);
   await page.locator('#trackInput').setInputFiles('/tmp/novex-smoke-track.wav');
@@ -100,7 +117,7 @@ try {
     const video = document.querySelector('#previewVideo');
     video.playbackRate = 8;
     video.currentTime = Math.max(0, video.duration - 0.18);
-    await video.play();
+    await video.play().catch(() => {});
   });
   await page.waitForFunction(() => {
     const video = document.querySelector('#previewVideo');
@@ -128,6 +145,7 @@ try {
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('#sidebar')?.classList.contains('open') && document.activeElement?.id === 'mobileMenu');
   await page.setViewportSize({ width: 1280, height: 900 });
+  await page.waitForFunction(() => !document.querySelector('#sidebar')?.inert && !document.querySelector('#sidebar')?.hasAttribute('aria-hidden'));
 
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
@@ -204,7 +222,7 @@ try {
     document.querySelector('#trackName')?.textContent === 'novex-smoke-track.wav' &&
     document.querySelectorAll('#referenceList .media-item-rich').length === 2 &&
     document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference-2.webm'),
-    null, { timeout: 20000 }
+    null, { timeout: 10000 }
   );
   if (pageErrors.length) throw new Error('Project media restore caused browser errors: ' + pageErrors.join(' | '));
 
@@ -307,6 +325,7 @@ try {
   }, null, { timeout: 20000 });
 
   // Exercise the New Project reset after source-audio mode has been enabled.
+  await page.waitForFunction(() => !document.querySelector('#renderBtn')?.disabled, null, { timeout: 10000 });
   await page.locator('#newProjectTop').click();
   await page.waitForFunction(() => {
     const modes = [...document.querySelectorAll('input[name="audioMode"]')];
@@ -316,9 +335,32 @@ try {
       document.querySelector('input[name="audioMode"]:checked')?.value === 'music' &&
       modes.some(el => el.value === 'source' && !el.checked && el.disabled);
   }, null, { timeout: 10000 });
-  if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
+  await page.locator('#referenceInput').setInputFiles('/tmp/novex-smoke-portrait.webm');
+  await page.waitForFunction(() => {
+    const video = document.querySelector('#previewVideo');
+    return document.querySelector('#referenceList')?.textContent.includes('novex-smoke-portrait.webm') &&
+      video?.dataset.previewKind === 'reference' && video.videoWidth === 180 && video.videoHeight === 320 &&
+      video.readyState >= 2;
+  }, null, { timeout: 15000 });
+  const portraitFit = await page.evaluate(() => {
+    const stage = document.querySelector('#previewStage').getBoundingClientRect();
+    const video = document.querySelector('#previewVideo');
+    const box = video.getBoundingClientRect();
+    return {
+      width: video.videoWidth,
+      height: video.videoHeight,
+      objectFit: getComputedStyle(video).objectFit,
+      objectPosition: getComputedStyle(video).objectPosition,
+      centerError: Math.max(Math.abs((box.left + box.width / 2) - (stage.left + stage.width / 2)),
+        Math.abs((box.top + box.height / 2) - (stage.top + stage.height / 2)))
+    };
+  });
+  if (portraitFit.width !== 180 || portraitFit.height !== 320 || portraitFit.objectFit !== 'contain' ||
+      portraitFit.objectPosition !== '50% 50%' || portraitFit.centerError > 1) {
+    throw new Error('Portrait reference drifted inside the preview stage: ' + JSON.stringify(portraitFit));
+  }
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — editorial theme and animated type, real lyrics splitting, keyboard preview seek, mobile menu backdrop/Escape, multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export with automatic animation SFX, transcript subtitles, independent music/source audio playback, two MP4 exports and download metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — dark cyberpunk theme, centered upload CTA and aligned animated play ring, real lyrics splitting, keyboard preview seek, mobile menu/backdrop/Escape, landscape and portrait reference fitting, multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, project/media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC export with automatic motion SFX and transcript subtitles, independent audio playback, two MP4 exports and download metadata.');
 
 } finally {
   if (browser) await browser.close();

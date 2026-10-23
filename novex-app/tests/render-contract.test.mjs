@@ -135,7 +135,7 @@ test('reference scene analysis feeds detected cut points into segment selection'
   assert.match(main, /const scenePoints=\[\]/);
   assert.match(main, /scenePoints\.push\(/);
   assert.match(main, /scenePoints:\[\.\.\.new Set\(scenePoints\)\]/);
-  assert.match(main, /const sceneTime=scenePoints\.length\?scenePoints\[occurrence%scenePoints\.length\]:null/);
+  assert.match(main, /scenePoints=Array\.isArray\(ref\.a\?\.scenePoints\)\?ref\.a\.scenePoints:\[\],sceneTime=scenePoints\.length\?scenePoints\[occurrence%scenePoints\.length\]:null/);
   assert.match(main, /sceneTime-clipDuration\*\.15/);
 });
 
@@ -151,27 +151,31 @@ test('director commands have real render-path effects instead of silent no-op pa
   assert.match(main, /cameraEdit=.*camera_motion/);
   assert.match(main, /subtitlesEdit=.*add_subtitles/);
   assert.match(main, /subtitlesEdit&&!p\.lines\.length/);
-  assert.match(main, /if\(patch\.type==='add_subtitles'\)\$\('#burnLyrics'\)\.checked=true/);
+  assert.match(main, /if\(nextEdits\.some\(edit=>edit\.type==='add_subtitles'\)\)\$\('#burnLyrics'\)\.checked=true/);
 });
 test('NOVEX rebrand assets use the current theme across PWA metadata and icon', async () => {
   const manifest = JSON.parse(await readFile(new URL('../public/manifest.webmanifest', import.meta.url), 'utf8'));
   const icon = await readFile(new URL('../public/novex.svg', import.meta.url), 'utf8');
   const css = await readFile(new URL('../src/editorial-motion.css', import.meta.url), 'utf8');
+  const cyberpunk = await readFile(new URL('../src/cyberpunk-theme.css', import.meta.url), 'utf8');
   const sw = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
-  assert.equal(manifest.theme_color, '#f4f1ea');
-  assert.equal(manifest.background_color, '#f4f1ea');
-  assert.match(icon, /#d6ff5f/);
-  assert.match(icon, /#ff6e52/);
+  assert.equal(manifest.theme_color, '#070b13');
+  assert.equal(manifest.background_color, '#070b13');
+  assert.match(icon, /#c8ff55/);
+  assert.match(icon, /#54e7ff/);
   assert.match(css, /Editorial Motion Lab/);
   assert.match(css, /--lime:\s*#d6ff5f/);
   assert.match(css, /\.profile-avatar/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(sw, /novex-shell-v4/);
+  assert.match(cyberpunk, /--paper: #070b13/);
+  assert.match(cyberpunk, /color-scheme: dark/);
+  assert.match(sw, /novex-shell-v5/);
 });
 
 test('director rejects unsupported camera commands instead of silently recording a no-op', () => {
   assert.match(main, /Движение камеры сейчас доступно только для загруженного исходного видео/);
-  assert.match(main, /if\(S\.plan\)\{S\.plan=makePlan\(\);S\.plan\.edits=S\.edits\.map/);
+  assert.match(main, /function planWithDirectorEdits\(nextEdits\)/);
+  assert.match(main, /candidate=makePlan\(nextEdits\)/);
 });
 
 test('source-video editing mode can build a plan without reference clips', () => {
@@ -202,7 +206,7 @@ test('timeline selection, trim, reorder, duplicate and delete controls mutate th
   assert.match(main, /S\.plan\.timeline=next/);
   assert.match(main, /function persistPlanChanges\(/);
   assert.match(cloud, /cloud\.from\('novex_projects'\)\.update\(payload\)\.eq\('id', project\.cloudId\)/);
-  assert.match(main, /timelineVersion:2/);
+  assert.match(main, /timelineVersion:3,localProjectId:localId/);
   assert.match(main, /!d\.timelineVersion&&d\.useSourceVideo&&!refs\.length/);
 });
 
@@ -211,14 +215,23 @@ test('saved projects persist media in IndexedDB and restore reference, track and
   assert.match(main, /function openMediaDb\(/);
   assert.match(main, /async function saveProjectMedia\(/);
   assert.match(main, /async function readProjectMedia\(/);
-  assert.match(main, /async function restoreProjectMedia\(project,referenceNames\)/);
+  assert.match(main, /async function restoreProjectMedia\(project,referenceNames,generation=mediaLoadState\.generation,restoreEpoch=projectRestoreEpoch\)/);
   assert.match(main, /saveProjectMedia\(project\)\.then/);
-  assert.match(main, /let sourceOk=!!d\.sourceName&&!!S\.source&&S\.source\.name===d\.sourceName/);
-  assert.match(main, /const restored=await restoreProjectMedia\(p,refs\)/);
+  assert.match(main, /sourceOk=!!d\.sourceName&&fileMatchesIdentity\(S\.source,d\.sourceIdentity,d\.sourceName\)/);
+  assert.match(main, /const restored=await restoreProjectMedia\(p,refs,generation,restoreEpoch\)/);
   assert.match(main, /\.filter\(x=>x\.ref\|\|sourceOk\)/);
 });
 
-test('multiple reference videos play sequentially in preview with a soft handoff', async () => { const css=await readFile(new URL('../src/style.css',import.meta.url),'utf8'); assert.match(main,/function playReferenceAt\(index,autoplay=true,fade=true\)/); assert.match(main,/dataset\.previewSwitch/); assert.match(main,/v\.addEventListener\('loadeddata',reveal,\{once:true\}\);v\.src=item\.url;v\.load\(\)/); assert.match(main,/v\.dataset\.referencePlaylist='true'/); assert.match(main,/playReferenceAt\(current\+1,true,true\)/); assert.match(css,/#previewVideo\.preview-fade-out\{opacity:0\}/); assert.match(main,/d\.querySelector\('\.ref-preview'\)\.onclick=d\.querySelector\('\.ref-open'\)\.onclick=\(\)=>playReferenceAt/); });
+test('multiple reference videos play sequentially in preview with a soft handoff', async () => {
+  const css=await readFile(new URL('../src/style.css',import.meta.url),'utf8');
+  assert.match(main,/function playReferenceAt\(index,autoplay=true,fade=true\)/);
+  assert.match(main,/dataset\.previewSwitch/);
+  assert.match(main,/video\.addEventListener\('loadeddata',reveal,\{once:true\}\);video\.addEventListener\('error',fail,\{once:true\}\);video\.src=item\.url;video\.load\(\)/);
+  assert.match(main,/video\.dataset\.referencePlaylist='true'/);
+  assert.match(main,/playReferenceAt\(current\+1,true,true\)/);
+  assert.match(css,/#previewVideo\.preview-fade-out\{opacity:0\}/);
+  assert.match(main,/d\.querySelector\('\.ref-preview'\)\.onclick=d\.querySelector\('\.ref-open'\)\.onclick=\(\)=>playReferenceAt/);
+});
 test('preview and app shell are constrained to the viewport on mobile', async () => {
   const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
   assert.match(css, /html,body,#app\{width:100%;max-width:100%;min-width:0;min-height:100%;overflow-x:clip\}/);
@@ -274,33 +287,30 @@ test('default Supabase SMTP restriction gives a setup-specific message', () => {
 
 
 test('audio uploads validate replacement before releasing the current track', () => {
+  assert.match(main, /sequence:\+\+mediaLoadState\.track/);
   assert.match(main, /candidate\.onerror=\(\)=>finish\(new Error\(/);
-  assert.match(main, /Не удалось прочитать аудиофайл\. Попробуй MP3 или WAV/);
-  assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return/);
-  assert.match(main, /au\.pause\(\);if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);\s*S\.track=f;S\.trackUrl=nextUrl/);
-  assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);\s*au\.pause\(\)/);
+  assert.match(main, /URL\.revokeObjectURL\(url\);if\(mediaLoadCurrent\('track',token\)\)toast/);
+  assert.match(main, /if\(!mediaLoadCurrent\('track',token\)\)\{URL\.revokeObjectURL\(url\)/);
+  assert.match(main, /if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);S\.track=file;S\.trackUrl=url/);
 });
 
 
 test('reference preview recovers visibly when a selected video fails to load', () => {
-  assert.match(main, /const fail=\(\)=>\{if\(v\.dataset\.previewSwitch!==switchToken\|\|v\.dataset\.referencePreview!==item\.url\)return/);
-  assert.match(main, /v\.addEventListener\('error',fail,\{once:true\}\)/);
-  assert.match(main, /v\.removeEventListener\('error',fail\)/);
-  assert.match(main, /v\.removeEventListener\('loadeddata',reveal\);v\.removeEventListener\('error',fail\);v\.pause\(\)/);
-  assert.match(main, /v\.hidden=true;v\.removeAttribute\('src'\);v\.load\(\);delete v\.dataset\.referencePlaylist;delete v\.dataset\.referencePreview/);
+  assert.match(main, /const fail=\(\)=>\{if\(video\.dataset\.previewSwitch!==token\|\|video\.dataset\.referencePreview!==item\.url\)return/);
+  assert.match(main, /video\.addEventListener\('error',fail,\{once:true\}\)/);
+  assert.match(main, /video\.removeEventListener\('error',fail\);video\.pause\(\);video\.removeAttribute\('src'\);video\.load\(\)/);
+  assert.match(main, /delete video\.dataset\.previewKind;delete video\.dataset\.referencePreview;delete video\.dataset\.referencePlaylist/);
   assert.match(main, /\$\('#previewStage'\)\.classList\.remove\('has-preview'\);\$\('#previewStage \.preview-placeholder'\)\.hidden=false/);
-  assert.match(main, /\$\('#previewClock'\)\.textContent='00:00 \/ 00:00';\$\('#previewSeekFill'\)\.style\.width='0%'/);
-  assert.match(main, /Не удалось открыть видео '\+item\.file\.name/);
-  assert.match(main, /v\.classList\.remove\('preview-fade-out'\)/);
-  assert.match(main, /\$\('#playPreview'\)\.textContent='▶'/);
+  assert.match(main, /Не удалось открыть референс /);
+  assert.match(main, /video\.classList\.remove\('preview-fade-out'\)/);
 });
 
 
 test('invalid audio replacement preserves the last valid track and player', () => {
-  assert.match(main, /const nextUrl=URL\.createObjectURL\(f\),candidate=document\.createElement\('audio'\);candidate\.preload='metadata';candidate\.src=nextUrl/);
-  assert.match(main, /catch\(err\)\{\s*candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return;\s*\}/);
-  assert.match(main, /const au=\$\('#trackAudio'\),duration=Number\.isFinite\(candidate\.duration\)\?candidate\.duration:0/);
-  assert.match(main, /au\.pause\(\);if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);\s*S\.track=f;S\.trackUrl=nextUrl;S\.duration=duration/);
+  assert.match(main, /const token=\{generation:mediaLoadState\.generation,sequence:\+\+mediaLoadState\.track\},url=URL\.createObjectURL\(file\),candidate/);
+  assert.match(main, /catch\(error\)\{candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(url\)/);
+  assert.match(main, /if\(!mediaLoadCurrent\('track',token\)\)\{URL\.revokeObjectURL\(url\)/);
+  assert.match(main, /if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);S\.track=file;S\.trackUrl=url;S\.duration=duration/);
 });
 
 
@@ -390,28 +400,32 @@ test('starting a new render releases stale export URLs and clears only the old e
 
 
 test('reset stops audio playback and releases the audio element source', () => {
-  assert.match(main, /function reset\(\)\{if\(S\.busy\)return toast\('Дождись завершения рендера\.','warn'\);const au=\$\('#trackAudio'\),sourceAudio=\$\('#sourceAudioPreview'\);au\.pause\(\);au\.removeAttribute\('src'\);au\.load\(\);au\.hidden=true;sourceAudio\.pause\(\);sourceAudio\.removeAttribute\('src'\);sourceAudio\.load\(\);sourceAudio\.hidden=true/);
+  assert.match(main, /function reset\(\)\{if\(S\.busy\)return toast\('Дождись завершения рендера\.'\,'warn'\);invalidateMediaLoads\(\);const video=/);
+  assert.match(main, /const au=\$\('#trackAudio'\),sourceAudio=\$\('#sourceAudioPreview'\);au\.pause\(\);au\.removeAttribute\('src'\);au\.load\(\);au\.hidden=true;sourceAudio\.pause\(\)/);
   assert.match(main, /if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\)/);
+  assert.match(main, /\$\('#lyrics'\)\.value='';\$\('#sourceTranscript'\)\.value=''/);
+  assert.match(main, /\$\('#burnLyrics'\)\.checked=false/);
 });
 
 test('replacing the source video revokes the previous object URL only after the new video is probed', () => {
-  assert.match(main, /const p=await probe\(f\),audioPreview=\$\('#sourceAudioPreview'\);audioPreview\.pause\(\);audioPreview\.removeAttribute\('src'\);audioPreview\.load\(\);\s*if\(S\.sourceUrl\)URL\.revokeObjectURL\(S\.sourceUrl\);S\.source=f;S\.sourceUrl=p\.url/);
-  assert.match(main, /e\.target\.value='';stats\(\);library\(\)/);
-  assert.match(main, /catch\(err\)\{e\.target\.value='';toast\(err\.message,'error'\);\}/);
+  assert.match(main, /const item=await probe\(file\);if\(!mediaLoadCurrent\('source',token\)\)\{URL\.revokeObjectURL\(item\.url\)/);
+  assert.match(main, /if\(oldUrl\)URL\.revokeObjectURL\(oldUrl\);S\.source=file;S\.sourceUrl=item\.url/);
+  assert.match(main, /input\.value='';stats\(\);library\(\)/);
+  assert.match(main, /catch\(error\)\{input\.value='';if\(mediaLoadCurrent\('source',token\)\)toast\(error\.message,'error'\);\}/);
 });
 
 
 test('successful audio replacement reuses the validated URL and updates track metadata', () => {
-  assert.match(main, /au\.src=nextUrl;au\.volume=1;au\.hidden=false;au\.load\(\);\$\('#audioExportControls'\)\.hidden=false;syncSourceAudioControls\(\)/);
-  assert.match(main, /\$\('#trackName'\)\.textContent=f\.name;\$\('#trackMeta'\)\.textContent=clock\(S\.duration\)\+' · '\+size\(f\.size\)/);
-  assert.match(main, /e\.target\.value='';stats\(\);library\(\);toast\('Трек загружен\.'/);
+  assert.match(main, /audio\.src=url;audio\.volume=1;audio\.hidden=false;audio\.load\(\);\$\('#audioExportControls'\)\.hidden=false;syncSourceAudioControls\(\)/);
+  assert.match(main, /\$\('#trackName'\)\.textContent=file\.name;\$\('#trackMeta'\)\.textContent=clock\(S\.duration\)\+' · '\+size\(file\.size\)/);
+  assert.match(main, /input\.value='';stats\(\);library\(\);toast\('Трек загружен\.'/);
 });
 
 test('media metadata probing has a timeout and releases failed temporary media URLs', () => {
   assert.match(main, /Истекло время чтения '\+file\.name|Истекло время чтения \+file\.name/);
-  assert.match(main, /const timer=setTimeout\(\(\)=>finish\(new Error\('Истекло время чтения аудиофайла/);
-  assert.match(main, /v\.removeAttribute\('src'\);v\.load\(\);URL\.revokeObjectURL\(u\);throw e/);
-  assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(nextUrl\)/);
+  assert.match(main, /const timeout=setTimeout\(\(\)=>finish\(new Error\('Истекло время чтения аудиофайла/);
+  assert.match(main, /video\.removeAttribute\('src'\);video\.load\(\);URL\.revokeObjectURL\(url\);throw error/);
+  assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(url\)/);
 });
 
 
@@ -436,9 +450,11 @@ test('final MP4 validation checks audio/video streams and decoded dimensions/dur
 
 
 test('removing reference clips preserves active playlist index and clears empty preview state', () => {
-  assert.match(main, /const v=\$\('#previewVideo'\),activePlaylist=v\.dataset\.referencePlaylist==='true',removedActive=activePlaylist&&v\.dataset\.referencePreview===x\.url/);
-  assert.match(main, /v\.dataset\.referenceIndex=String\(S\.refs\.findIndex\(y=>y\.url===v\.dataset\.referencePreview\)\)/);
-  assert.match(main, /if\(!S\.refs\.length\)\{v\.pause\(\);v\.removeAttribute\('src'\);v\.load\(\);delete v\.dataset\.referencePlaylist;delete v\.dataset\.referenceIndex;delete v\.dataset\.referencePreview/);
+  assert.match(main, /activeUrl=video\.dataset\.previewKind==='reference'\?video\.dataset\.referencePreview:null,wasActive=activeUrl===x\.url/);
+  assert.match(main, /if\(wasActive\)\{if\(\$\('#useSourceVideo'\)\.checked&&S\.source\)showSourcePreview\(\);else if\(S\.refs\.length\)playReferenceAt/);
+  assert.match(main, /const nextIndex=S\.refs\.findIndex\(item=>item\.url===activeUrl\);if\(nextIndex>=0\)video\.dataset\.referenceIndex=String\(nextIndex\)/);
+  assert.match(main, /else clearMediaPreview\(\)/);
+  assert.match(main, /URL\.revokeObjectURL\(x\.url\);refList\(\);stats\(\);library\(\)/);
 });
 
 
@@ -493,7 +509,7 @@ test('audio controls expose a mutually exclusive track-or-video source', async (
 });
 
 test('New Project resets the selected audio source to music', () => {
-  assert.match(main, /\$\('input\[name="audioMode"\]\[value="music"\]'\)\.checked=true;syncSourceAudioControls\(\)/);
+  assert.match(main, /\$\('input\[name="audioMode"\]\[value="music"\]'\)\.checked=true;\$\('#burnLyrics'\)\.checked=false;syncSourceAudioControls\(\)/);
 });
 
 test('3D export pauses the live preview and captures deterministic frame timestamps', () => {
@@ -514,12 +530,9 @@ test('browser render smoke exercises the real 3D export path with software WebGL
 
 
 test('local project metadata survives reload and cloud refresh preserves local-only projects', () => {
-  assert.match(main, /const LOCAL_PROJECTS_KEY='novex\.localProjects\.v1'/);
-  assert.match(main, /function loadLocalProjects\(\)/);
-  assert.match(main, /function persistLocalProjects\(\)/);
-  assert.match(main, /S\.projects=loadLocalProjects\(\)/);
-  assert.match(main, /persistLocalProjects\(\);stats\(\)/);
-  assert.match(main, /const local=loadLocalProjects\(\)/);
+  assert.match(main, /const rows=await cloudListProjects\(\),local=loadLocalProjects\(\)/);
+  assert.match(main, /remoteMediaIds=new Set\(remote\.map\(localMediaProjectId\)\)/);
+  assert.match(main, /local\.filter\(x=>!remoteIds\.has\(String\(x\.cloudId\|\|''\)\)&&!remoteMediaIds\.has\(localMediaProjectId\(x\)\)\)/);
   assert.match(main, /localStorage\.setItem\(LOCAL_PROJECTS_KEY,JSON\.stringify/);
 });
 
@@ -599,9 +612,9 @@ test('video audio selection does not require replacing reference visuals with so
 });
 
 test('reference list restores first uploaded clip when preview is blank, including after an output state change', () => {
-  assert.match(main, /const activeReference=preview\.dataset\.referencePreview&&S\.refs\.some/);
-  assert.match(main, /const hasPlayableOutput=Boolean\(S\.output&&preview\.getAttribute\('src'\)&&!preview\.hidden\)/);
-  assert.match(main, /if\(!activeReference&&!hasPlayableOutput\)\{\s*playReferenceAt\(0,true,false\)/);
+  assert.match(main, /hasOutput=video\.dataset\.previewKind==='output'&&!!video\.getAttribute\('src'\)&&!video\.hidden/);
+  assert.match(main, /if\(!hasOutput&&!hasSource&&!hasReference\)/);
+  assert.match(main, /if\(sourceWanted\)showSourcePreview\(\);else if\(S\.refs\.length\)playReferenceAt\(0,true,false\)/);
   assert.match(main, /#referenceList/);
 });
 
@@ -609,7 +622,10 @@ test('reference list restores first uploaded clip when preview is blank, includi
 test('Chromium smoke covers redesigned visuals and working accessible controls', async () => {
   const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(smoke, /Editorial theme did not apply/);
+  assert.match(smoke, /Dark theme, centered upload CTA or play-ring alignment failed/);
+  assert.match(smoke, /novex-smoke-portrait\.webm/);
+  assert.match(smoke, /Portrait reference drifted inside the preview stage/);
+  assert.match(smoke, /centered upload CTA and aligned animated play ring/);
   assert.match(smoke, /#syncLyrics/);
   assert.match(smoke, /lyricsStatus/);
   assert.match(smoke, /aria-valuenow/);
