@@ -152,7 +152,7 @@ async function cleanupRenderArtifacts(){
  finally{S.refs.forEach(ref=>{delete ref._ff;});}
 }
 
-$('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,W=p.aspect==='9:16'?Math.round(p.resolution*9/16/2)*2:p.aspect==='1:1'?p.resolution:Math.round(p.resolution*16/9/2)*2,H=p.aspect==='16:9'?Math.round(p.resolution*9/16/2)*2:p.resolution;const entries=[];let sourceAudioInput=null,sourceAudioSeek=0;
+$('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,W=p.aspect==='9:16'?Math.round(p.resolution*9/16/2)*2:p.aspect==='1:1'?p.resolution:Math.round(p.resolution*16/9/2)*2,H=p.aspect==='16:9'?Math.round(p.resolution*9/16/2)*2:p.resolution;let sourceAudioInput=null,sourceAudioSeek=0;
 if(S.source&&$('#useSourceVideo').checked){
  const sourceExt=(S.source.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
  const sourceInput='source-video.'+sourceExt;sourceAudioInput=sourceInput;
@@ -161,8 +161,38 @@ if(S.source&&$('#useSourceVideo').checked){
  const sourceDuration=Number(S.sourceMeta?.duration)||r.duration;const sourceSeek=Math.max(0,Math.min(r.start,Math.max(0,sourceDuration-0.1)));sourceAudioSeek=sourceSeek;const sourceArgs=['-ss',String(sourceSeek),'-i',sourceInput,'-vf',`tpad=stop_mode=clone:stop_duration=${r.duration},scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p`,'-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','silent.mp4'];
  if(await ff.exec(sourceArgs)!==0)throw Error('Не удалось подготовить исходное видео. Попробуй MP4/H.264 или более короткий файл.');
 }else{
-for(let i=0;i<p.timeline.length;i++){const s=p.timeline[i],f='ref'+i+'.mp4',part='part'+i+'.mp4';progress(5+30*i/p.timeline.length,'Подготавливаю фрагменты…',(i+1)+' / '+p.timeline.length+' · '+s.ref.file.name);if(!s.ref._ff) {s.ref._ff='source'+S.refs.indexOf(s.ref)+'.mp4';await ff.writeFile(s.ref._ff,await fetchFile(s.ref.file));}const start=Math.max(0,Number(s.sourceStart)||0),dur=Math.max(.1,s.end-s.start);const res=await ff.exec(['-ss',String(start),'-i',s.ref._ff,'-t',String(dur),'-vf',`tpad=stop_mode=clone:stop_duration=${dur},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},zoompan=z='min(1.025+on*0.0003,1.06)':x='iw/2-(iw/zoom/2)+sin(on/18+${i})*iw*0.005':y='ih/2-(ih/zoom/2)+cos(on/24+${i})*ih*0.005':d=1:s=${W}x${H}:fps=30,setsar=1,format=yuv420p`,'-an','-c:v','libx264','-preset','ultrafast','-crf','25','-y',part]);if(res!==0)throw Error('Ошибка кодирования фрагмента '+(i+1));entries.push("file '"+part+"'");}await ff.writeFile('concat.txt',new TextEncoder().encode(entries.join('\n')));progress(38,'Собираю монтаж…','Объединяю '+entries.length+' клипов.');if(await ff.exec(['-f','concat','-safe','0','-i','concat.txt','-c','copy','-y','silent.mp4'])!==0)throw Error('Не удалось соединить клипы.');
-
+const segmentDurations=[];
+for(let i=0;i<p.timeline.length;i++){
+ const s=p.timeline[i],part='part'+i+'.mp4';
+ const start=Math.max(0,Number(s.sourceStart)||0),dur=Math.max(.1,s.end-s.start);
+ segmentDurations.push(dur);
+ progress(5+30*i/Math.max(1,p.timeline.length),'Подготавливаю фрагменты…',(i+1)+' / '+p.timeline.length+' · '+s.ref.file.name);
+ if(!s.ref._ff){s.ref._ff='source'+S.refs.indexOf(s.ref)+'.mp4';await ff.writeFile(s.ref._ff,await fetchFile(s.ref.file));}
+ const res=await ff.exec(['-ss',String(start),'-i',s.ref._ff,'-t',String(dur),'-vf',`tpad=stop_mode=clone:stop_duration=${dur},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},zoompan=z='min(1.025+on*0.0003,1.06)':x='iw/2-(iw/zoom/2)+sin(on/18+${i})*iw*0.005':y='ih/2-(ih/zoom/2)+cos(on/24+${i})*ih*0.005':d=1:s=${W}x${H}:fps=30,setsar=1,format=yuv420p`,'-an','-c:v','libx264','-preset','ultrafast','-crf','25','-y',part]);
+ if(res!==0)throw Error('Ошибка кодирования фрагмента '+(i+1));
+}
+if(!segmentDurations.length)throw Error('Добавь хотя бы один видеофрагмент в монтажный план.');
+progress(38,'Собираю монтаж…',segmentDurations.length>1?'Плавно соединяю '+segmentDurations.length+' клипов.':'Подготавливаю один видеоклип.');
+if(segmentDurations.length===1){
+ if(await ff.exec(['-i','part0.mp4','-c','copy','-y','silent.mp4'])!==0)throw Error('Не удалось подготовить видеоклип.');
+}else{
+ const transition=Math.max(1/30,Math.floor(Math.min(.35,...segmentDurations.map(d=>d*.45))*30)/30);
+ const overlapTotal=transition*(segmentDurations.length-1);
+ const padding=Math.max(0,r.duration-(segmentDurations.reduce((sum,d)=>sum+d,0)-overlapTotal));
+ const args=[];
+ for(let i=0;i<segmentDurations.length;i++)args.push('-i','part'+i+'.mp4');
+ const filters=[];
+ for(let i=0;i<segmentDurations.length;i++)filters.push('['+i+':v]settb=AVTB,setpts=PTS-STARTPTS,fps=30,format=yuv420p[v'+i+']');
+ let current='v0',elapsed=segmentDurations[0];
+ for(let i=1;i<segmentDurations.length;i++){
+  const next='x'+i,offset=Math.max(0,elapsed-transition*(i-1)-transition);
+  filters.push('['+current+'][v'+i+']xfade=transition=fade:duration='+transition.toFixed(6)+':offset='+offset.toFixed(6)+'['+next+']');
+  current=next;elapsed+=segmentDurations[i];
+ }
+ filters.push('['+current+']tpad=stop_mode=clone:stop_duration='+padding.toFixed(6)+',format=yuv420p[outv]');
+ args.push('-filter_complex',filters.join(';'),'-map','[outv]','-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','silent.mp4');
+ if(await ff.exec(args)!==0)throw Error('Не удалось собрать плавные переходы между клипами. Попробуй более короткие фрагменты.');
+}
 }
 const threeDEdit=(S.edits||[]).find(e=>e.type==='add_3d_title');
 if(threeDEdit){
