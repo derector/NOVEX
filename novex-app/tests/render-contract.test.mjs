@@ -378,3 +378,14 @@ test('media metadata probing has a timeout and releases failed temporary media U
   assert.match(main, /v\.removeAttribute\('src'\);v\.load\(\);URL\.revokeObjectURL\(u\);throw e/);
   assert.match(main, /candidate\.removeAttribute\('src'\);candidate\.load\(\);URL\.revokeObjectURL\(nextUrl\)/);
 });
+
+
+test('export dimensions preserve the selected aspect ratio and use 720p as the long edge for landscape', () => {
+  assert.match(main, /baseSize=Math\.max\(2,Math\.round\(p\.resolution\/2\)\*2\)/);
+  assert.match(main, /W=p\.aspect==='9:16'\?Math\.max\(2,Math\.round\(baseSize\*9\/16\/2\)\*2\):p\.aspect==='1:1'\?baseSize:Math\.max\(2,Math\.round\(baseSize\*16\/9\/2\)\*2\),H=p\.aspect==='16:9'\?baseSize:p\.aspect==='9:16'\?baseSize:baseSize/);
+});
+
+test('MP4 export validates the ISO base media file signature before presenting a download', () => {
+  assert.match(main, /const mp4Head=Array\.from\(data\.slice\(4,8\),x=>String\.fromCharCode\(x\)\)\.join\(''\);if\(mp4Head!=='ftyp'\)throw Error/);
+  assert.match(main, /progress\(98,'Проверяю контейнер MP4…'/);
+});
