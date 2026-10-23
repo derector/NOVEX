@@ -434,3 +434,20 @@ input,textarea,select,button{max-width:100%}
 /* Keyboard focus: keep every interactive control visible against NOVEX's dark surfaces. */
 :where(a,button,input,textarea,select,[tabindex]):focus-visible{outline:2px solid #6ce7ff;outline-offset:3px}
 @media(forced-colors:active){:where(a,button,input,textarea,select,[tabindex]):focus-visible{outline:2px solid CanvasText;outline-offset:3px}}
+
+
+/* Android/mobile: make uploaded reference videos unmistakably visible and tappable. */
+.media-item-rich{display:grid;grid-template-columns:112px minmax(0,1fr) auto;align-items:center;gap:12px}
+.ref-preview{position:relative;display:block;width:112px;aspect-ratio:16/10;overflow:hidden;padding:0;border:1px solid var(--line,#2a2b3a);border-radius:10px;background:#090a10;color:#d8ccff;cursor:pointer}
+.ref-preview video{display:block;width:100%;height:100%;object-fit:cover;background:#151321}
+.ref-preview>span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:32px;height:32px;border:1px solid #bca9ff99;border-radius:50%;background:#0b0917bb}
+.media-copy{min-width:0}.media-copy>b{display:block;overflow-wrap:anywhere}.media-copy>small{display:block;line-height:1.5}
+#previewVideo[hidden]{display:none!important}
+#previewStage .preview-placeholder[hidden]{display:none!important}
+@media(max-width:560px){
+ .media-item-rich{grid-template-columns:96px minmax(0,1fr) auto;gap:9px}
+ .ref-preview{width:96px;aspect-ratio:4/3}
+ .media-copy .text-button{min-height:32px}
+ #referenceList{display:grid;gap:9px}
+ #previewVideo{object-fit:contain}
+}
