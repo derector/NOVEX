@@ -398,9 +398,9 @@ if(threeDEdit){
  if(!motion3d)throw Error('Не удалось создать 3D-сцену для экспорта.');
  motion3d.setText(threeDEdit.text||'NOVEX');
  motion3d.setOptions(threeDEdit.style||{});
- const fps=Math.max(1,Math.min(Math.ceil(Math.min(threeDEdit.duration||2.8,r.duration)*fps),180));
+ const overlayDuration=Math.min(Math.max(.1,Number(threeDEdit.duration)||2.8),r.duration),fps=30,frames=Math.max(1,Math.min(180,Math.ceil(overlayDuration*fps)));
  progress(40,'Рендерю 3D-слой…',frames+' прозрачных кадров в разрешении '+W+'×'+H);
- const restore=await motion3d.exportFrames({width:W,height:H,frames,fps,start:Math.max(0,threeDEdit.start||0),duration:Math.min(threeDEdit.duration||2.8,r.duration),writeFrame:async(i,bytes)=>ff.writeFile('3d_'+String(i).padStart(4,'0')+'.png',bytes)});
+ const restore=await motion3d.exportFrames({width:W,height:H,frames,fps,start:Math.max(0,threeDEdit.start||0),duration:overlayDuration,writeFrame:async(i,bytes)=>ff.writeFile('3d_'+String(i).padStart(4,'0')+'.png',bytes)});
  const overlayStart=Math.max(0,Number(threeDEdit.start)||0),overlayEnd=Math.min(r.duration,overlayStart+(threeDEdit.duration||2.8));
  const overlayArgs=['-i','silent.mp4','-itsoffset',String(overlayStart),'-framerate',String(fps),'-start_number','0','-i','3d_%04d.png','-filter_complex',"[0:v][1:v]overlay=0:0:enable='between(t,"+overlayStart.toFixed(3)+","+overlayEnd.toFixed(3)+")':eof_action=pass:shortest=0,format=yuv420p[v]",'-map','[v]','-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','composite.mp4'];
  if(await ff.exec(overlayArgs)!==0)throw Error('Не удалось наложить 3D-слой на видео.');
