@@ -412,14 +412,17 @@ test('removing reference clips preserves active playlist index and clears empty 
 });
 
 
-test('source audio mixing maps the source and music streams through normalized, limited amix', () => {
-  assert.match(main, /if\(useSourceAudio\)args\.push\('-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\)/);
-  assert.match(main, /\[1:a:0\]aresample=48000,volume='\+sourceGain\+'\[src\];\[2:a:0\]aresample=48000,volume='\+musicGain\+'\[music\];\[src\]\[music\]amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0\.95\[aout\]/);
-  assert.match(main, /args\.push\('-filter_complex',[\s\S]*?'-map','\[aout\]'\)/);
-  assert.match(main, /sourceAudioSeek=sourceSeek/);
-  assert.match(main, /await validateExportMedia\(blob,W,H,r\.duration\)/);
+test('source, music and procedural SFX streams are mapped through a normalized, limited audio mix', () => {
+  assert.ok(main.includes("sourceAudioIndex=inputIndex++"));
+  assert.ok(main.includes("musicAudioIndex=inputIndex++"));
+  assert.ok(main.includes("sfxAudioIndex=inputIndex++"));
+  assert.ok(main.includes("['+sourceAudioIndex+':a:0]aresample=48000,volume='+sourceGain+'[src]"));
+  assert.ok(main.includes("['+musicAudioIndex+':a:0]aresample=48000,volume='+musicGain+'[music]"));
+  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
+  assert.ok(main.includes("args.push('-filter_complex',audioFilters.join(';'),'-map','[aout]')"));
+  assert.ok(main.includes("sourceAudioSeek=sourceSeek"));
+  assert.ok(main.includes("await validateExportMedia(blob,W,H,r.duration)"));
 });
-
 
 
 test('director capability note accurately describes implemented export effects', async () => {
