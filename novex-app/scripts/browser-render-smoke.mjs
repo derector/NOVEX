@@ -203,6 +203,9 @@ try {
   }, null, { timeout: 15000 });
   const motionStatus = (await page.locator('#motion3dStatus').innerText()).trim();
   if (!motionStatus.includes('Воспроизведение 3D-сцены')) throw new Error('3D preview did not initialize: ' + motionStatus);
+  await page.locator('#editCommand').fill('Добавь графический акцент-кольцо с плавным появлением.');
+  await page.locator('#applyEditCommand').click();
+  await page.waitForFunction(() => document.querySelector('#directorPlan')?.textContent.includes('Кольцевой акцент'), null, { timeout: 10000 });
   await page.locator('#burnLyrics').uncheck();
   await page.locator('.segmented label').filter({ has: page.locator('input[name="resolution"][value="480"]') }).click();
   await page.locator('#planBtn').click();
