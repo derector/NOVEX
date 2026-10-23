@@ -361,7 +361,7 @@ test('reset stops audio playback and releases the audio element source', () => {
 });
 
 test('replacing the source video revokes the previous object URL only after the new video is probed', () => {
-  assert.match(main, /const p=await probe\(f\);if\(S\.sourceUrl\)URL\.revokeObjectURL\(S\.sourceUrl\);S\.source=f;S\.sourceUrl=p\.url/);
+  assert.match(main, /const p=await probe\(f\),audioPreview=\$\('#sourceAudioPreview'\);audioPreview\.pause\(\);audioPreview\.removeAttribute\('src'\);audioPreview\.load\(\);if\(S\.sourceUrl\)URL\.revokeObjectURL\(S\.sourceUrl\);S\.source=f;S\.sourceUrl=p\.url/);
 });
 
 
@@ -441,7 +441,7 @@ test('source transcript option rejects an empty transcript instead of silently o
 test('source-only mode can be selected before analysis when a source video is uploaded', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(html, /<div id="sourceTranscriptWrap" class="source-transcript hidden"><label class="check-row"><input type="checkbox" id="useSourceVideo">/);
-  assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="sourceTranscript"[\s\S]*?name="audioMode"[\s\S]*?value="mix"/);
+  assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="sourceTranscript"[\s\S]*?id="sourceAudioPreview"/);
   assert.equal((html.match(/id="useSourceVideo"/g) || []).length, 1);
 });
 
@@ -458,4 +458,17 @@ test('audio controls expose music/original/mix modes, source preview and adjusta
   assert.match(main, /audioMode==='mix'\)\{args\.push\('-filter_complex'/);
   assert.match(main, /sourceAudioPreview'\)\.onerror/);
   assert.match(css, /\.audio-volume-grid input\[type="range"\]/);
+});
+
+
+test('music volume is available with a track, while source modes activate only for selected source footage', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="audioExportControls" class="audio-export-controls" hidden/);
+  assert.match(html, /name="audioMode" value="original" disabled/);
+  assert.match(html, /name="audioMode" value="mix" disabled/);
+  assert.match(html, /id="musicAudioVolume" type="range" min="0" max="100" step="1" value="85" disabled/);
+  assert.ok(main.includes("$('#audioExportControls').hidden=false;$('#musicAudioVolume').disabled=false"));
+  assert.ok(main.includes("function syncSourceAudioControls(){const enabled=!!S.source&&$('#useSourceVideo').checked"));
+  assert.ok(main.includes("$('#useSourceVideo').onchange=syncSourceAudioControls"));
+  assert.ok(main.includes("$('#audioExportControls').hidden=true;$('#musicAudioVolume').disabled=true"));
 });
