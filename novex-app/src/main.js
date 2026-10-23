@@ -6,6 +6,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import './style.css';
 import './editorial-motion.css';
 import './cyberpunk-theme.css';
+import './premium-interactions.js';
 import { localMediaProjectId, matchProjectReferences, retimeCaptionLines } from './project-utils.js';
 import { splitLyricsIntoLines } from './ui-helpers.js';
 import { analyzeBeatGrid, snapCutToBeat } from './audio-analysis.js';
