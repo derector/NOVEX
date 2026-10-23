@@ -11,7 +11,7 @@ export function createMotionDirector({duration=1,fps=30}={}){
  const add=(list,type,target,opts={})=>{
   const start=Math.max(0,number(opts.at??opts.start,0));
   const span=Math.max(0,number(opts.duration??opts.dur,type==='set'?0:.5));
-  const cue={id:'motion-'+(++id),type,target:keyOf(target),start,duration:span,end:Math.min(D,start+span),...opts};
+  const cue={id:'motion-'+(++id),type,target:keyOf(target),start,duration:span,end:start+span,...opts};
   list.push(cue);list.sort((a,b)=>a.start-b.start);return cue;
  };
  const tl={
