@@ -191,7 +191,7 @@ test('saved projects persist media in IndexedDB and restore reference, track and
   assert.match(main, /async function readProjectMedia\(/);
   assert.match(main, /async function restoreProjectMedia\(project,referenceNames\)/);
   assert.match(main, /saveProjectMedia\(project\)\.then/);
-  assert.match(main, /const sourceOk=!!d\.sourceName&&!!S\.source&&S\.source\.name===d\.sourceName/);
+  assert.match(main, /let sourceOk=!!d\.sourceName&&!!S\.source&&S\.source\.name===d\.sourceName/);
   assert.match(main, /const restored=await restoreProjectMedia\(p,refs\)/);
   assert.match(main, /\.filter\(x=>x\.ref\|\|sourceOk\)/);
 });
