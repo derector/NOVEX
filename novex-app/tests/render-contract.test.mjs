@@ -415,3 +415,12 @@ test('source audio mixing maps the source and music streams through normalized, 
   assert.match(main, /await validateExportMedia\(blob,W,H,r\.duration\)/);
 });
 
+
+
+test('director capability note accurately describes implemented export effects', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /3D-логотип и кинетические титры вшиваются в MP4/);
+  assert.match(html, /Движение камеры доступно для исходного видео/);
+  assert.match(html, /точная синхронизация слов автоматически не выполняются/);
+  assert.doesNotMatch(html, /Остальные команды пока добавляют правки в план; их визуальный экспорт ещё не реализован/);
+});
