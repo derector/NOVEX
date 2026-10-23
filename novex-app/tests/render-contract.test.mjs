@@ -268,9 +268,11 @@ test('reference preview recovers visibly when a selected video fails to load', (
 });
 
 
-test('failed audio replacement clears stale duration and refreshes dependent UI', () => {
-  assert.match(main, /S\.trackUrl=null;S\.track=null;S\.duration=0;au\.removeAttribute\('src'\)/);
-  assert.match(main, /\$\('#fullDurationLabel'\)\.textContent='Вся длительность · 00:00';stats\(\);library\(\);toast\(err\.message,'error'\)/);
+test('invalid audio replacement preserves the last valid track and player', () => {
+  assert.match(main, /const nextUrl=URL\.createObjectURL\(f\),candidate=document\.createElement\('audio'\);candidate\.preload='metadata';candidate\.src=nextUrl/);
+  assert.match(main, /catch\(err\)\{\s*URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return;\s*\}/);
+  assert.match(main, /const au=\$\('#trackAudio'\),duration=Number\.isFinite\(candidate\.duration\)\?candidate\.duration:0/);
+  assert.match(main, /au\.pause\(\);if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);\s*S\.track=f;S\.trackUrl=nextUrl;S\.duration=duration/);
 });
 
 
@@ -359,4 +361,11 @@ test('reset stops audio playback and releases the audio element source', () => {
 
 test('replacing the source video revokes the previous object URL only after the new video is probed', () => {
   assert.match(main, /const p=await probe\(f\);if\(S\.sourceUrl\)URL\.revokeObjectURL\(S\.sourceUrl\);S\.source=f;S\.sourceUrl=p\.url/);
+});
+
+
+test('successful audio replacement reuses the validated URL and updates track metadata', () => {
+  assert.match(main, /au\.src=nextUrl;au\.hidden=false;au\.load\(\)/);
+  assert.match(main, /\$\('#trackName'\)\.textContent=f\.name;\$\('#trackMeta'\)\.textContent=clock\(S\.duration\)\+' · '\+size\(f\.size\)/);
+  assert.match(main, /e\.target\.value='';stats\(\);library\(\);toast\('Трек загружен\.'\)/);
 });
