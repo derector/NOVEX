@@ -24,6 +24,15 @@ export function createLogoScene(canvas){
  const particleGeometry=new THREE.BufferGeometry();particleGeometry.setAttribute('position',new THREE.BufferAttribute(particlePositions,3));
  const particleMaterial=new THREE.PointsMaterial({color:0x9dbbff,size:.035,transparent:true,opacity:.68,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true});
  const particles=new THREE.Points(particleGeometry,particleMaterial);scene.add(particles);
+ const streakCount=72,streakPositions=new Float32Array(streakCount*2*3);
+ for(let i=0;i<streakCount;i++){
+  const x=(Math.random()-.5)*16,y=(Math.random()-.5)*9,z=-2-Math.random()*14,length=.25+Math.random()*1.05,tilt=(Math.random()-.5)*.18;
+  const k=i*6;streakPositions[k]=x;streakPositions[k+1]=y;streakPositions[k+2]=z;
+  streakPositions[k+3]=x+length;streakPositions[k+4]=y+tilt;streakPositions[k+5]=z;
+ }
+ const streakGeometry=new THREE.BufferGeometry();streakGeometry.setAttribute('position',new THREE.BufferAttribute(streakPositions,3));
+ const streakMaterial=new THREE.LineBasicMaterial({color:0x8beaff,transparent:true,opacity:.72,blending:THREE.AdditiveBlending,depthWrite:false});
+ const streaks=new THREE.LineSegments(streakGeometry,streakMaterial);streaks.visible=false;scene.add(streaks);
  const ringMaterialA=new THREE.MeshBasicMaterial({color:0x42dfff,transparent:true,opacity:.48,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false});
  const ringMaterialB=new THREE.MeshBasicMaterial({color:0xb45cff,transparent:true,opacity:.36,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false});
  const ringA=new THREE.Mesh(new THREE.TorusGeometry(2.35,.012,8,120),ringMaterialA),ringB=new THREE.Mesh(new THREE.TorusGeometry(2.8,.009,8,120),ringMaterialB);
@@ -72,6 +81,11 @@ export function createLogoScene(canvas){
   camera.lookAt(0,0,0);
   if(cameraMode==='whip-pan')camera.rotation.z+=Math.sin(t*5.4)*.045*Math.exp(-t*.6);
   particles.visible=effectMode!=='none';
+  streaks.visible=effectMode==='light-streaks';
+  streaks.rotation.z=Math.sin(t*1.8)*.035;
+  streaks.rotation.y=t*.025;
+  streaks.position.x=Math.sin(t*3.4)*.28;
+  streakMaterial.opacity=.48+.28*(.5+.5*Math.sin(t*7.5));
   ringA.visible=effectMode==='energy-rings'||effectMode==='cinematic-particles'||effectMode==='light-streaks';
   ringB.visible=ringA.visible;
   particles.rotation.z=effectMode==='light-streaks'?Math.sin(t*1.7)*.12:Math.sin(t*.15)*.025;
@@ -134,6 +148,6 @@ export function createLogoScene(canvas){
    }
    return ()=>{renderer.setClearColor(0x000000,0);};
   },
-  dispose(){disposed=true;playing=false;cancelAnimationFrame(raf);ro.disconnect();if(mesh)mesh.geometry.dispose();particleGeometry.dispose();particleMaterial.dispose();ringA.geometry.dispose();ringB.geometry.dispose();ringMaterialA.dispose();ringMaterialB.dispose();mat.dispose();renderer.dispose();}
+  dispose(){disposed=true;playing=false;cancelAnimationFrame(raf);ro.disconnect();if(mesh)mesh.geometry.dispose();particleGeometry.dispose();particleMaterial.dispose();streakGeometry.dispose();streakMaterial.dispose();ringA.geometry.dispose();ringB.geometry.dispose();ringMaterialA.dispose();ringMaterialB.dispose();mat.dispose();renderer.dispose();}
  };
 }
