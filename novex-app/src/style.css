@@ -412,3 +412,6 @@ input,textarea,select,button{max-width:100%}
 
 /* NOVEX audio player — native playback with the studio glass treatment. */
 #trackAudio{appearance:auto;display:block;width:100%;height:48px;margin-top:12px;padding:6px 8px;border:1px solid #34374c;border-radius:14px;background:linear-gradient(135deg,#171a2a,#0d101a);accent-color:#b4a0ff;box-shadow:inset 0 1px #ffffff08,0 8px 22px #0002;color-scheme:dark}#trackAudio::-webkit-media-controls-panel{background:linear-gradient(135deg,#171a2a,#0d101a)}#trackAudio::-webkit-media-controls-current-time-display,#trackAudio::-webkit-media-controls-time-remaining-display{color:#d9d7f3;font-size:11px}#trackAudio:focus-visible{outline:2px solid #9d8cff;outline-offset:3px}.cloud-support input[readonly]{opacity:.8}.cloud-actions .btn{flex:1;min-width:145px}.cloud-card .text-button{display:inline-flex;align-items:center;min-height:36px;margin:5px 8px 0 0;padding:5px 0;color:#aebfe0;background:none;border:0;text-decoration:underline;text-decoration-color:#51647d;text-underline-offset:4px;cursor:pointer}.cloud-card .text-button:hover{color:#e6f3ff}
+
+/* Smooth, cinematic handoff between reference clips in the live preview. */
+#previewVideo{opacity:1;transition:opacity .22s ease-in-out}#previewVideo.preview-fade-out{opacity:0}#previewStage.has-preview{overflow:hidden}#previewVideo{will-change:opacity}

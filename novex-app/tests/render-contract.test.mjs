@@ -187,6 +187,7 @@ test('saved source-only plans can be reopened when the source and music are rese
   assert.match(main, /sourceStart:x\.sourceStart\|\|0,referenceName:x\.ref\?\.file\?\.name\|\|x\.sourceLabel\|\|S\.source\?\.name/);
 });
 
+test('multiple reference videos play sequentially in preview with a soft handoff', () => { assert.match(main,/function playReferenceAt\(index,autoplay=true,fade=true\)/); assert.match(main,/v\.dataset\.referencePlaylist='true'/); assert.match(main,/playReferenceAt\(current\+1,true,true\)/); assert.match(css,/#previewVideo\.preview-fade-out\{opacity:0\}/); assert.match(main,/d\.querySelector\('\.ref-preview'\)\.onclick=d\.querySelector\('\.ref-open'\)\.onclick=\(\)=>playReferenceAt/); });
 test('source-only analysis evaluates the selected source video', () => { assert.match(main,/if\(S\.source&&\$\('#useSourceVideo'\)\.checked\)\{try\{const x=\{file:S\.source,url:S\.sourceUrl/); assert.match(main,/Видео-источник · '\+x\.file\.name/); });
 test('preview and app shell are constrained to the viewport on mobile', async () => {
   const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
