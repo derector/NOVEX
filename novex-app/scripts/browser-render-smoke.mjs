@@ -50,6 +50,24 @@ try {
   }
 
   await page.waitForFunction(() => {
+    const audio = document.querySelector('#trackAudio');
+    return audio && !audio.hidden && audio.readyState >= 1 &&
+      Number.isFinite(audio.duration) && audio.duration > 2.5;
+  }, null, { timeout: 15000 });
+  const musicPlayer = await page.evaluate(async () => {
+    const audio = document.querySelector('#trackAudio');
+    await audio.play();
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const result = { paused: audio.paused, currentTime: audio.currentTime, duration: audio.duration };
+    audio.pause();
+    return result;
+  });
+  if (musicPlayer.paused || musicPlayer.currentTime <= 0 ||
+      musicPlayer.duration < 2.5) {
+    throw new Error('Uploaded music player did not play: ' + JSON.stringify(musicPlayer));
+  }
+
+  await page.waitForFunction(() => {
     const video = document.querySelector('#previewVideo');
     return video && video.videoWidth === 320 && video.dataset.referenceIndex === '0' &&
       video.dataset.referencePlaylist === 'true';
@@ -143,6 +161,24 @@ try {
     !document.querySelector('#sourceTranscriptWrap')?.classList.contains('hidden'),
     null, { timeout: 20000 }
   );
+  await page.waitForFunction(() => {
+    const audio = document.querySelector('#sourceAudioPreview');
+    return audio && !audio.hidden && audio.readyState >= 1 &&
+      Number.isFinite(audio.duration) && audio.duration > 2.5;
+  }, null, { timeout: 15000 });
+  const sourcePlayer = await page.evaluate(async () => {
+    const audio = document.querySelector('#sourceAudioPreview');
+    await audio.play();
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const result = { paused: audio.paused, currentTime: audio.currentTime, duration: audio.duration };
+    audio.pause();
+    return result;
+  });
+  if (sourcePlayer.paused || sourcePlayer.currentTime <= 0 ||
+      sourcePlayer.duration < 2.5) {
+    throw new Error('Source audio preview did not play: ' + JSON.stringify(sourcePlayer));
+  }
+
   await page.locator('#sourceTranscript').fill('Source dialogue for subtitle render smoke test.');
   await page.locator('#useSourceVideo').check();
   await page.locator('input[name="audioMode"][value="mix"]').check();
@@ -182,7 +218,7 @@ try {
   }, null, { timeout: 15000 });
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project persistence across reload, source-only edit, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, MP4 export/download and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project persistence across reload, source-only edit, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, music and source-audio player playback, MP4 export/download and output metadata.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
