@@ -1,0 +1,38 @@
+name: Refresh Motion Skill References
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
+permissions:
+  contents: read
+concurrency:
+  group: motion-skill-refresh
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install NOVEX package scripts
+        working-directory: novex-app
+        run: npm install --no-audit --no-fund
+      - name: Download approved GitHub skill references
+        working-directory: novex-app
+        run: npm run skills:sync
+      - name: Validate source provenance and required references
+        working-directory: novex-app
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; const m=JSON.parse(fs.readFileSync('.cache/motion-skills/manifest.json','utf8')); if(m.sources.length!==2 || m.sources.some(s=>!s.commit || !s.files.length)) process.exit(1); console.log(m.sources.map(s=>s.repo+' @ '+s.commit).join('\n'));"
+          test -s .cache/motion-skills/references/jakubkrehel--skills/skills/better-interface/SKILL.md
+          test -s .cache/motion-skills/references/jakubkrehel--skills/skills/better-ui/SKILL.md
+          test -s .cache/motion-skills/references/kaankiziltug--logo-design-skill/README.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NOVEX-Motion-Skill-References
+          path: novex-app/.cache/motion-skills/
+          retention-days: 14
+          if-no-files-found: error
