@@ -291,7 +291,7 @@ test('source audio is validated and selected as the only audio input, never mixe
   assert.match(main, /const audioMode=radio\('audioMode'\)\|\|'music'/);
   assert.match(main, /if\(audioMode==='source'&&!S\.source\)/);
   assert.match(main, /await ff\.exec\(\['-hide_banner','-i',sourceAudioInput\]\)/);
-  assert.match(main, /if\(!\/\\bAudio:\\s\/\.test\(probeLog\)\)throw Error/);
+  assert.match(main, /В выбранном видео-источнике нет доступной аудиодорожки/);
   assert.match(main, /args\.push\('-vf',vf,'-map','0:v:0','-map','1:a:0','-af'/);
   assert.doesNotMatch(main, /amix=inputs=|motion-sfx\.wav|motionAudio\.sfx\(/);
   assert.match(main, /sourceAudioSeek=sourceSeek/);
