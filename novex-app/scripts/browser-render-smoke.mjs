@@ -28,11 +28,13 @@ try {
   page.on('console', message => { if (message.type() === 'error') pageErrors.push('console: ' + message.text()); });
 
   await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.locator('#referenceInput').setInputFiles('/tmp/novex-smoke-reference.webm');
+  await page.locator('#referenceInput').setInputFiles(['/tmp/novex-smoke-reference.webm', '/tmp/novex-smoke-reference-2.webm']);
   await page.locator('#trackInput').setInputFiles('/tmp/novex-smoke-track.wav');
   try {
     await page.waitForFunction(() =>
       document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference.webm') &&
+      document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference-2.webm') &&
+      document.querySelectorAll('#referenceList .media-item-rich').length === 2 &&
       document.querySelector('#trackName')?.textContent === 'novex-smoke-track.wav',
       null, { timeout: 20000 }
     );
@@ -46,6 +48,35 @@ try {
     }));
     throw new Error('Media upload did not complete: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
   }
+
+  await page.waitForFunction(() => {
+    const video = document.querySelector('#previewVideo');
+    return video && video.videoWidth === 320 && video.dataset.referenceIndex === '0' &&
+      video.dataset.referencePlaylist === 'true';
+  }, null, { timeout: 15000 });
+  await page.evaluate(async () => {
+    const video = document.querySelector('#previewVideo');
+    video.playbackRate = 8;
+    video.currentTime = Math.max(0, video.duration - 0.18);
+    await video.play();
+  });
+  await page.waitForFunction(() => {
+    const video = document.querySelector('#previewVideo');
+    return video?.dataset.referenceIndex === '1' &&
+      video.dataset.referencePlaylist === 'true' && video.videoWidth === 320;
+  }, null, { timeout: 15000 });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileLayout = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+    profileRight: document.querySelector('#cloudAccountBtn').getBoundingClientRect().right
+  }));
+  if (mobileLayout.document > mobileLayout.viewport + 1 ||
+      mobileLayout.profileRight > mobileLayout.viewport + 1) {
+    throw new Error('Mobile layout overflows viewport: ' + JSON.stringify(mobileLayout));
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
 
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
@@ -89,7 +120,7 @@ try {
   }
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — uploaded video + audio, analysis, plan, FFmpeg MP4 export, stream/metadata validation, preview playback metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — two reference uploads, sequential preview handoff, mobile viewport, analysis, plan, FFmpeg MP4 export, stream/metadata validation and download.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
