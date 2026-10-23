@@ -428,3 +428,41 @@ footer, .app-footer { color: #71889d !important; border-color: #203348 !importan
   #sidebar:not(.open) { visibility: hidden; pointer-events: none; }
   #sidebar.open { visibility: visible; pointer-events: auto; }
 }
+
+
+/* Final responsive fixes — this stylesheet is loaded last in the app. */
+#previewStage.preview-stage{
+  position:relative!important;display:grid!important;place-items:center!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  margin:0!important;padding:0!important;overflow:hidden!important;isolation:isolate;
+  aspect-ratio:var(--preview-ratio,16 / 9)!important;
+  background:#03070d!important;transform:none!important;
+}
+#previewStage.preview-stage>#previewVideo{
+  position:absolute!important;inset:0!important;display:block;width:100%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;
+  margin:0!important;padding:0!important;border:0!important;
+  object-fit:contain!important;object-position:center!important;background:transparent!important;
+  filter:none!important;opacity:1!important;transform:none!important;
+}
+#previewStage #previewVideo[hidden]{display:none!important}
+.preview-panel,.preview-panel *{min-width:0}
+.preview-controls{display:flex;align-items:center;gap:12px;width:100%;max-width:100%;box-sizing:border-box}
+.preview-track{flex:1 1 auto;min-width:24px;touch-action:pan-y;cursor:pointer}
+#previewClock{flex:0 0 auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.toast{z-index:1000;max-width:min(420px,calc(100vw - 32px));overflow-wrap:anywhere}
+@media(max-width:640px){
+  #previewStage.preview-stage{width:100%!important;max-width:100%!important;min-height:0!important}
+  .preview-controls{gap:8px;padding:10px;flex-wrap:nowrap}
+  #playPreview{flex:0 0 44px;min-width:44px;min-height:44px}
+  #previewClock{font-size:10px;letter-spacing:0}
+  .preview-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .preview-stats>div{min-width:0;padding:10px}
+  .preview-stats small{font-size:9px;letter-spacing:.08em}
+  .toast{position:fixed!important;top:calc(76px + env(safe-area-inset-top,0px))!important;right:12px!important;
+    bottom:auto!important;left:12px!important;width:auto!important;max-width:480px!important;margin-inline:auto!important;
+    padding:12px 14px!important;line-height:1.45!important;text-align:center;transform:none!important}
+  .toast.show{transform:none!important}
+  .helper-fab{z-index:70}
+}
