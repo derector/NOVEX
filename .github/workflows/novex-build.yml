@@ -33,8 +33,8 @@ jobs:
         run: npm run build && test -s dist/ffmpeg/ffmpeg-core.js && test -s dist/ffmpeg/ffmpeg-core.wasm
         env:
           VITE_BASE_PATH: /NOVEX/
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://jtkpydprgqccxxkqcvou.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HbBlyHbGCY6SFmoo9qL1eg_p6jOYVEO' }}
       - uses: actions/upload-artifact@v4
         with:
           name: NOVEX-Web-Build
@@ -84,8 +84,8 @@ jobs:
         run: npm test
       - run: npm run build && test -s dist/ffmpeg/ffmpeg-core.js && test -s dist/ffmpeg/ffmpeg-core.wasm
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://jtkpydprgqccxxkqcvou.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HbBlyHbGCY6SFmoo9qL1eg_p6jOYVEO' }}
       - run: npx cap add android
       - run: npx cap sync android
       - name: Build debug APK
