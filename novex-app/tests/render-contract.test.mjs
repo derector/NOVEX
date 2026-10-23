@@ -25,8 +25,9 @@ test('FFmpeg ESM core is loaded through MIME-typed module URLs for WebView compa
 });
 
 test('uploaded source footage enters the MP4 render path', () => {
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
+  assert.match(main, /const sourceInput='source-video\.'\+sourceExt/);
+  assert.match(main, /await ff\.writeFile\(sourceInput,await fetchFile\(S\.source\)\)/);
+  assert.match(main, /const sourceArgs=\['-ss',String\(sourceSeek\),'-i',sourceInput/);
   assert.match(main, /tpad=stop_mode=clone/);
   assert.match(main, /'silent\.mp4'/);
 });
@@ -125,9 +126,6 @@ test('startup and navigation use querySelectorAll for collection loops', () => {
 });
 
 test('reference montage samples varied portions of full source clips instead of repeating the first 35 percent', () => {
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
   assert.doesNotMatch(main, /s\.start%Math\.max\(1,s\.ref\.duration\*\.35\)/);
   assert.match(main, /tpad=stop_mode=clone:stop_duration=\$\{dur\}/);
   assert.match(main, /mode==='original'\).*refOrder\.sort/s);
@@ -167,37 +165,33 @@ test('NOVEX rebrand assets use the current theme across PWA metadata and icon', 
 });
 
 test('director rejects unsupported camera commands instead of silently recording a no-op', () => {
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
   assert.match(main, /Движение камеры сейчас доступно только для загруженного исходного видео/);
   assert.match(main, /if\(S\.plan\)\{S\.plan=makePlan\(\);S\.plan\.edits=S\.edits\.map/);
 });
 
 test('source-video editing mode can build a plan without reference clips', () => {
   assert.match(main, /if\(!S\.track\)throw Error\('Сначала добавь музыкальный трек\.'\)/);
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
   assert.match(main, /let refOrder=useSourceVideo\?\[\]:\[\.\.\.S\.refs\]/);
   assert.match(main, /if\(!refOrder\.length&&useSourceVideo\)timeline\.push\(\{start:0,end:range\.duration,ref:null/);
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
 });
 
 
 test('email OTP flow verifies codes and hidden form sections do not block submission', async () => { const cloud=await readFile(new URL('../src/cloud.js',import.meta.url),'utf8'); const html=await readFile(new URL('../index.html',import.meta.url),'utf8'); assert.match(cloud,/cloud\.auth\.verifyOtp\(\{ email, token, type: 'email' \}\)/); assert.match(main,/cloudVerifyEmailCode\(email,token\)/); assert.match(html,/id="cloudOtpWrap" class="cloud-support hidden"/); assert.doesNotMatch(html,/id="cloudRecoveryPassword"[^>]*required/); assert.doesNotMatch(html,/id="cloudSupportSubject"[^>]*required/); });
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
 
 test('source video rendering seeks to the selected source offset', () => {
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
+  assert.match(main, /const sourceSeek=Math\.max\(0,Math\.min\(r\.start,Math\.max\(0,sourceDuration-0\.1\)\)\)/);
+  assert.match(main, /sourceAudioSeek=sourceSeek/);
+  assert.match(main, /const sourceArgs=\['-ss',String\(sourceSeek\),'-i',sourceInput/);
 });
 
 test('saved source-only plans can be reopened when the source and music are reselected', () => {
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
+  assert.match(main, /sourceName:S\.source\?\.name\|\|null/);
+  assert.match(main, /const sourceOk=!!d\.sourceName&&!!S\.source&&S\.source\.name===d\.sourceName/);
+  assert.match(main, /\(!matched\.length&&!sourceOk\)/);
+  assert.match(main, /\.filter\(x=>x\.ref\|\|sourceOk\)/);
 });
 
 test('multiple reference videos play sequentially in preview with a soft handoff', async () => { const css=await readFile(new URL('../src/style.css',import.meta.url),'utf8'); assert.match(main,/function playReferenceAt\(index,autoplay=true,fade=true\)/); assert.match(main,/dataset\.previewSwitch/); assert.match(main,/v\.addEventListener\('loadeddata',reveal,\{once:true\}\);v\.src=item\.url;v\.load\(\)/); assert.match(main,/v\.dataset\.referencePlaylist='true'/); assert.match(main,/playReferenceAt\(current\+1,true,true\)/); assert.match(css,/#previewVideo\.preview-fade-out\{opacity:0\}/); assert.match(main,/d\.querySelector\('\.ref-preview'\)\.onclick=d\.querySelector\('\.ref-open'\)\.onclick=\(\)=>playReferenceAt/); });
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
 test('preview and app shell are constrained to the viewport on mobile', async () => {
   const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
   assert.match(css, /html,body,#app\{width:100%;max-width:100%;min-width:0;min-height:100%;overflow-x:clip\}/);
@@ -224,9 +218,9 @@ test('the supplied motion director source files are present and cross-linked', a
 
 
 test('source video duration metadata is retained for safe source seeking', () => {
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
+  assert.match(main, /const sourceDuration=Number\(S\.sourceMeta\?\.duration\)\|\|r\.duration/);
+  assert.match(main, /Math\.max\(0,sourceDuration-0\.1\)/);
+  assert.match(main, /sourceAudioSeek=sourceSeek/);
 });
 
 test('account errors explain the actionable Supabase configuration cause', () => {
@@ -250,7 +244,6 @@ test('default Supabase SMTP restriction gives a setup-specific message', () => {
   assert.match(main, /пользовательский SMTP в Supabase по backend\/BREVO-SETUP\.md/);
 });
 
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
 
 
 test('audio uploads release the previous object URL and report unreadable files', () => {
@@ -312,7 +305,6 @@ test('render temporary files are cleaned after success or failure and reference 
   assert.match(main, /await ff\.deleteFile\(name\)/);
   assert.match(main, /finally\{S\.refs\.forEach\(ref=>\{delete ref\._ff;\}\);\}/);
   assert.match(main, /finally\{await cleanupRenderArtifacts\(\);S\.busy=false;busy\(b,false\);\}/);
-  assert.ok(main.includes('source[0-9]+|part[0-9]+|ref[0-9]+'));
 });
 
 test('mobile navigation exposes state and closes with Escape', async () => {
