@@ -36,8 +36,8 @@ try {
 
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
-  await page.locator('input[name="styleMode"][value="faithful"]').check();
-  await page.locator('input[name="resolution"][value="480"]').check();
+  await page.locator('label.choice-card').filter({ has: page.locator('input[name="styleMode"][value="faithful"]') }).click();
+  await page.locator('.segmented label').filter({ has: page.locator('input[name="resolution"][value="480"]') }).click();
   await page.locator('#planBtn').click();
   await page.locator('#renderPanel').waitFor({ state: 'visible', timeout: 10000 });
   await page.locator('#renderBtn').click();
