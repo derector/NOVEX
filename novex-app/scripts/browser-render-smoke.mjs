@@ -203,10 +203,8 @@ try {
 
   await page.locator('#sourceTranscript').fill('Source dialogue for subtitle render smoke test.');
   await page.locator('#useSourceVideo').check();
-  await page.locator('input[name="audioMode"][value="mix"]').check();
+  await page.locator('input[name="audioMode"][value="source"]').check();
   await page.locator('#useSourceTranscript').check();
-  await page.locator('#sourceAudioVolume').evaluate(el => { el.value = '37'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-  await page.locator('#musicAudioVolume').evaluate(el => { el.value = '62'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
   await page.locator('#editCommand').fill('Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.');
@@ -244,7 +242,7 @@ try {
       Number.isFinite(video.duration) && video.duration > 2.5 && video.duration < 3.5;
   }, null, { timeout: 15000 });
 
-  // Verify that the source mode, audio mix and user-selected gains survive reload.
+  // Verify that the exclusive video-audio source selection survives reload.
   await page.locator('[data-view="projects"]').click();
   await page.locator('#projectsGrid .project-open').first().waitFor({ state: 'visible', timeout: 10000 });
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -254,12 +252,12 @@ try {
     const audioMode = document.querySelector('input[name="audioMode"]:checked')?.value;
     return document.querySelector('#sourceVideoName')?.textContent === 'novex-smoke-source.mp4' &&
       document.querySelector('#trackName')?.textContent === 'novex-smoke-track.wav' &&
-      document.querySelector('#useSourceVideo')?.checked === true && audioMode === 'mix' &&
-      document.querySelector('#sourceAudioVolume')?.value === '37' &&
-      document.querySelector('#musicAudioVolume')?.value === '62';
+      document.querySelector('#useSourceVideo')?.checked === true && audioMode === 'source' &&
+      document.querySelector('input[name="audioMode"][value="music"]')?.disabled === false &&
+      document.querySelector('input[name="audioMode"][value="source"]')?.disabled === false;
   }, null, { timeout: 20000 });
 
-  // Exercise the New Project reset after source/mix settings have been enabled.
+  // Exercise the New Project reset after source-audio mode has been enabled.
   await page.locator('#newProjectTop').click();
   await page.waitForFunction(() => {
     const modes = [...document.querySelectorAll('input[name="audioMode"]')];
@@ -267,12 +265,11 @@ try {
       document.querySelector('#sourceVideoName')?.textContent === 'Добавить видео-источник' &&
       document.querySelector('#useSourceVideo')?.checked === false &&
       document.querySelector('input[name="audioMode"]:checked')?.value === 'music' &&
-      modes.filter(el => el.value !== 'music').every(el => el.disabled) &&
-      document.querySelector('#musicAudioVolume')?.disabled === true;
+      modes.some(el => el.value === 'source' && !el.checked && el.disabled);
   }, null, { timeout: 10000 });
   if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project and media restoration across reload, source-only edit, source/audio settings restoration, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, music and source-audio player playback, MP4 export/download and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export, transcript subtitles, independent music/source audio player playback, MP4 export/download and output metadata.');
 
 } finally {
   if (browser) await browser.close();
