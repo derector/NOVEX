@@ -1,5 +1,11 @@
 name: Refresh Motion Skill References
 on:
+  push:
+    branches: [main, 'feat/**']
+    paths:
+      - 'novex-app/scripts/sync-motion-skills.mjs'
+      - 'novex-app/package.json'
+      - '.github/workflows/motion-skills-refresh.yml'
   workflow_dispatch:
   schedule:
     - cron: "17 5 * * 1"
