@@ -306,6 +306,15 @@ test('render temporary files are cleaned after success or failure and reference 
   assert.match(main, /finally\{S\.refs\.forEach\(ref=>\{delete ref\._ff;\}\);\}/);
   assert.match(main, /finally\{await cleanupRenderArtifacts\(\);S\.busy=false;busy\(b,false\);\}/);
   assert.match(main, /ref\[0-9\]\+\|x\[0-9\]\+/);
+  const cleanupPattern = main.match(/if\(!\/(.+?)\/i\.test\(name\)\)continue;/);
+  assert.ok(cleanupPattern, 'cleanup must have a narrow temporary-file allowlist');
+  const allowed = new RegExp(cleanupPattern[1], 'i');
+  for (const name of ['silent.mp4', 'export.mp4', 'source-video.mov', 'part12.mp4', 'ref2.webm', 'x3.mp4', '3d_0001.png', 'title_0012.png']) {
+    assert.match(name, allowed, name + ' should be cleaned');
+  }
+  for (const name of ['notes.txt', 'source-video-backup.mp4', 'my-export.mp4', 'user-photo.png']) {
+    assert.doesNotMatch(name, allowed, name + ' must not be deleted');
+  }
 });
 
 test('mobile navigation exposes state and closes with Escape', async () => {
