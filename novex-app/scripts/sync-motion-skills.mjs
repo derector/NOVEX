@@ -4,7 +4,7 @@ import process from 'node:process';
 
 const root=process.cwd(),cache=path.join(root,'.cache','motion-skills');
 const sources=[
- {repo:'jakubkrehel/skills',branch:'main',requireSkill:true,include:['LICENSE','AGENTS.md','skills/better-interface/SKILL.md','skills/better-ui/SKILL.md','skills/better-accessibility/SKILL.md','skills/layout/SKILL.md','skills/typography/SKILL.md','skills/colors/SKILL.md','skills/writing/SKILL.md']},
+ {repo:'jakubkrehel/skills',branch:'main',requireSkill:true,include:['LICENSE','AGENTS.md','skills/better-interface/SKILL.md','skills/better-ui/SKILL.md','skills/better-accessibility/SKILL.md','skills/better-layout/SKILL.md','skills/better-typography/SKILL.md','skills/better-colors/SKILL.md','skills/better-writing/SKILL.md']},
  {repo:'kaankiziltug/logo-design-skill',branch:'main',requireSkill:false,include:['LICENSE','README.md','TRADEMARKS.md']}
 ];
 const headers={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
