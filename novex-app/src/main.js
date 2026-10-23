@@ -527,7 +527,7 @@ function applyDirectorCommand(raw){
  if(!S.plan&&!S.refs.length&&!S.source)throw Error('Сначала добавь исходное видео или референс, затем можно планировать правки.');
  S.editHistory.push(S.edits.map(x=>({...x})));
  patch.id='edit-'+Date.now()+'-'+S.edits.length;
- patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · облёт камеры':patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.type==='add_motion_graphic'?'Графика: '+patch.graphic+' · '+patch.duration+' с':patch.label;
+ patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · камера: '+(({orbit:'облёт', 'slow-orbit':'медленная орбита','dolly-in':'наезд','dolly-out':'отъезд','whip-pan':'рывок'})[patch.style?.camera]||'медленная орбита')+' · эффекты: '+(({ 'cinematic-particles':'частицы и кольца','energy-rings':'энергетические кольца','light-streaks':'световые лучи',none:'без частиц'})[patch.style?.effect]||'частицы и кольца'):patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.type==='add_motion_graphic'?'Графика: '+patch.graphic+' · '+patch.duration+' с':patch.label;
  S.edits.push(patch);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX',patch.style||{});if(patch.type==='add_subtitles')$('#burnLyrics').checked=true;renderDirectorPlan();$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';
  if(S.plan){S.plan=makePlan();S.plan.edits=S.edits.map(x=>({...x}));showPlan(S.plan);}
 }
