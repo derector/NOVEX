@@ -252,3 +252,12 @@ test('audio uploads release the previous object URL and report unreadable files'
   assert.match(main, /au\.onerror=\(\)=>reject\(new Error\(/);
   assert.match(main, /au\.hidden=true;\$\('#trackName'\)\.textContent='Загрузи трек'/);
 });
+
+
+test('reference preview recovers visibly when a selected video fails to load', () => {
+  assert.match(main, /const fail=\(\)=>\{if\(v\.dataset\.previewSwitch!==switchToken\|\|v\.dataset\.referencePreview!==item\.url\)return/);
+  assert.match(main, /v\.addEventListener\('error',fail,\{once:true\}\)/);
+  assert.match(main, /v\.removeEventListener\('error',fail\)/);
+  assert.match(main, /Не удалось открыть видео '\+item\.file\.name/);
+  assert.match(main, /v\.classList\.remove\('preview-fade-out'\);\$\('#playPreview'\)\.textContent='▶'/);
+});
