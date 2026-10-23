@@ -287,13 +287,17 @@ test('reference preview advances only when multiple videos are queued', () => {
 });
 
 
-test('source audio is validated and selected as the only audio input, never mixed', () => {
+test('video or music remains the only base audio source; animation SFX are mixed on top', () => {
   assert.match(main, /const audioMode=radio\('audioMode'\)\|\|'music'/);
   assert.match(main, /if\(audioMode==='source'&&!S\.source\)/);
   assert.match(main, /await ff\.exec\(\['-hide_banner','-i',sourceAudioInput\]\)/);
   assert.match(main, /В выбранном видео-источнике нет доступной аудиодорожки/);
-  assert.match(main, /args\.push\('-vf',vf,'-map','0:v:0','-map','1:a:0','-af'/);
-  assert.doesNotMatch(main, /amix=inputs=|motion-sfx\.wav|motionAudio\.sfx\(/);
+  assert.match(main, /args\.push\('-map','1:a:0','-af'/);
+  assert.match(main, /motionAudio\.synthesizeAudio\(\{sampleRate:24000,masterGain:\.24\}\)/);
+  assert.match(main, /motionAudio\.hit\(cueAt\(threeDEdit\.start\),'l'\)/);
+  assert.match(main, /motionAudio\.sfx\('pop',cueAt\(edit\.start\)/);
+  assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
+  assert.doesNotMatch(main, /mixSourceRequested|musicAudioIndex|sourceAudioIndex|audioMode==='mix'/);
   assert.match(main, /sourceAudioSeek=sourceSeek/);
 });
 
@@ -410,12 +414,13 @@ test('removing reference clips preserves active playlist index and clears empty 
 });
 
 
-test('reference clips are silent visual inputs and the final export maps one selected audio source', () => {
+test('reference clips are silent visual inputs and only one base source is selected before SFX', () => {
   assert.match(main, /'-an','-c:v','libx264'/);
   assert.match(main, /'-map','1:a:0','-af'/);
   assert.match(main, /if\(audioMode==='source'\)/);
   assert.match(main, /else\{\s*const ext=/);
-  assert.doesNotMatch(main, /amix=inputs=|motion-sfx\.wav/);
+  assert.match(main, /motion-sfx\.wav/);
+  assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
 });
 
 test('director capability note accurately describes implemented export effects', async () => {
@@ -518,8 +523,12 @@ test('browser smoke validates exclusive source-audio selection and no audio mixi
   assert.match(smoke, /Uncaught browser errors after New Project reset/);
 });
 
-test('motion sound effects are not added to the final audio stream', () => {
-  assert.doesNotMatch(main, /motionAudio\.sfx\(|motion-sfx\.wav|amix=inputs=/);
+test('automatic motion SFX are synthesized and layered over the single chosen audio source', () => {
+  assert.match(main, /const motionAudio=createMotionDirector\(\{duration:r\.duration,fps:30\}\)/);
+  assert.match(main, /motionAudio\.synthesizeAudio/);
+  assert.match(main, /motion-sfx\.wav/);
+  assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
+  assert.doesNotMatch(main, /mixSourceRequested|audioMode==='mix'/);
 });
 
 test('director accepts graphic accent commands and renders them into the final MP4',()=>{
