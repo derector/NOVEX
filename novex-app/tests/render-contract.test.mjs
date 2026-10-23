@@ -473,3 +473,10 @@ test('music volume is available with a track, while source modes activate only f
   assert.ok(main.includes("$('#useSourceVideo').onchange=syncSourceAudioControls"));
   assert.ok(main.includes("$('#audioExportControls').hidden=true;$('#musicAudioVolume').disabled=true"));
 });
+
+
+test('3D export pauses the live preview and captures deterministic frame timestamps', () => {
+  assert.match(motion3d, /const wasPlaying=playing;\\s*if\\(wasPlaying\\)\\{playing=false;cancelAnimationFrame\\(raf\\);\\}/);
+  assert.match(motion3d, /const t=start\\+Math\\.min\\(Math\\.max\\(0,duration\\),i\\/fps\\);/);
+  assert.match(motion3d, /if\\(wasPlaying&&!disposed\\)\\{playing=true;started=performance\\.now\\(\\);raf=requestAnimationFrame\\(tick\\);\\}/);
+});
