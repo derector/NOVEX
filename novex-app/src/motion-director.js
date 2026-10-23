@@ -6,7 +6,7 @@ const keyOf=target=>typeof target==='string'?target:target?.id||target?.dataset?
 
 export function createMotionDirector({duration=1,fps=30}={}){
  const engine=createMotionEngine({duration,fps}),D=engine.duration,F=engine.fps;
- const scenes=[],cues=[],audio=[];let id=0;
+ const scenes=[],cues=[],audio=[],frameHooks=[];let id=0;
  const add=(list,type,target,opts={})=>{
   const start=Math.max(0,number(opts.at??opts.start,0));
   const span=Math.max(0,number(opts.duration??opts.dur,type==='set'?0:.5));
@@ -28,6 +28,7 @@ export function createMotionDirector({duration=1,fps=30}={}){
  function effect(type,target,o={}){add(cues,type,target,{at:o.at??0,duration:o.duration??D,amplitude:number(o.amplitude,type==='shake'?7:8),period:Math.max(.1,number(o.period,2.4)),frequency:number(o.frequency,18)});return api;}
  function sfx(name,at,o={}){audio.push({id:'sfx-'+(++id),name:String(name),at:Math.max(0,number(at)),gain:number(o.gain),duration:Math.max(.01,number(o.duration,.12))});return api;}
  const draw={underline:(target,o={})=>{add(cues,'draw-underline',target,{at:o.at??0,duration:o.duration??.55,color:o.color||'#fff'});return api;},circle:(target,o={})=>{add(cues,'draw-circle',target,{at:o.at??0,duration:o.duration??.7,color:o.color||'#fff'});return api;},arrow:(target,o={})=>{add(cues,'draw-arrow',target,{at:o.at??0,duration:o.duration??.6,color:o.color||'#fff'});return api;},ring:(target,o={})=>{add(cues,'draw-ring',target,{at:o.at??0,duration:o.duration??.8,color:o.color||'#fff',radius:number(o.r2,80)});return api;},burst:(target,o={})=>{add(cues,'draw-burst',target,{at:o.at??0,duration:o.duration??.55,color:o.color||'#fff'});return api;}};
+ function onFrame(callback){if(typeof callback!=='function')throw new TypeError('onFrame expects a function.');frameHooks.push(callback);return ()=>{const i=frameHooks.indexOf(callback);if(i>=0)frameHooks.splice(i,1);};}
  function renderAt(time){
   const t=clamp(number(time),0,D),frame=engine.sampleAt(t),elements={},effects=[];
   for(const c of cues){if(t<c.start)continue;const p=c.duration?clamp((t-c.start)/c.duration):1,values=elements[c.target]||(elements[c.target]={});
@@ -39,9 +40,9 @@ export function createMotionDirector({duration=1,fps=30}={}){
    else effects.push({...c,progress:p,visible:t<=c.end});
   }
   const activeScenes=scenes.filter(s=>t>=s.start&&t<=s.end).map(s=>({...s,opacity:Math.min(s.transitionIn?clamp((t-s.start)/s.transitionIn):1,s.transitionOut?clamp((s.end-t)/s.transitionOut):1)}));
-  return {...frame,time:t,scenes:activeScenes,elements,effects,audioEvents:audio.filter(a=>Math.abs(a.at-t)<.5/F)};
+  let output={...frame,time:t,scenes:activeScenes,elements,effects,audioEvents:audio.filter(a=>Math.abs(a.at-t)<.5/F)};for(const hook of frameHooks){const patch=hook(output);if(patch&&typeof patch==='object')output={...output,...patch};}return output;
  }
  function check(){const issues=[];for(const item of [...scenes,...cues,...audio]){const start=item.start??item.at,end=item.end??item.at;if(!Number.isFinite(start)||!Number.isFinite(end))issues.push({id:item.id,code:'invalid-time'});if((item.duration??0)<0)issues.push({id:item.id,code:'negative-duration'});if(end>D+.0001)issues.push({id:item.id,code:'past-duration'});}return {ok:!issues.length,issues};}
- const api={duration:D,fps:F,tl,draw,engine,scene,seq,text,textOut,show,count,captions,float:(target,o={})=>effect('float',target,o),shake:(target,o={})=>effect('shake',target,o),sfx,hit:(at,size='s')=>sfx(size==='l'?'impact-large':'impact-small',at,{gain:size==='l'?-2:-7,duration:size==='l'?.5:.12}),win:(target,o={})=>{add(cues,'video-window',target,{at:o.at??0,duration:o.duration??D,mask:o.mask||'rounded',fit:o.fit||'cover'});return api;},camera:(target,o={})=>{add(cues,'camera',target,{at:o.at??0,duration:o.duration??D,move:o.move||'slow-drift',parallax:number(o.parallax,.08)});return api;},chart:(target,data=[],o={})=>{add(cues,'chart',target,{at:o.at??0,duration:o.duration??1,data,kind:o.kind||'bar'});return api;},start(fn){fn({tl,f:F,D,M:api});return api;},renderAt,seekFrame:n=>renderAt(Math.max(0,Math.round(number(n)))/F),compile:()=>({version:1,duration:D,fps:F,scenes:scenes.map(x=>({...x})),cues:cues.map(x=>({...x})),audio:audio.map(x=>({...x}))}),check,track:engine.track,hook:engine.hook,sampleAt:engine.sampleAt};
+ const api={duration:D,fps:F,tl,draw,engine,scene,seq,text,textOut,show,count,captions,float:(target,o={})=>effect('float',target,o),shake:(target,o={})=>effect('shake',target,o),sfx,onFrame,hit:(at,size='s')=>sfx(size==='l'?'impact-large':'impact-small',at,{gain:size==='l'?-2:-7,duration:size==='l'?.5:.12}),win:(target,o={})=>{add(cues,'video-window',target,{at:o.at??0,duration:o.duration??D,mask:o.mask||'rounded',fit:o.fit||'cover'});return api;},camera:(target,o={})=>{add(cues,'camera',target,{at:o.at??0,duration:o.duration??D,move:o.move||'slow-drift',parallax:number(o.parallax,.08)});return api;},chart:(target,data=[],o={})=>{add(cues,'chart',target,{at:o.at??0,duration:o.duration??1,data,kind:o.kind||'bar'});return api;},start(fn){fn({tl,f:F,D,M:api});return api;},renderAt,seekFrame:n=>renderAt(Math.max(0,Math.round(number(n)))/F),compile:()=>({version:1,duration:D,fps:F,scenes:scenes.map(x=>({...x})),cues:cues.map(x=>({...x})),audio:audio.map(x=>({...x}))}),check,track:engine.track,hook:engine.hook,sampleAt:engine.sampleAt};
  return api;
 }
