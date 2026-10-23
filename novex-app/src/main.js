@@ -358,7 +358,7 @@ if(S.source&&$('#useSourceVideo').checked){
  const sourceDuration=Number(S.sourceMeta?.duration)||r.duration;const sourceSeek=Math.max(0,Math.min(r.start,Math.max(0,sourceDuration-0.1)));sourceAudioSeek=sourceSeek;const sourceArgs=['-ss',String(sourceSeek),'-i',sourceInput,'-vf',`tpad=stop_mode=clone:stop_duration=${r.duration},scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p`,'-an','-c:v','libx264','-preset','ultrafast','-crf','25','-t',String(r.duration),'-y','silent.mp4'];
  if(await ff.exec(sourceArgs)!==0)throw Error('Не удалось подготовить исходное видео. Попробуй MP4/H.264 или более короткий файл.');
 }else{
-const segmentDurations=[];
+const segmentDurations=[],motionTransitionCues=[];
 for(let i=0;i<p.timeline.length;i++){
  const s=p.timeline[i],part='part'+i+'.mp4';
  const start=Math.max(0,Number(s.sourceStart)||0),dur=Math.max(.1,s.end-s.start);
@@ -383,6 +383,7 @@ if(segmentDurations.length===1){
  let current='v0',elapsed=segmentDurations[0];
  for(let i=1;i<segmentDurations.length;i++){
   const next='x'+i,offset=Math.max(0,elapsed-transition*(i-1)-transition);
+  motionTransitionCues.push(offset);
   filters.push('['+current+'][v'+i+']xfade=transition=fade:duration='+transition.toFixed(6)+':offset='+offset.toFixed(6)+'['+next+']');
   current=next;elapsed+=segmentDurations[i];
  }
@@ -435,6 +436,7 @@ const cueAt=start=>Math.max(0,Number(start||0)-r.start);
 if(threeDEdit)motionAudio.hit(cueAt(threeDEdit.start),'l');
 for(const edit of titleEdits)if(cueAt(edit.start)<r.duration)motionAudio.sfx('pop',cueAt(edit.start),{gain:-7,duration:.14});
 for(const edit of graphicEdits)if(cueAt(edit.start)<r.duration)motionAudio.sfx(edit.graphic==='ring'?'whoosh':'tick',cueAt(edit.start),{gain:-8,duration:.18});
+for(const at of motionTransitionCues)motionAudio.sfx('whoosh',at,{gain:-9,duration:.28});
 const motionAudioCues=motionAudio.compile().audio;
 if(motionAudioCues.length){
  await ff.writeFile('motion-sfx.wav',motionAudio.synthesizeAudio({sampleRate:24000,masterGain:.24}));
