@@ -258,6 +258,10 @@ test('reference preview recovers visibly when a selected video fails to load', (
   assert.match(main, /const fail=\(\)=>\{if\(v\.dataset\.previewSwitch!==switchToken\|\|v\.dataset\.referencePreview!==item\.url\)return/);
   assert.match(main, /v\.addEventListener\('error',fail,\{once:true\}\)/);
   assert.match(main, /v\.removeEventListener\('error',fail\)/);
+  assert.match(main, /v\.removeEventListener\('loadeddata',reveal\);v\.removeEventListener\('error',fail\);v\.pause\(\)/);
+  assert.match(main, /v\.hidden=true;v\.removeAttribute\('src'\);v\.load\(\);delete v\.dataset\.referencePlaylist;delete v\.dataset\.referencePreview/);
+  assert.match(main, /\$\('#previewStage'\)\.classList\.remove\('has-preview'\);\$\('#previewStage \.preview-placeholder'\)\.hidden=false/);
+  assert.match(main, /\$\('#previewClock'\)\.textContent='00:00 \/ 00:00';\$\('#previewSeekFill'\)\.style\.width='0%'/);
   assert.match(main, /Не удалось открыть видео '\+item\.file\.name/);
   assert.match(main, /v\.classList\.remove\('preview-fade-out'\);\$\('#playPreview'\)\.textContent='▶'/);
 });
