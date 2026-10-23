@@ -14,6 +14,9 @@ test('FFmpeg ESM core is loaded through MIME-typed module URLs for WebView compa
   assert.match(main, /toBlobURL\(wasmSourceUrl,'application\/wasm'\)/);
   assert.match(main, /URL\.revokeObjectURL\(coreSourceUrl\)/);
   assert.match(main, /URL\.revokeObjectURL\(wasmSourceUrl\)/);
+  assert.match(main, /URL\.revokeObjectURL\(coreModuleUrl\)/);
+  assert.match(main, /URL\.revokeObjectURL\(wasmModuleUrl\)/);
+  assert.match(main, /finally\{[\s\S]*URL\.revokeObjectURL\(coreModuleUrl\)/);
   assert.match(main, /Promise\.allSettled\(/);
   assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
