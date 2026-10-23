@@ -3,7 +3,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import './style.css';
 import { createLogoScene } from './motion3d.js';
 import { cloud, cloudConfigured, cloudSession, cloudAuth, cloudListProjects, cloudSaveProject, cloudEmailLink, cloudPasswordReset, cloudUpdatePassword, cloudSendSupportMessage, cloudVerifyEmailCode } from './cloud.js';
-const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const LOCAL_PROJECTS_KEY='novex-projects-v1';
 const readLocalProjects=()=>{try{const items=JSON.parse(localStorage.getItem(LOCAL_PROJECTS_KEY)||'[]');return Array.isArray(items)?items.filter(p=>p&&p.id&&typeof p.name==='string'&&p.project_data&&typeof p.project_data==='object').slice(0,15):[]}catch{return []}};
 const persistLocalProjects=()=>{try{localStorage.setItem(LOCAL_PROJECTS_KEY,JSON.stringify(S.projects.filter(p=>!p.cloud).slice(0,15)))}catch(error){console.warn('NOVEX could not persist local project metadata:',error)}};
