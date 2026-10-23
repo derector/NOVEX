@@ -207,3 +207,17 @@ test('the supplied motion director source files are present and cross-linked', a
   assert.match(api, /M\.draw/);
   assert.match(engine, /^\/\* motion\.js v3/);
 });
+
+
+test('source video duration metadata is retained for safe source seeking', () => {
+  assert.match(main, /sourceMeta:\{duration:p\.duration,w:p\.w,h:p\.h\}/);
+  assert.match(main, /const sourceDuration=Number\(S\.sourceMeta\?\.duration\)\|\|r\.duration/);
+  assert.match(main, /source:null,sourceUrl:null,sourceMeta:null,duration:0/);
+});
+
+test('account errors explain the actionable Supabase configuration cause', () => {
+  assert.match(main, /Регистрация по электронной почте отключена в настройках Supabase Auth/);
+  assert.match(main, /Проверь SMTP и подтверждённый адрес отправителя/);
+  assert.match(main, /Добавь URL сайта NOVEX и адрес приложения в Auth/);
+  assert.match(main, /cloudStatus\(cloudErrorMessage\(err,'signup'\),'error'\)/);
+});
