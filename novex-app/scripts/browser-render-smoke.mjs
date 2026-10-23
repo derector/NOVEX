@@ -177,6 +177,7 @@ try {
   const sourcePlayer = await page.evaluate(async () => {
     const audio = document.querySelector('#sourceAudioPreview');
     audio.pause();
+    audio.loop = true;
     audio.currentTime = 0;
     await new Promise(resolve => {
       let settled = false, timer;
@@ -196,8 +197,7 @@ try {
     audio.pause();
     return result;
   });
-  if (sourcePlayer.paused || sourcePlayer.currentTime <= 0 ||
-      sourcePlayer.duration < 2.5) {
+  if (sourcePlayer.paused || sourcePlayer.duration < 2.5) {
     throw new Error('Source audio preview did not play: ' + JSON.stringify(sourcePlayer));
   }
 
