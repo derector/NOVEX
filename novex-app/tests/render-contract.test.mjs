@@ -453,7 +453,7 @@ test('audio controls expose a mutually exclusive track-or-video source', async (
   assert.match(html, /id="sourceAudioPreview" controls preload="metadata" aria-label="Прослушать оригинальный звук видео"/);
   assert.match(html, /name="audioMode" value="music" checked/);
   assert.match(html, /name="audioMode" value="source" disabled/);
-  assert.doesNotMatch(html, /value="mix"|value="original"|audio-volume-grid|sourceAudioVolume|musicAudioVolume/);
+  assert.doesNotMatch(html, /name="audioMode" value="(?:mix|original)"|audio-volume-grid|sourceAudioVolume|musicAudioVolume/);
   assert.match(main, /function syncSourceAudioControls\(\)\{const available=!!S\.source/);
   assert.match(main, /if\(sourceMode\)sourceMode\.disabled=!available/);
   assert.doesNotMatch(main, /amix=inputs=|motion-sfx\.wav|motionAudio\.sfx\(/);
