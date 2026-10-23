@@ -578,3 +578,9 @@ test('director accepts graphic accent commands and renders them into the final M
   assert.ok(main.includes("graphic-composite.mp4"));
   assert.ok(main.includes("graphic-composite|concat"));
 });
+
+test('graphic motion accents are available from the Director quick actions',async()=>{
+  const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+  assert.match(html,/data-command="graphic">◌ Графический акцент/);
+  assert.ok(main.includes("graphic:'Добавь графический акцент-кольцо с плавным появлением.'"));
+});
