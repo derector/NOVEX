@@ -299,7 +299,7 @@ test('video or music remains the only base audio source; animation SFX are mixed
   assert.match(main, /for\(const at of motionTransitionCues\)motionAudio\.sfx\('whoosh',at/);
   assert.match(main, /motionAudio\.sfx\('pop',cueAt\(edit\.start\)/);
   assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
-  assert.doesNotMatch(main, /);
+  assert.doesNotMatch(main, /mixSourceRequested|musicAudioIndex|sourceAudioIndex/);
   assert.match(main, /sourceAudioSeek=sourceSeek/);
 });
 
