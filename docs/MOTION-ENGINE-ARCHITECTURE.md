@@ -29,3 +29,5 @@ The director returns deterministic frame-state descriptors; the actual audio syn
 
 
 Procedural audio: Motion Director can synthesize scheduled SFX cues into deterministic PCM WAV using generated oscillators and envelopes. MP4 export mixes this sound-effects track with the selected music and/or original audio.
+
+Visual overlays: users can request a ring, circle outline, underline, arrow, or burst in natural language. The app renders each accent as deterministic transparent PNG frames and composites it into the MP4; its hit/tick/whoosh cue is synthesized and mixed with the selected audio.
