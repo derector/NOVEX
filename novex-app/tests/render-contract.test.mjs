@@ -382,10 +382,19 @@ test('media metadata probing has a timeout and releases failed temporary media U
 
 test('export dimensions preserve the selected aspect ratio and use 720p as the long edge for landscape', () => {
   assert.match(main, /baseSize=Math\.max\(2,Math\.round\(p\.resolution\/2\)\*2\)/);
-  assert.match(main, /W=p\.aspect==='9:16'\?Math\.max\(2,Math\.round\(baseSize\*9\/16\/2\)\*2\):p\.aspect==='1:1'\?baseSize:Math\.max\(2,Math\.round\(baseSize\*16\/9\/2\)\*2\),H=p\.aspect==='16:9'\?baseSize:p\.aspect==='9:16'\?baseSize:baseSize/);
+  assert.match(main, /W=p\.aspect==='9:16'\?Math\.max\(2,Math\.round\(baseSize\*9\/16\/2\)\*2\):p\.aspect==='1:1'\?baseSize:Math\.max\(2,Math\.round\(baseSize\*16\/9\/2\)\*2\),H=baseSize/);
 });
 
 test('MP4 export validates the ISO base media file signature before presenting a download', () => {
   assert.match(main, /const mp4Head=Array\.from\(data\.slice\(4,8\),x=>String\.fromCharCode\(x\)\)\.join\(''\);if\(mp4Head!=='ftyp'\)throw Error/);
   assert.match(main, /progress\(98,'Проверяю контейнер MP4…'/);
+});
+
+
+test('final MP4 validation checks audio/video streams and decoded dimensions/duration', () => {
+  assert.ok(main.includes("async function validateExportMedia(blob,W,H,duration)"));
+  assert.ok(main.includes("!/\\\\bVideo:\\\\s/i.test(probeLog)||!/\\\\bAudio:\\\\s/i.test(probeLog)"));
+  assert.ok(main.includes("video.videoWidth!==W||video.videoHeight!==H"));
+  assert.ok(main.includes("Math.abs(video.duration-duration)>Math.max(1,duration*.03)"));
+  assert.ok(main.includes("await validateExportMedia(blob,W,H,r.duration)"));
 });
