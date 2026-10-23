@@ -431,3 +431,8 @@ test('source transcript checkbox contributes source text to the subtitle render 
   assert.match(main, /const subtitlesEdit=\(S\.edits\|\|\[\]\)\.some\(e=>e\.type==='add_subtitles'\)/);
   assert.match(main, /if\(lyrics&&\(\$\('#burnLyrics'\)\.checked\|\|\$\('#useSourceTranscript'\)\.checked\|\|subtitlesEdit\)\)/);
 });
+
+
+test('source transcript option rejects an empty transcript instead of silently omitting subtitles', () => {
+  assert.match(main, /if\(\$\('#useSourceTranscript'\)\.checked&&!\$\('#sourceTranscript'\)\.value\.trim\(\)\)throw Error\('Включена опция текста источника, но поле пустое/);
+});
