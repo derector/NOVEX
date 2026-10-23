@@ -42,3 +42,10 @@ test('audio cues, captions, float and shake are timestamp deterministic',()=>{
  assert.equal(typeof frame.elements['#card'].y,'number');
  assert.equal(typeof frame.elements['#card'].x,'number');
 });
+
+test('M.onFrame derives deterministic per-frame hook values',()=>{
+ const M=createMotionDirector({duration:2,fps:30});
+ M.onFrame(frame=>({beat:Math.max(0,Math.sin(frame.time*Math.PI*2))}));
+ assert.equal(M.renderAt(0).beat,0);
+ assert.ok(M.renderAt(.25).beat>.99);
+});
