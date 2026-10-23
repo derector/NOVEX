@@ -295,3 +295,20 @@ test('source audio mixing falls back to music-only export when the source has no
   assert.ok(main.includes("}else args.push('-map','1:a:0')"));
   assert.ok(main.includes('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.'));
 });
+
+
+test('mobile navigation exposes state and closes with Escape', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="mobileMenu"[^>]*aria-label="Открыть меню навигации"/);
+  assert.match(html, /id="mobileMenu"[^>]*aria-controls="sidebar"/);
+  assert.match(html, /id="mobileMenu"[^>]*aria-expanded="false"/);
+  assert.match(main, /const open=\$\('#sidebar'\)\.classList\.toggle\('open'\);\$\('#mobileMenu'\)\.setAttribute\('aria-expanded',String\(open\)\)/);
+  assert.match(main, /e\.key==='Escape'[\s\S]*\$\('#mobileMenu'\)\.focus\(\)/);
+  assert.match(main, /\$\('#sidebar'\)\.classList\.remove\('open'\);\$\('#mobileMenu'\)\.setAttribute\('aria-expanded','false'\)/);
+});
+
+test('keyboard focus indicators remain visible, including forced-colors mode', async () => {
+  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /:where\(a,button,input,textarea,select,\[tabindex\]\):focus-visible\{outline:2px solid #6ce7ff;outline-offset:3px\}/);
+  assert.match(css, /@media\(forced-colors:active\)[\s\S]*outline:2px solid CanvasText/);
+});
