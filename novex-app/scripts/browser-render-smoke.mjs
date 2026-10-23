@@ -133,7 +133,7 @@ try {
   );
   await page.locator('#sourceTranscript').fill('Source dialogue for subtitle render smoke test.');
   await page.locator('#useSourceVideo').check();
-  await page.locator('#mixSourceAudio').check();
+  await page.locator('input[name="audioMode"][value="mix"]').check();
   await page.locator('#useSourceTranscript').check();
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
