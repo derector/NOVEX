@@ -22,6 +22,12 @@ ln -sf "$(node -p "require('$CACHE/node_modules/ffmpeg-static')")" "$CACHE/node_
 ln -sf "$(node -p "require('$CACHE/node_modules/ffprobe-static').path")" "$CACHE/node_modules/.bin/ffprobe"
 export PATH="$CACHE/node_modules/.bin:$PATH"
 
+# Ensure both ffmpeg and ffprobe exist even if a cached npm binary is missing.
+if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+  sudo timeout 180s apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=30
+  sudo timeout 300s apt-get install -y ffmpeg
+fi
+
 if ! command -v pip3 >/dev/null 2>&1; then
   sudo timeout 180s apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=30
   sudo timeout 300s apt-get install -y python3-pip
