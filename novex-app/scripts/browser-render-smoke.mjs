@@ -91,10 +91,14 @@ try {
   await page.locator('#lyrics').fill('');
   const musicPlayer = await page.evaluate(async () => {
     const audio = document.querySelector('#trackAudio');
+    audio.pause();
+    audio.loop = true;
+    audio.currentTime = 0;
     await audio.play();
     await new Promise(resolve => setTimeout(resolve, 300));
     const result = { paused: audio.paused, currentTime: audio.currentTime, duration: audio.duration };
     audio.pause();
+    audio.loop = false;
     return result;
   });
   if (musicPlayer.paused || musicPlayer.currentTime <= 0 ||
