@@ -152,7 +152,19 @@ async function cleanupRenderArtifacts(){
  finally{S.refs.forEach(ref=>{delete ref._ff;});}
 }
 
-$('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,W=p.aspect==='9:16'?Math.round(p.resolution*9/16/2)*2:p.aspect==='1:1'?p.resolution:Math.round(p.resolution*16/9/2)*2,H=p.aspect==='16:9'?Math.round(p.resolution*9/16/2)*2:p.resolution;let sourceAudioInput=null,sourceAudioSeek=0;
+function clearPreviousExportPreview(){
+ if(!S.output)return;
+ const previous=S.output;S.output=null;URL.revokeObjectURL(previous);
+ const v=$('#previewVideo');
+ if(v.src!==previous)return;
+ v.pause();v.removeAttribute('src');v.load();v.hidden=true;
+ delete v.dataset.referencePlaylist;delete v.dataset.referenceIndex;
+ $('#previewStage').classList.remove('has-preview');
+ $('#previewStage .preview-placeholder').hidden=false;
+ $('#playPreview').textContent='▶';
+}
+
+$('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}clearPreviousExportPreview();S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,W=p.aspect==='9:16'?Math.round(p.resolution*9/16/2)*2:p.aspect==='1:1'?p.resolution:Math.round(p.resolution*16/9/2)*2,H=p.aspect==='16:9'?Math.round(p.resolution*9/16/2)*2:p.resolution;let sourceAudioInput=null,sourceAudioSeek=0;
 if(S.source&&$('#useSourceVideo').checked){
  const sourceExt=(S.source.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
  const sourceInput='source-video.'+sourceExt;sourceAudioInput=sourceInput;

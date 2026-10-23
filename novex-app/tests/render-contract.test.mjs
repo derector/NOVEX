@@ -340,3 +340,13 @@ test('workspace navigation uses a named landmark and announces the active view',
   assert.match(html, /class="nav-item active" data-view="studio" aria-current="page"/);
   assert.match(main, /if\(current\)x\.setAttribute\('aria-current','page'\);else x\.removeAttribute\('aria-current'\)/);
 });
+
+
+test('starting a new render releases stale export URLs and clears only the old export preview', () => {
+  assert.match(main, /function clearPreviousExportPreview\(\)/);
+  assert.match(main, /const previous=S\.output;S\.output=null;URL\.revokeObjectURL\(previous\)/);
+  assert.match(main, /if\(v\.src!==previous\)return/);
+  assert.match(main, /v\.pause\(\);v\.removeAttribute\('src'\);v\.load\(\);v\.hidden=true/);
+  assert.match(main, /\$\('#previewStage'\)\.classList\.remove\('has-preview'\)/);
+  assert.match(main, /clearPreviousExportPreview\(\);S\.busy=true/);
+});
