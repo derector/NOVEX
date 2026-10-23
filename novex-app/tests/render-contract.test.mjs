@@ -480,3 +480,13 @@ test('3D export pauses the live preview and captures deterministic frame timesta
   assert.match(motion3d, /const t=start\\+Math\\.min\\(Math\\.max\\(0,duration\\),i\\/fps\\);/);
   assert.match(motion3d, /if\\(wasPlaying&&!disposed\\)\\{playing=true;started=performance\\.now\\(\\);raf=requestAnimationFrame\\(tick\\);\\}/);
 });
+
+
+test('browser render smoke exercises the real 3D export path with software WebGL', async () => {
+  const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
+  assert.match(smoke, /--enable-webgl/);
+  assert.match(smoke, /--enable-unsafe-swiftshader/);
+  assert.match(smoke, /Добавь в начале объёмный 3D-логотип NOVEX/);
+  assert.match(smoke, /3D preview did not initialize/);
+  assert.match(smoke, /real Three\.js 3D frame capture\/compositing/);
+});
