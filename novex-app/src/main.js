@@ -145,7 +145,7 @@ async function cleanupRenderArtifacts(){
   for(const entry of entries){
    if(entry.isDir)continue;
    const name=entry.name||'';
-   if(!/^(?:silent|export|composite|title-composite|concat|lyrics|music|source-video|source\\d+|part\\d+|ref\\d+|3d_\\d+|title_\\d+)(?:\\.[a-z0-9]+)?$/i.test(name))continue;
+   if(!/^(?:silent|export|composite|title-composite|concat|lyrics|music|source-video|source[0-9]+|part[0-9]+|ref[0-9]+|3d_[0-9]+|title_[0-9]+)(?:\.[a-z0-9]+)?$/i.test(name))continue;
    try{await ff.deleteFile(name)}catch{}
   }
  }catch{}
