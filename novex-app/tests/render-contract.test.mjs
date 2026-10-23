@@ -272,3 +272,11 @@ test('failed audio replacement clears stale duration and refreshes dependent UI'
 test('reference preview advances only when multiple videos are queued', () => {
   assert.match(main, /\$\('#previewVideo'\)\.onended=\(\)=>\{const v=\$\('#previewVideo'\);if\(v\.dataset\.referencePlaylist==='true'&&S\.refs\.length>1\)\{const current=Number\(v\.dataset\.referenceIndex\)\|\|0;playReferenceAt\(current\+1,true,true\);return;\}\$\('#playPreview'\)\.textContent='▶';\};/);
 });
+
+
+test('source audio mixing falls back to music-only export when the source has no audio stream', () => {
+  assert.ok(main.includes("const mixSourceRequested=$('#mixSourceAudio').checked"));
+  assert.ok(main.includes("await ff.exec(['-hide_banner','-i',sourceAudioInput])"));
+  assert.ok(main.includes("useSourceAudio=/\\bAudio:\\s/i.test(probeLog)"));
+  assert.ok(main.includes('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.'));
+});
