@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { Script } from 'node:vm';
 
 const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 const motion3d = await readFile(new URL('../src/motion3d.js', import.meta.url), 'utf8');
@@ -206,11 +207,12 @@ test('the supplied motion director source files are present and cross-linked', a
   assert.match(api, /M\.win/);
   assert.match(api, /M\.draw/);
   assert.match(engine, /^\/\* motion\.js v3/);
+  assert.doesNotThrow(() => new Script(engine, { filename: 'motion.js' }));
 });
 
 
 test('source video duration metadata is retained for safe source seeking', () => {
-  assert.match(main, /sourceMeta:\{duration:p\.duration,w:p\.w,h:p\.h\}/);
+  assert.match(main, /S\.sourceMeta=\{duration:p\.duration,w:p\.w,h:p\.h\}/);
   assert.match(main, /const sourceDuration=Number\(S\.sourceMeta\?\.duration\)\|\|r\.duration/);
   assert.match(main, /source:null,sourceUrl:null,sourceMeta:null,duration:0/);
 });
