@@ -8,8 +8,8 @@ if(!key)throw new Error('Set OPENAI_API_KEY as a GitHub Actions secret to enable
 if(!task)throw new Error('Supply a concrete implementation task.');
 const root=process.cwd();
 const read=async p=>{try{return await readFile(path.join(root,p),'utf8')}catch{return '[not present]'}};
-const [engine,main,tests,pkg,spec,manifest]=await Promise.all([
- read('src/motion-engine.js'),read('src/main.js'),read('tests/render-contract.test.mjs'),read('package.json'),read('../docs/NOVEX-FULL-SPEC.md'),read('.cache/motion-skills/manifest.json')
+const [engine,director,audio,main,tests,pkg,spec,manifest]=await Promise.all([
+ read('src/motion-engine.js'),read('src/motion-director.js'),read('src/motion-audio.js'),read('src/main.js'),read('tests/render-contract.test.mjs'),read('package.json'),read('../docs/NOVEX-FULL-SPEC.md'),read('.cache/motion-skills/manifest.json')
 ]);
 let references='';
 async function collect(dir){
@@ -27,6 +27,8 @@ const prompt=[
  'IMPLEMENTATION TASK:\n'+task,
  'NOVEX REQUIREMENTS:\n'+spec.slice(0,12000),
  'CURRENT MOTION ENGINE:\n'+engine,
+ 'CURRENT MOTION DIRECTOR API:\n'+director,
+ 'CURRENT PROCEDURAL AUDIO MODULE:\n'+audio,
  'CURRENT APP SOURCE (up to 36000 chars):\n'+main.slice(0,95000),
  'CURRENT CONTRACT TESTS (up to 16000 chars):\n'+tests.slice(0,30000),
  'PACKAGE CONFIGURATION:\n'+pkg,
