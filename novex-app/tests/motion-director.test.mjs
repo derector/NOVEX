@@ -49,3 +49,11 @@ test('M.onFrame derives deterministic per-frame hook values',()=>{
  assert.equal(M.renderAt(0).beat,0);
  assert.ok(M.renderAt(.25).beat>.99);
 });
+
+test('Motion Director synthesizes its scheduled SFX into a PCM WAV',()=>{
+ const M=createMotionDirector({duration:1,fps:30});
+ M.hit(.25,'s').sfx('pop',.6,{gain:-6});
+ const wav=M.synthesizeAudio({sampleRate:8000});
+ assert.equal(String.fromCharCode(...wav.slice(0,4)),'RIFF');
+ assert.equal(wav.length,44+8000*2);
+});
