@@ -3,8 +3,14 @@ const easings={
  linear:t=>t,
  power2Out:t=>1-(1-t)*(1-t),
  power2In:t=>t*t,
+ power3In:t=>t*t*t,
+ power3Out:t=>1-Math.pow(1-t,3),
  power3InOut:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,
  expoOut:t=>t===1?1:1-Math.pow(2,-10*t),
+ circOut:t=>Math.sqrt(1-Math.pow(t-1,2)),
+ elasticOut:t=>t===0||t===1?t:Math.pow(2,-10*t)*Math.sin((t*10-.75)*(2*Math.PI/3))+1,
+ glide:t=>t<.5?8*Math.pow(t,4):1-Math.pow(-2*t+2,4)/2,
+ bounceOut:t=>{const n=7.5625,d=2.75;if(t<1/d)return n*t*t;if(t<2/d){const x=t-1.5/d;return n*x*x+.75;}if(t<2.5/d){const x=t-2.25/d;return n*x*x+.9375;}const x=t-2.625/d;return n*x*x+.984375;},
  backOut:t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);},
  sineInOut:t=>-(Math.cos(Math.PI*t)-1)/2
 };
