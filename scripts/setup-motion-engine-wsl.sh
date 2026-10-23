@@ -17,7 +17,7 @@ if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v pip3 >/dev/null 2>&1; the
   sudo timeout 300s apt-get install -y ffmpeg python3-pip
 fi
 if ! python3 -c 'import numpy, cv2' >/dev/null 2>&1; then
-  timeout 300s python3 -m pip install --break-system-packages numpy opencv-python-headless
+  timeout 300s python3 -m pip install numpy opencv-python-headless
 fi
 
 CACHE="$HOME/.cache/motion-director"
