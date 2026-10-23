@@ -28,7 +28,7 @@ export function createLogoScene(canvas){
  const ringMaterialB=new THREE.MeshBasicMaterial({color:0xb45cff,transparent:true,opacity:.36,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false});
  const ringA=new THREE.Mesh(new THREE.TorusGeometry(2.35,.012,8,120),ringMaterialA),ringB=new THREE.Mesh(new THREE.TorusGeometry(2.8,.009,8,120),ringMaterialB);
  ringA.position.z=-.55;ringB.position.z=-.8;ringA.rotation.x=.32;ringB.rotation.x=-.46;scene.add(ringA,ringB);
- let cameraMode='slow-orbit',effectMode='cinematic-particles',effectIntensity=1;
+ let cameraMode='slow-orbit',effectMode='cinematic-particles',effectIntensity=1,baseCameraZ=8.6;
  const loader=new FontLoader();const font=loader.parse(fontData);
  let mesh=null,playing=false,raf=0,started=0,elapsed=0,disposed=false;
  const mat=new THREE.MeshPhysicalMaterial({color:0xe7e9ff,metalness:.92,roughness:.19,clearcoat:1,clearcoatRoughness:.12});
@@ -42,11 +42,11 @@ export function createLogoScene(canvas){
  function resize(){
   if(disposed)return;
   const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight);
-  renderer.setSize(w,h,false);camera.aspect=w/h;camera.position.z=w/h<1.15?10.2:8.6;camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false);camera.aspect=w/h;baseCameraZ=w/h<1.15?10.2:8.6;camera.position.z=baseCameraZ;camera.updateProjectionMatrix();
  }
  function draw(t){
   if(disposed)return;
-  const baseZ=canvas.clientWidth/Math.max(1,canvas.clientHeight)<1.15?10.2:8.6;
+  const baseZ=baseCameraZ;
   group.rotation.y=Math.sin(t*.58)*.52;
   group.rotation.x=Math.sin(t*.8)*.09;
   group.position.y=Math.sin(t*1.4)*.07;
@@ -109,12 +109,13 @@ export function createLogoScene(canvas){
   async exportFrames({width,height,frames,fps=30,start=0,duration=2.8,writeFrame}){
    const wasPlaying=playing;
    if(wasPlaying){playing=false;cancelAnimationFrame(raf);}
-   const oldW=canvas.width,oldH=canvas.height;
+   const oldW=canvas.width,oldH=canvas.height,oldBaseCameraZ=baseCameraZ;
    const oldStyleW=canvas.style.width,oldStyleH=canvas.style.height;
    renderer.setClearColor(0x000000,0);
    renderer.setSize(width,height,false);
    camera.aspect=width/height;
-   camera.position.z=width/height<1?10.2:8.6;
+   baseCameraZ=width/height<1.15?10.2:8.6;
+   camera.position.z=baseCameraZ;
    camera.updateProjectionMatrix();
    try{
     for(let i=0;i<frames;i++){
@@ -128,7 +129,7 @@ export function createLogoScene(canvas){
     canvas.style.width=oldStyleW;canvas.style.height=oldStyleH;
     renderer.setSize(Math.max(1,canvas.clientWidth),Math.max(1,canvas.clientHeight),false);
     camera.aspect=Math.max(1,canvas.clientWidth)/Math.max(1,canvas.clientHeight);
-    camera.position.z=camera.aspect<1.15?10.2:8.6;camera.updateProjectionMatrix();draw(0);
+    baseCameraZ=oldBaseCameraZ;camera.position.z=baseCameraZ;camera.updateProjectionMatrix();draw(0);
     if(wasPlaying&&!disposed){playing=true;started=performance.now();raf=requestAnimationFrame(tick);}
    }
    return ()=>{renderer.setClearColor(0x000000,0);};
