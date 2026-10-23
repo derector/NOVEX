@@ -18,6 +18,26 @@ export function createLogoScene(canvas){
  const rim=new THREE.PointLight(0x42dfff,18,18);rim.position.set(3,1,2);scene.add(rim);
  const violet=new THREE.PointLight(0xb45cff,15,16);violet.position.set(-3,-2,2);scene.add(violet);
  const group=new THREE.Group();scene.add(group);
+ // Lightweight 3D environment: depth particles and animated energy rings.
+ const particleCount=260,particlePositions=new Float32Array(particleCount*3);
+ for(let i=0;i<particleCount;i++){particlePositions[i*3]=(Math.random()-.5)*15;particlePositions[i*3+1]=(Math.random()-.5)*9;particlePositions[i*3+2]=-2-Math.random()*13;}
+ const particleGeometry=new THREE.BufferGeometry();particleGeometry.setAttribute('position',new THREE.BufferAttribute(particlePositions,3));
+ const particleMaterial=new THREE.PointsMaterial({color:0x9dbbff,size:.035,transparent:true,opacity:.68,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true});
+ const particles=new THREE.Points(particleGeometry,particleMaterial);scene.add(particles);
+ const streakCount=72,streakPositions=new Float32Array(streakCount*2*3);
+ for(let i=0;i<streakCount;i++){
+  const x=(Math.random()-.5)*16,y=(Math.random()-.5)*9,z=-2-Math.random()*14,length=.25+Math.random()*1.05,tilt=(Math.random()-.5)*.18;
+  const k=i*6;streakPositions[k]=x;streakPositions[k+1]=y;streakPositions[k+2]=z;
+  streakPositions[k+3]=x+length;streakPositions[k+4]=y+tilt;streakPositions[k+5]=z;
+ }
+ const streakGeometry=new THREE.BufferGeometry();streakGeometry.setAttribute('position',new THREE.BufferAttribute(streakPositions,3));
+ const streakMaterial=new THREE.LineBasicMaterial({color:0x8beaff,transparent:true,opacity:.72,blending:THREE.AdditiveBlending,depthWrite:false});
+ const streaks=new THREE.LineSegments(streakGeometry,streakMaterial);streaks.visible=false;scene.add(streaks);
+ const ringMaterialA=new THREE.MeshBasicMaterial({color:0x42dfff,transparent:true,opacity:.48,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false});
+ const ringMaterialB=new THREE.MeshBasicMaterial({color:0xb45cff,transparent:true,opacity:.36,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false});
+ const ringA=new THREE.Mesh(new THREE.TorusGeometry(2.35,.012,8,120),ringMaterialA),ringB=new THREE.Mesh(new THREE.TorusGeometry(2.8,.009,8,120),ringMaterialB);
+ ringA.position.z=-.55;ringB.position.z=-.8;ringA.rotation.x=.32;ringB.rotation.x=-.46;scene.add(ringA,ringB);
+ let cameraMode='slow-orbit',effectMode='cinematic-particles',effectIntensity=1,baseCameraZ=8.6;
  const loader=new FontLoader();const font=loader.parse(fontData);
  let mesh=null,playing=false,raf=0,started=0,elapsed=0,disposed=false;
  const mat=new THREE.MeshPhysicalMaterial({color:0xe7e9ff,metalness:.92,roughness:.19,clearcoat:1,clearcoatRoughness:.12});
@@ -31,13 +51,51 @@ export function createLogoScene(canvas){
  function resize(){
   if(disposed)return;
   const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight);
-  renderer.setSize(w,h,false);camera.aspect=w/h;camera.position.z=w/h<1.15?10.2:8.6;camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false);camera.aspect=w/h;baseCameraZ=w/h<1.15?10.2:8.6;camera.position.z=baseCameraZ;camera.updateProjectionMatrix();
  }
  function draw(t){
   if(disposed)return;
+  const baseZ=baseCameraZ;
   group.rotation.y=Math.sin(t*.58)*.52;
   group.rotation.x=Math.sin(t*.8)*.09;
   group.position.y=Math.sin(t*1.4)*.07;
+  camera.position.set(0,.1,baseZ);
+  camera.rotation.z=0;
+  if(cameraMode==='orbit'){
+   camera.position.x=Math.sin(t*.92)*2.15;
+   camera.position.y=.1+Math.sin(t*.61)*.5;
+   camera.position.z=baseZ+Math.cos(t*.92)*.35;
+  }else if(cameraMode==='dolly-in'){
+   camera.position.z=baseZ-Math.min(1.7,t*.62);
+   camera.position.x=Math.sin(t*.38)*.12;
+  }else if(cameraMode==='dolly-out'){
+   camera.position.z=baseZ+Math.min(1.9,t*.68);
+   camera.position.x=Math.sin(t*.35)*.1;
+  }else if(cameraMode==='whip-pan'){
+   camera.position.x=Math.sin(t*5.4)*.65*Math.exp(-t*.45);
+   camera.rotation.z=Math.sin(t*5.4)*.045*Math.exp(-t*.6);
+  }else{
+   camera.position.x=Math.sin(t*.28)*.2;
+   camera.position.z=baseZ+Math.cos(t*.42)*.22;
+  }
+  camera.lookAt(0,0,0);
+  if(cameraMode==='whip-pan')camera.rotation.z+=Math.sin(t*5.4)*.045*Math.exp(-t*.6);
+  particles.visible=effectMode!=='none';
+  streaks.visible=effectMode==='light-streaks';
+  streaks.rotation.z=Math.sin(t*1.8)*.035;
+  streaks.rotation.y=t*.025;
+  streaks.position.x=Math.sin(t*3.4)*.28;
+  streakMaterial.opacity=.48+.28*(.5+.5*Math.sin(t*7.5));
+  ringA.visible=effectMode==='energy-rings'||effectMode==='cinematic-particles'||effectMode==='light-streaks';
+  ringB.visible=ringA.visible;
+  particles.rotation.z=effectMode==='light-streaks'?Math.sin(t*1.7)*.12:Math.sin(t*.15)*.025;
+  particles.rotation.y=effectMode==='light-streaks'?t*.16:t*.025;
+  particleMaterial.opacity=effectMode==='none'?0:(effectMode==='light-streaks'?.88:.48)*effectIntensity;
+  ringA.rotation.z=t*.45;ringB.rotation.z=-t*.31;
+  ringA.scale.setScalar(1+Math.sin(t*2.2)*.035);
+  ringB.scale.setScalar(1+Math.cos(t*1.6)*.045);
+  ringMaterialA.opacity=(effectMode==='energy-rings'?.72:.38)*effectIntensity;
+  ringMaterialB.opacity=(effectMode==='energy-rings'?.56:.28)*effectIntensity;
   rim.intensity=15+Math.sin(t*1.7)*4;
   renderer.render(scene,camera);
  }
@@ -49,6 +107,15 @@ export function createLogoScene(canvas){
  const ro=new ResizeObserver(resize);ro.observe(canvas);
  return {
   setText,
+  setOptions(options={}){
+   const camera=String(options.camera||'slow-orbit').toLowerCase();
+   cameraMode=({orbit:'orbit','slow-orbit':'slow-orbit','dolly-in':'dolly-in','dolly-out':'dolly-out','whip-pan':'whip-pan'})[camera]||'slow-orbit';
+   const effect=String(options.effect||'cinematic-particles').toLowerCase();
+   effectMode=({particles:'cinematic-particles','cinematic-particles':'cinematic-particles','energy-rings':'energy-rings','light-streaks':'light-streaks',none:'none'})[effect]||'cinematic-particles';
+   effectIntensity=Math.max(.25,Math.min(1.8,Number(options.intensity)||1));
+   draw(elapsed);
+   return {camera:cameraMode,effect:effectMode,intensity:effectIntensity};
+  },
   play(){if(playing||disposed)return;playing=true;started=performance.now();raf=requestAnimationFrame(tick);},
   pause(){playing=false;cancelAnimationFrame(raf);draw(elapsed);},
   isPlaying(){return playing;},
@@ -56,16 +123,17 @@ export function createLogoScene(canvas){
   async exportFrames({width,height,frames,fps=30,start=0,duration=2.8,writeFrame}){
    const wasPlaying=playing;
    if(wasPlaying){playing=false;cancelAnimationFrame(raf);}
-   const oldW=canvas.width,oldH=canvas.height;
+   const oldW=canvas.width,oldH=canvas.height,oldBaseCameraZ=baseCameraZ;
    const oldStyleW=canvas.style.width,oldStyleH=canvas.style.height;
    renderer.setClearColor(0x000000,0);
    renderer.setSize(width,height,false);
    camera.aspect=width/height;
-   camera.position.z=width/height<1?10.2:8.6;
+   baseCameraZ=width/height<1.15?10.2:8.6;
+   camera.position.z=baseCameraZ;
    camera.updateProjectionMatrix();
    try{
     for(let i=0;i<frames;i++){
-     const t=start+Math.min(Math.max(0,duration),i/fps);
+     const t=Math.min(Math.max(0,duration),i/fps);
      draw(t);
      const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Не удалось получить PNG-кадр 3D')),'image/png'));
      const bytes=new Uint8Array(await blob.arrayBuffer());
@@ -75,11 +143,11 @@ export function createLogoScene(canvas){
     canvas.style.width=oldStyleW;canvas.style.height=oldStyleH;
     renderer.setSize(Math.max(1,canvas.clientWidth),Math.max(1,canvas.clientHeight),false);
     camera.aspect=Math.max(1,canvas.clientWidth)/Math.max(1,canvas.clientHeight);
-    camera.position.z=camera.aspect<1.15?10.2:8.6;camera.updateProjectionMatrix();draw(0);
+    baseCameraZ=oldBaseCameraZ;camera.position.z=baseCameraZ;camera.updateProjectionMatrix();draw(0);
     if(wasPlaying&&!disposed){playing=true;started=performance.now();raf=requestAnimationFrame(tick);}
    }
    return ()=>{renderer.setClearColor(0x000000,0);};
   },
-  dispose(){disposed=true;playing=false;cancelAnimationFrame(raf);ro.disconnect();if(mesh)mesh.geometry.dispose();mat.dispose();renderer.dispose();}
+  dispose(){disposed=true;playing=false;cancelAnimationFrame(raf);ro.disconnect();if(mesh)mesh.geometry.dispose();particleGeometry.dispose();particleMaterial.dispose();streakGeometry.dispose();streakMaterial.dispose();ringA.geometry.dispose();ringB.geometry.dispose();ringMaterialA.dispose();ringMaterialB.dispose();mat.dispose();renderer.dispose();}
  };
 }

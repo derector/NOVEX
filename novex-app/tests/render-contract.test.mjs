@@ -287,16 +287,21 @@ test('reference preview advances only when multiple videos are queued', () => {
 });
 
 
-test('source audio mixing falls back to music-only export when the source has no audio stream', () => {
-  assert.ok(main.includes("const audioMode=radio('audioMode')||'music',mixSourceRequested=audioMode!=='music'"));
-  assert.ok(main.includes("await ff.exec(['-hide_banner','-i',sourceAudioInput])"));
-  assert.ok(main.includes("useSourceAudio=/\\bAudio:\\s/i.test(probeLog)"));
-  assert.ok(main.includes("finally{ff.off('log',capture);}"));
-  assert.ok(main.includes("if(useSourceAudio){audioFilters.push('['+sourceAudioIndex+':a:0]aresample=48000,volume='+sourceGain+'[src]')"));
-  assert.ok(main.includes("if(includeMusic){audioFilters.push('['+musicAudioIndex+':a:0]aresample=48000,volume='+musicGain+'[music]')"));
-  assert.ok(main.includes('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.'));
+test('video or music remains the only base audio source; animation SFX are mixed on top', () => {
+  assert.match(main, /const audioMode=radio\('audioMode'\)\|\|'music'/);
+  assert.match(main, /if\(audioMode==='source'&&!S\.source\)/);
+  assert.match(main, /await ff\.exec\(\['-hide_banner','-i',sourceAudioInput\]\)/);
+  assert.match(main, /В выбранном видео-источнике нет доступной аудиодорожки/);
+  assert.match(main, /args\.push\('-map','1:a:0','-af'/);
+  assert.match(main, /motionAudio\.synthesizeAudio\(\{sampleRate:24000,masterGain:\.24\}\)/);
+  assert.match(main, /motionAudio\.hit\(cueAt\(threeDEdit\.start\),'l'\)/);
+  assert.match(main, /motionTransitionCues\.push\(offset\)/);
+  assert.match(main, /for\(const at of motionTransitionCues\)motionAudio\.sfx\('whoosh',at/);
+  assert.match(main, /motionAudio\.sfx\('pop',cueAt\(edit\.start\)/);
+  assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
+  assert.doesNotMatch(main, /mixSourceRequested|musicAudioIndex|sourceAudioIndex/);
+  assert.match(main, /sourceAudioSeek=sourceSeek/);
 });
-
 
 test('multi-reference MP4 export uses smooth crossfades and preserves target duration', () => {
   assert.match(main, /const transition=Math\.max\(1\/30,Math\.floor\(Math\.min\(\.35,\.\.\.segmentDurations\.map\(d=>d\*\.45\)\)\*30\)\/30\)/);
@@ -371,11 +376,10 @@ test('replacing the source video revokes the previous object URL only after the 
 
 
 test('successful audio replacement reuses the validated URL and updates track metadata', () => {
-  assert.match(main, /au\.src=nextUrl;au\.volume=\(Number\(\$\('#musicAudioVolume'\)\.value\)\|\|85\)\/100;au\.hidden=false;au\.load\(\)/);
+  assert.match(main, /au\.src=nextUrl;au\.volume=1;au\.hidden=false;au\.load\(\);\$\('#audioExportControls'\)\.hidden=false;syncSourceAudioControls\(\)/);
   assert.match(main, /\$\('#trackName'\)\.textContent=f\.name;\$\('#trackMeta'\)\.textContent=clock\(S\.duration\)\+' · '\+size\(f\.size\)/);
-  assert.match(main, /e\.target\.value='';stats\(\);library\(\);toast\('Трек загружен\.'\)/);
+  assert.match(main, /e\.target\.value='';stats\(\);library\(\);toast\('Трек загружен\.'/);
 });
-
 
 test('media metadata probing has a timeout and releases failed temporary media URLs', () => {
   assert.match(main, /Истекло время чтения '\+file\.name|Истекло время чтения \+file\.name/);
@@ -412,18 +416,14 @@ test('removing reference clips preserves active playlist index and clears empty 
 });
 
 
-test('source, music and procedural SFX streams are mapped through a normalized, limited audio mix', () => {
-  assert.ok(main.includes("sourceAudioIndex=inputIndex++"));
-  assert.ok(main.includes("musicAudioIndex=inputIndex++"));
-  assert.ok(main.includes("sfxAudioIndex=inputIndex++"));
-  assert.ok(main.includes("['+sourceAudioIndex+':a:0]aresample=48000,volume='+sourceGain+'[src]"));
-  assert.ok(main.includes("['+musicAudioIndex+':a:0]aresample=48000,volume='+musicGain+'[music]"));
-  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
-  assert.ok(main.includes("args.push('-filter_complex',audioFilters.join(';'),'-map','[aout]')"));
-  assert.ok(main.includes("sourceAudioSeek=sourceSeek"));
-  assert.ok(main.includes("await validateExportMedia(blob,W,H,r.duration)"));
+test('reference clips are silent visual inputs and only one base source is selected before SFX', () => {
+  assert.match(main, /'-an','-c:v','libx264'/);
+  assert.match(main, /'-map','1:a:0','-af'/);
+  assert.match(main, /if\(audioMode==='source'\)/);
+  assert.match(main, /else\{\s*const ext=/);
+  assert.match(main, /motion-sfx\.wav/);
+  assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
 });
-
 
 test('director capability note accurately describes implemented export effects', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
@@ -454,44 +454,25 @@ test('source-only mode can be selected before analysis when a source video is up
 });
 
 
-test('audio controls expose music/original/mix modes, source preview and adjustable export levels', async () => {
+test('audio controls expose a mutually exclusive track-or-video source', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  const css = await readFile(new URL('../src/style.css', import.meta.url), 'utf8');
   assert.match(html, /id="trackAudio" controls preload="metadata" aria-label="Прослушать музыкальный трек"/);
   assert.match(html, /id="sourceAudioPreview" controls preload="metadata" aria-label="Прослушать оригинальный звук видео"/);
-  for (const mode of ['music', 'original', 'mix']) assert.match(html, new RegExp('name="audioMode" value="' + mode + '"'));
-  assert.match(html, /id="sourceAudioVolume" type="range"/);
-  assert.match(html, /id="musicAudioVolume" type="range"/);
-  assert.match(main, /audioMode==='original'&&useSourceAudio/);
-  assert.match(main, /audioMode==='mix'&&useSourceAudio/);
-  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
-  assert.match(main, /sourceAudioPreview'\)\.onerror/);
-  assert.match(css, /\.audio-volume-grid input\[type="range"\]/);
+  assert.match(html, /name="audioMode" value="music" checked/);
+  assert.match(html, /name="audioMode" value="source" disabled/);
+  assert.doesNotMatch(html, /name="audioMode" value="(?:mix|original)"|audio-volume-grid|sourceAudioVolume|musicAudioVolume/);
+  assert.match(main, /function syncSourceAudioControls\(\)\{const available=!!S\.source/);
+  assert.match(main, /if\(sourceMode\)sourceMode\.disabled=!available/);
+  assert.doesNotMatch(main, /mixSourceRequested/);
 });
 
-
-test('reset safely disables non-music audio modes without treating a single element as a collection', () => {
-  assert.match(main, /\$\$\('input\[name="audioMode"\]'\)\.filter\(x=>x\.value!=='music'\)\.forEach\(x=>x\.disabled=true\)/);
-  assert.doesNotMatch(main, /(?<!\$)\$\('input\[name="audioMode"\]'\)\.filter\(x=>x\.value!=='music'\)/);
+test('New Project resets the selected audio source to music', () => {
+  assert.match(main, /\$\('input\[name="audioMode"\]\[value="music"\]'\)\.checked=true;syncSourceAudioControls\(\)/);
 });
-
-test('music volume is available with a track, while source modes activate only for selected source footage', async () => {
-  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(html, /id="audioExportControls" class="audio-export-controls" hidden/);
-  assert.match(html, /name="audioMode" value="original" disabled/);
-  assert.match(html, /name="audioMode" value="mix" disabled/);
-  assert.match(html, /id="musicAudioVolume" type="range" min="0" max="100" step="1" value="85" disabled/);
-  assert.ok(main.includes("$('#audioExportControls').hidden=false;$('#musicAudioVolume').disabled=false"));
-  assert.ok(main.includes("function syncSourceAudioControls(){const enabled=!!S.source&&$('#useSourceVideo').checked"));
-  assert.match(main, /\$\$\('input\[name="audioMode"\]'\)\.filter\(x=>x\.value!=='music'\)/);
-  assert.ok(main.includes("$('#useSourceVideo').onchange=syncSourceAudioControls"));
-  assert.ok(main.includes("$('#audioExportControls').hidden=true;$('#musicAudioVolume').disabled=true"));
-});
-
 
 test('3D export pauses the live preview and captures deterministic frame timestamps', () => {
   assert.match(motion3d, /const wasPlaying=playing;\s*if\(wasPlaying\)\{playing=false;cancelAnimationFrame\(raf\);\}/);
-  assert.match(motion3d, /const t=start\+Math\.min\(Math\.max\(0,duration\),i\/fps\);/);
+  assert.match(motion3d, /const t=Math\.min\(Math\.max\(0,duration\),i\/fps\);/);
   assert.match(motion3d, /if\(wasPlaying&&!disposed\)\{playing=true;started=performance\.now\(\);raf=requestAnimationFrame\(tick\);\}/);
 });
 
@@ -529,43 +510,27 @@ test('Android export writes the MP4 to persistent app Documents and opens the na
 });
 
 
-test('saved projects restore source-video mode, audio mode and both volume levels', () => {
+test('saved projects restore source-video mode and the exclusive audio-source selection', () => {
   assert.match(main, /useSourceVideo:\!\!\(S\.source&&\$\('#useSourceVideo'\)\.checked\)/);
   assert.match(main, /audioMode:radio\('audioMode'\)\|\|'music'/);
-  assert.match(main, /sourceAudioVolume:Number\(\$\('#sourceAudioVolume'\)\.value\)\|\|0/);
-  assert.match(main, /musicAudioVolume:Number\(\$\('#musicAudioVolume'\)\.value\)\|\|0/);
-  assert.match(main, /typeof d\.useSourceVideo==='boolean'\?d\.useSourceVideo:\(!refs\.length&&!!d\.sourceName\)/);
-  assert.match(main, /const savedAudioMode=/);
-  assert.match(main, /d\.audioMode\|\|'music'/);
+  assert.match(main, /const savedMode=d\.audioMode==='source'\|\|d\.audioMode==='original'\|\|d\.audioMode==='mix'\?'source':'music'/);
   assert.match(main, /syncSourceAudioControls\(\);const timeline=/);
-  assert.match(main, /d\.sourceAudioVolume!==undefined/);
-  assert.match(main, /d\.musicAudioVolume!==undefined/);
 });
 
-
-test('browser smoke exercises the New Project reset after source/audio settings are enabled', async () => {
+test('browser smoke validates exclusive source-audio selection and no audio mixing', async () => {
   const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
-  assert.match(smoke, /Exercise the New Project reset after source\/mix settings have been enabled/);
-  assert.match(smoke, /page\.locator\('#newProjectTop'\)\.click\(\)/);
-  assert.match(smoke, /modes\.filter\(el => el\.value !== 'music'\)\.every\(el => el\.disabled\)/);
+  assert.match(smoke, /audioMode === 'source'/);
+  assert.doesNotMatch(smoke, /sourceAudioVolume|musicAudioVolume|audioMode === 'mix'/);
+  assert.match(smoke, /exclusive audio-source restoration/);
   assert.match(smoke, /Uncaught browser errors after New Project reset/);
 });
 
-test('browser smoke verifies saved source/audio settings after a full reload', async () => {
-  const smoke = await readFile(new URL('../scripts/browser-render-smoke.mjs', import.meta.url), 'utf8');
-  assert.match(smoke, /sourceAudioVolume/);
-  assert.match(smoke, /musicAudioVolume/);
-  assert.match(smoke, /audioMode === 'mix'/);
-  assert.match(smoke, /document\.querySelector\('#useSourceVideo'\)\?\.checked === true/);
-  assert.match(smoke, /source\/audio settings restoration/);
-});
-
-test('motion sound effects are synthesized deterministically and mixed into the exported MP4',()=>{
-  assert.ok(main.includes("createMotionDirector({duration:r.duration,fps:30})"));
-  assert.ok(main.includes("motionAudio.synthesizeAudio({sampleRate:24000,masterGain:.24})"));
-  assert.ok(main.includes("ff.writeFile('motion-sfx.wav'"));
-  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
-  assert.ok(main.includes("audioMode==='mix'"));
+test('automatic motion SFX are synthesized and layered over the single chosen audio source', () => {
+  assert.match(main, /const motionAudio=createMotionDirector\(\{duration:r\.duration,fps:30\}\)/);
+  assert.match(main, /motionAudio\.synthesizeAudio/);
+  assert.match(main, /motion-sfx\.wav/);
+  assert.match(main, /\[base\]\[sfx\]amix=inputs=2:duration=first/);
+  assert.doesNotMatch(main, /mixSourceRequested/);
 });
 
 test('director accepts graphic accent commands and renders them into the final MP4',()=>{
@@ -579,6 +544,16 @@ test('director accepts graphic accent commands and renders them into the final M
   assert.ok(main.includes("graphic-composite|concat"));
 });
 
+test('3D camera paths and cinematic effect presets are configurable and exposed in the Director', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(motion3d, /setOptions\(options=\{\}\)/);
+  for (const mode of ['orbit', 'dolly-in', 'dolly-out', 'whip-pan']) assert.ok(motion3d.includes(mode), 'missing camera path ' + mode);
+  for (const effect of ['cinematic-particles', 'energy-rings', 'light-streaks']) assert.ok(motion3d.includes(effect), 'missing 3D effect ' + effect);
+  assert.match(motion3d, /new THREE\.LineSegments\(streakGeometry,streakMaterial\)/);
+  for (const preset of ['data-command="orbit"', 'data-command="rings"', 'data-command="streaks"']) assert.ok(html.includes(preset), 'missing Director preset ' + preset);
+  assert.match(main, /motion3d\.setOptions\(threeDEdit\.style\|\|\{\}\)/);
+});
+
 test('graphic motion accents are available from the Director quick actions',async()=>{
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
   assert.match(html,/data-command="graphic">◌ Графический акцент/);
@@ -589,4 +564,10 @@ test('browser render smoke exercises the animated graphic overlay export path',a
   const smoke=await readFile(new URL('../scripts/browser-render-smoke.mjs',import.meta.url),'utf8');
   assert.match(smoke,/Добавь графический акцент-кольцо с плавным появлением/);
   assert.match(smoke,/directorPlan.*Кольцевой акцент/);
+});
+
+
+test('video audio selection does not require replacing reference visuals with source-video visuals', () => {
+  assert.match(main, /if\(\(radio\('audioMode'\)\|\|'music'\)==='source'&&!S\.source\)/);
+  assert.doesNotMatch(main, /Выбран звук «Оригинал» или «Смешать»/);
 });
