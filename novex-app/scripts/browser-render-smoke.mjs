@@ -176,7 +176,20 @@ try {
   }, null, { timeout: 15000 });
   const sourcePlayer = await page.evaluate(async () => {
     const audio = document.querySelector('#sourceAudioPreview');
+    audio.pause();
     audio.currentTime = 0;
+    await new Promise(resolve => {
+      let settled = false, timer;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        audio.removeEventListener('seeked', finish);
+        resolve();
+      };
+      audio.addEventListener('seeked', finish, { once: true });
+      timer = setTimeout(finish, 750);
+    });
     await audio.play();
     await new Promise(resolve => setTimeout(resolve, 300));
     const result = { paused: audio.paused, currentTime: audio.currentTime, duration: audio.duration };
