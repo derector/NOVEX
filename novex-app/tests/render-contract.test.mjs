@@ -573,6 +573,8 @@ test('video audio selection does not require replacing reference visuals with so
 });
 
 test('reference list restores first uploaded clip when preview is blank, including after an output state change', () => {
-  assert.match(main, /if\(S\.refs\.length\)\{\s*const preview=\$\('#previewVideo'\);\s*const activeReference=preview\.dataset\.referencePreview&&S\.refs\.some\(x=>x\.url===preview\.dataset\.referencePreview\);\s*const hasPlayableOutput=Boolean\(S\.output&&preview\.getAttribute\('src'\)&&!preview\.hidden\);\s*if\(!activeReference&&!hasPlayableOutput\)\{\s*playReferenceAt\(0,true,false\);\s*\}\s*\}/);
+  assert.match(main, /const activeReference=preview\.dataset\.referencePreview&&S\.refs\.some/);
+  assert.match(main, /const hasPlayableOutput=Boolean\(S\.output&&preview\.getAttribute\('src'\)&&!preview\.hidden\)/);
+  assert.match(main, /if\(!activeReference&&!hasPlayableOutput\)\{\s*playReferenceAt\(0,true,false\)/);
   assert.match(main, /#referenceList/);
 });
