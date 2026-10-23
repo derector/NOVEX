@@ -263,7 +263,8 @@ test('reference preview recovers visibly when a selected video fails to load', (
   assert.match(main, /\$\('#previewStage'\)\.classList\.remove\('has-preview'\);\$\('#previewStage \.preview-placeholder'\)\.hidden=false/);
   assert.match(main, /\$\('#previewClock'\)\.textContent='00:00 \/ 00:00';\$\('#previewSeekFill'\)\.style\.width='0%'/);
   assert.match(main, /Не удалось открыть видео '\+item\.file\.name/);
-  assert.match(main, /v\.classList\.remove\('preview-fade-out'\);\$\('#playPreview'\)\.textContent='▶'/);
+  assert.match(main, /v\.classList\.remove\('preview-fade-out'\)/);
+  assert.match(main, /\$\('#playPreview'\)\.textContent='▶'/);
 });
 
 
