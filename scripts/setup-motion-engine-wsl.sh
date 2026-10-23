@@ -17,8 +17,9 @@ mkdir -p "$CACHE"
 if [ ! -f "$CACHE/package.json" ] || ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$CACHE/package.json" >/dev/null 2>&1; then
   printf '{"name":"motion-director-cache","private":true}\n' > "$CACHE/package.json"
 fi
-timeout 300s npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap ffmpeg-static
+timeout 300s npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap ffmpeg-static ffprobe-static
 ln -sf "$(node -p "require('$CACHE/node_modules/ffmpeg-static')")" "$CACHE/node_modules/.bin/ffmpeg"
+ln -sf "$(node -p "require('$CACHE/node_modules/ffprobe-static').path")" "$CACHE/node_modules/.bin/ffprobe"
 export PATH="$CACHE/node_modules/.bin:$PATH"
 
 if ! command -v pip3 >/dev/null 2>&1; then

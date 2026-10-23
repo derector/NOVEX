@@ -36,7 +36,7 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://jtkpydprgqccxxkqcvou.supabase.co' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HbBlyHbGCY6SFmoo9qL1eg_p6jOYVEO' }}
       - name: Install Chromium for browser render smoke test
-        run: npm install --no-save --package-lock=false playwright ffmpeg-static && npx playwright install --only-shell chromium && node -e "console.log(require('path').dirname(require('ffmpeg-static')))" >> "$GITHUB_PATH"
+        run: npm install --no-save --package-lock=false playwright ffmpeg-static ffprobe-static && npx playwright install --only-shell chromium && node -e "console.log(require('path').dirname(require('ffmpeg-static')))" >> "$GITHUB_PATH"
       - name: Verify FFmpeg for media fixtures
         run: ffmpeg -version
       - name: Generate tiny media fixtures for real MP4 export
