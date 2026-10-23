@@ -350,3 +350,13 @@ test('starting a new render releases stale export URLs and clears only the old e
   assert.match(main, /\$\('#previewStage'\)\.classList\.remove\('has-preview'\)/);
   assert.match(main, /clearPreviousExportPreview\(\);S\.busy=true/);
 });
+
+
+test('reset stops audio playback and releases the audio element source', () => {
+  assert.match(main, /function reset\(\)\{if\(S\.busy\)return toast\('Дождись завершения рендера\.','warn'\);const au=\$\('#trackAudio'\);au\.pause\(\);au\.removeAttribute\('src'\);au\.load\(\);au\.hidden=true/);
+  assert.match(main, /if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\)/);
+});
+
+test('replacing the source video revokes the previous object URL only after the new video is probed', () => {
+  assert.match(main, /const p=await probe\(f\);if\(S\.sourceUrl\)URL\.revokeObjectURL\(S\.sourceUrl\);S\.source=f;S\.sourceUrl=p\.url/);
+});
