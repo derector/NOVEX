@@ -34,3 +34,5 @@ test('motion presets expose reusable enter, exit, sway and shake hooks',()=>{
  assert.equal(typeof motionHooks.shake()({time:.5}).x,'number');
  assert.ok(motionEasings.expoOut(.5)>.5);
 });
+
+test('cinematic easing presets have stable endpoints',()=>{ assert.equal(motionEasings.glide(0),0); assert.equal(motionEasings.glide(1),1); assert.equal(motionEasings.elasticOut(1),1); assert.equal(motionEasings.circOut(1),1); assert.equal(motionEasings.bounceOut(1),1); });

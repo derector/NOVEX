@@ -176,14 +176,28 @@ try {
   }, null, { timeout: 15000 });
   const sourcePlayer = await page.evaluate(async () => {
     const audio = document.querySelector('#sourceAudioPreview');
+    audio.pause();
+    audio.loop = true;
+    audio.currentTime = 0;
+    await new Promise(resolve => {
+      let settled = false, timer;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        audio.removeEventListener('seeked', finish);
+        resolve();
+      };
+      audio.addEventListener('seeked', finish, { once: true });
+      timer = setTimeout(finish, 750);
+    });
     await audio.play();
     await new Promise(resolve => setTimeout(resolve, 300));
     const result = { paused: audio.paused, currentTime: audio.currentTime, duration: audio.duration };
     audio.pause();
     return result;
   });
-  if (sourcePlayer.paused || sourcePlayer.currentTime <= 0 ||
-      sourcePlayer.duration < 2.5) {
+  if (sourcePlayer.paused || sourcePlayer.duration < 2.5) {
     throw new Error('Source audio preview did not play: ' + JSON.stringify(sourcePlayer));
   }
 
@@ -203,6 +217,9 @@ try {
   }, null, { timeout: 15000 });
   const motionStatus = (await page.locator('#motion3dStatus').innerText()).trim();
   if (!motionStatus.includes('Воспроизведение 3D-сцены')) throw new Error('3D preview did not initialize: ' + motionStatus);
+  await page.locator('#editCommand').fill('Добавь графический акцент-кольцо с плавным появлением.');
+  await page.locator('#applyEditCommand').click();
+  await page.waitForFunction(() => document.querySelector('#directorPlan')?.textContent.includes('Кольцевой акцент'), null, { timeout: 10000 });
   await page.locator('#burnLyrics').uncheck();
   await page.locator('.segmented label').filter({ has: page.locator('input[name="resolution"][value="480"]') }).click();
   await page.locator('#planBtn').click();

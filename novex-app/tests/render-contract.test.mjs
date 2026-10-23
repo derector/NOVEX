@@ -292,8 +292,8 @@ test('source audio mixing falls back to music-only export when the source has no
   assert.ok(main.includes("await ff.exec(['-hide_banner','-i',sourceAudioInput])"));
   assert.ok(main.includes("useSourceAudio=/\\bAudio:\\s/i.test(probeLog)"));
   assert.ok(main.includes("finally{ff.off('log',capture);}"));
-  assert.ok(main.includes("audioMode==='mix'){args.push('-filter_complex'"));
-  assert.ok(main.includes("}else args.push('-map','1:a:0','-af','volume='+musicGain)"));
+  assert.ok(main.includes("if(useSourceAudio){audioFilters.push('['+sourceAudioIndex+':a:0]aresample=48000,volume='+sourceGain+'[src]')"));
+  assert.ok(main.includes("if(includeMusic){audioFilters.push('['+musicAudioIndex+':a:0]aresample=48000,volume='+musicGain+'[music]')"));
   assert.ok(main.includes('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.'));
 });
 
@@ -317,7 +317,7 @@ test('render temporary files are cleaned after success or failure and reference 
   const cleanupPattern = main.match(/if\(!\/(.+?)\/i\.test\(name\)\)continue;/);
   assert.ok(cleanupPattern, 'cleanup must have a narrow temporary-file allowlist');
   const allowed = new RegExp(cleanupPattern[1], 'i');
-  for (const name of ['silent.mp4', 'export.mp4', 'source-video.mov', 'part12.mp4', 'ref2.webm', 'x3.mp4', '3d_0001.png', 'title_0012.png']) {
+  for (const name of ['silent.mp4', 'export.mp4', 'source-video.mov', 'part12.mp4', 'ref2.webm', 'x3.mp4', '3d_0001.png', 'title_0012.png', 'graphic_0001.png', 'graphic-composite.mp4', 'motion-sfx.wav']) {
     assert.match(name, allowed, name + ' should be cleaned');
   }
   for (const name of ['notes.txt', 'source-video-backup.mp4', 'my-export.mp4', 'user-photo.png']) {
@@ -412,14 +412,17 @@ test('removing reference clips preserves active playlist index and clears empty 
 });
 
 
-test('source audio mixing maps the source and music streams through normalized, limited amix', () => {
-  assert.match(main, /if\(useSourceAudio\)args\.push\('-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\)/);
-  assert.match(main, /\[1:a:0\]aresample=48000,volume='\+sourceGain\+'\[src\];\[2:a:0\]aresample=48000,volume='\+musicGain\+'\[music\];\[src\]\[music\]amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0\.95\[aout\]/);
-  assert.match(main, /args\.push\('-filter_complex',[\s\S]*?'-map','\[aout\]'\)/);
-  assert.match(main, /sourceAudioSeek=sourceSeek/);
-  assert.match(main, /await validateExportMedia\(blob,W,H,r\.duration\)/);
+test('source, music and procedural SFX streams are mapped through a normalized, limited audio mix', () => {
+  assert.ok(main.includes("sourceAudioIndex=inputIndex++"));
+  assert.ok(main.includes("musicAudioIndex=inputIndex++"));
+  assert.ok(main.includes("sfxAudioIndex=inputIndex++"));
+  assert.ok(main.includes("['+sourceAudioIndex+':a:0]aresample=48000,volume='+sourceGain+'[src]"));
+  assert.ok(main.includes("['+musicAudioIndex+':a:0]aresample=48000,volume='+musicGain+'[music]"));
+  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
+  assert.ok(main.includes("args.push('-filter_complex',audioFilters.join(';'),'-map','[aout]')"));
+  assert.ok(main.includes("sourceAudioSeek=sourceSeek"));
+  assert.ok(main.includes("await validateExportMedia(blob,W,H,r.duration)"));
 });
-
 
 
 test('director capability note accurately describes implemented export effects', async () => {
@@ -460,7 +463,8 @@ test('audio controls expose music/original/mix modes, source preview and adjusta
   assert.match(html, /id="sourceAudioVolume" type="range"/);
   assert.match(html, /id="musicAudioVolume" type="range"/);
   assert.match(main, /audioMode==='original'&&useSourceAudio/);
-  assert.match(main, /audioMode==='mix'\)\{args\.push\('-filter_complex'/);
+  assert.match(main, /audioMode==='mix'&&useSourceAudio/);
+  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
   assert.match(main, /sourceAudioPreview'\)\.onerror/);
   assert.match(css, /\.audio-volume-grid input\[type="range"\]/);
 });
@@ -554,4 +558,35 @@ test('browser smoke verifies saved source/audio settings after a full reload', a
   assert.match(smoke, /audioMode === 'mix'/);
   assert.match(smoke, /document\.querySelector\('#useSourceVideo'\)\?\.checked === true/);
   assert.match(smoke, /source\/audio settings restoration/);
+});
+
+test('motion sound effects are synthesized deterministically and mixed into the exported MP4',()=>{
+  assert.ok(main.includes("createMotionDirector({duration:r.duration,fps:30})"));
+  assert.ok(main.includes("motionAudio.synthesizeAudio({sampleRate:24000,masterGain:.24})"));
+  assert.ok(main.includes("ff.writeFile('motion-sfx.wav'"));
+  assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
+  assert.ok(main.includes("audioMode==='mix'"));
+});
+
+test('director accepts graphic accent commands and renders them into the final MP4',()=>{
+  assert.ok(main.includes("type:'add_motion_graphic'"));
+  assert.ok(main.includes("/кольц|обвод|подчерк|стрелк|вспыш|лучи|графическ/.test(q)"));
+  assert.ok(main.includes("async function exportMotionGraphic"));
+  assert.ok(main.includes("filter(e=>e.type==='add_motion_graphic')"));
+  assert.ok(main.includes("ff.writeFile('graphic_'+String(i).padStart(4,'0')+'.png'"));
+  assert.ok(main.includes("overlay=0:0:enable='between(t,"));
+  assert.ok(main.includes("graphic-composite.mp4"));
+  assert.ok(main.includes("graphic-composite|concat"));
+});
+
+test('graphic motion accents are available from the Director quick actions',async()=>{
+  const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+  assert.match(html,/data-command="graphic">◌ Графический акцент/);
+  assert.ok(main.includes("graphic:'Добавь графический акцент-кольцо с плавным появлением.'"));
+});
+
+test('browser render smoke exercises the animated graphic overlay export path',async()=>{
+  const smoke=await readFile(new URL('../scripts/browser-render-smoke.mjs',import.meta.url),'utf8');
+  assert.match(smoke,/Добавь графический акцент-кольцо с плавным появлением/);
+  assert.match(smoke,/directorPlan.*Кольцевой акцент/);
 });

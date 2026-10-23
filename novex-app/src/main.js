@@ -4,7 +4,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import './style.css';
-import { createMotionEngine } from './motion-engine.js';
+import { createMotionDirector } from './motion-director.js';
 import { createLogoScene } from './motion3d.js';
 import { cloud, cloudConfigured, cloudSession, cloudAuth, cloudListProjects, cloudSaveProject, cloudEmailLink, cloudPasswordReset, cloudUpdatePassword, cloudSendSupportMessage, cloudVerifyEmailCode } from './cloud.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -241,7 +241,7 @@ async function exportKineticTitle({text,width,height,duration,fps=15,writeFrame}
  for(const word of words){const candidate=line?line+' '+word:word;if(ctx.measureText(candidate).width>width*.84&&line){lines.push(line);line=word;}else line=candidate;}
  if(line)lines.push(line);const visible=lines.slice(0,3),lineHeight=fontSize*1.15;
  const frames=Math.max(1,Math.min(90,Math.ceil(duration*fps)));
- const engine=createMotionEngine({duration,fps});
+ const engine=createMotionDirector({duration,fps});
  engine.track('opacity',{start:0,duration:.28,from:0,to:1,ease:'power2Out'});
  engine.track('opacity',{start:Math.max(0,duration-.28),duration:.28,from:1,to:0,ease:'power2In'});
  engine.track('scale',{start:0,duration:.42,from:.82,to:1,ease:'backOut'});
@@ -267,7 +267,7 @@ async function cleanupRenderArtifacts(){
   for(const entry of entries){
    if(entry.isDir)continue;
    const name=entry.name||'';
-   if(!/^(?:silent|export|composite|title-composite|concat|lyrics|music|source-video|source[0-9]+|part[0-9]+|ref[0-9]+|x[0-9]+|3d_[0-9]+|title_[0-9]+)(?:\.[a-z0-9]+)?$/i.test(name))continue;
+   if(!/^(?:silent|export|composite|title-composite|graphic-composite|concat|lyrics|music|motion-sfx|source-video|source[0-9]+|part[0-9]+|ref[0-9]+|x[0-9]+|3d_[0-9]+|title_[0-9]+|graphic_[0-9]+)(?:\.[a-z0-9]+)?$/i.test(name))continue;
    try{await ff.deleteFile(name)}catch{}
   }
  }catch{}
@@ -313,6 +313,43 @@ async function validateExportMedia(blob,W,H,duration){
   });
  }finally{video.pause();video.removeAttribute('src');video.load();URL.revokeObjectURL(url);}
 }
+
+async function exportMotionGraphic({graphic='ring',width,height,duration,fps=30,color='#6ce7ff',writeFrame}){
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas 2D недоступен для графических акцентов.');
+ const frames=Math.max(1,Math.min(180,Math.ceil(duration*fps))),minSide=Math.min(width,height);
+ const timeline=createMotionDirector({duration,fps});
+ timeline.track('progress',{start:0,duration:Math.min(.48,duration),from:0,to:1,ease:'expoOut'});
+ timeline.track('opacity',{start:0,duration:.08,from:0,to:1,ease:'power2Out'});
+ timeline.track('opacity',{start:Math.max(0,duration-.24),duration:.24,from:1,to:0,ease:'power2In'});
+ for(let i=0;i<frames;i++){
+  const t=i/fps,state=timeline.sampleAt(t),p=Math.max(0,Math.min(1,state.progress??1));
+  ctx.clearRect(0,0,width,height);ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,state.opacity??1));
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=Math.max(3,minSide*.006);ctx.lineCap='round';ctx.lineJoin='round';
+  if(graphic==='underline'){
+   const x1=width*.17,x2=x1+(width*.66*p),y=height*.57;
+   ctx.beginPath();ctx.moveTo(x1,y);
+   for(let x=x1+12;x<x2;x+=12)ctx.lineTo(x,y+Math.sin((x-x1)/18)*minSide*.006);
+   ctx.lineTo(x2,y);ctx.stroke();
+  }else if(graphic==='arrow'){
+   const x1=width*.24,y1=height*.64,x2=x1+width*.48*p,y2=height*.38;
+   ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(width*.42,height*.61,x2,y2);ctx.stroke();
+   const angle=Math.atan2(y2-height*.61,x2-width*.42),head=minSide*.035;
+   ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(angle-.48),y2-head*Math.sin(angle-.48));ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(angle+.48),y2-head*Math.sin(angle+.48));ctx.stroke();
+  }else if(graphic==='burst'){
+   const cx=width*.5,cy=height*.48,r0=minSide*.08,r1=r0+minSide*.24*p;
+   for(let k=0;k<12;k++){const a=k*Math.PI/6;ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);ctx.lineTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);ctx.stroke();}
+  }else{
+   const cx=width*.5,cy=height*.48,r=minSide*(graphic==='circle'?.22:.09+.19*p);
+   ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+   if(graphic==='ring'){ctx.beginPath();ctx.arc(cx,cy,r+minSide*.035,0,Math.PI*2);ctx.stroke();}
+  }
+  ctx.restore();
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Не удалось получить PNG графического акцента.')),'image/png'));
+  await writeFrame(i,new Uint8Array(await blob.arrayBuffer()));
+ }
+}
+
 $('#renderBtn').onclick=async()=>{if(S.busy)return;if(!S.plan){toast('Сначала собери монтажный план.','warn');return;}clearPreviousExportPreview();S.busy=true;const b=$('#renderBtn');busy(b,true,'Рендеринг…');$('#renderStatus').textContent='РЕНДЕРИНГ';$('#renderStatus').className='render-status is-running';$('#exportResult').classList.add('hidden');try{progress(2,'Загружаю движок…','FFmpeg WebAssembly.');await ffReady();const p=S.plan,r=p.range,baseSize=Math.max(2,Math.round(p.resolution/2)*2),W=p.aspect==='9:16'?Math.max(2,Math.round(baseSize*9/16/2)*2):p.aspect==='1:1'?baseSize:Math.max(2,Math.round(baseSize*16/9/2)*2),H=baseSize;let sourceAudioInput=null,sourceAudioSeek=0;
 if(S.source&&$('#useSourceVideo').checked){
  const sourceExt=(S.source.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -382,14 +419,33 @@ for(let ti=0;ti<titleEdits.length;ti++){
  await ff.writeFile('silent.mp4',await ff.readFile('title-composite.mp4'));
  for(let i=0;i<frames;i++)try{await ff.deleteFile('title_'+String(i).padStart(4,'0')+'.png')}catch{}
 }
-const audioMode=radio('audioMode')||'music',mixSourceRequested=audioMode!=='music';if(mixSourceRequested&&(!sourceAudioInput||!$('#useSourceVideo').checked))throw Error('Для режимов «Оригинал» и «Смешать» включи использование видео-источника.');let useSourceAudio=mixSourceRequested;if(useSourceAudio){let probeLog='';const capture=({message=''})=>{probeLog+=message+'\n';};ff.on('log',capture);try{await ff.exec(['-hide_banner','-i',sourceAudioInput]);}catch{}finally{ff.off('log',capture);}useSourceAudio=/\bAudio:\s/i.test(probeLog);if(!useSourceAudio)toast('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.','warn');}const sourceGain=Math.max(0,Math.min(1,(Number($('#sourceAudioVolume').value)||0)/100)),musicGain=Math.max(0,Math.min(1,(Number($('#musicAudioVolume').value)||0)/100));const ext=(S.track.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,'');await ff.writeFile('music.'+ext,await fetchFile(S.track));const args=['-i','silent.mp4'];if(useSourceAudio)args.push('-ss',String(sourceAudioSeek),'-t',String(r.duration),'-i',sourceAudioInput);const includeMusic=audioMode!=='original'||!useSourceAudio;if(includeMusic)args.push('-ss',String(r.start),'-t',String(r.duration),'-i','music.'+ext);const lyrics=p.lines.map((l,i)=>(i+1)+'\n'+srt(Math.max(0,l.start-r.start))+' --> '+srt(Math.max(.1,l.end-r.start))+'\n'+l.text).join('\n\n');const subtitlesEdit=(S.edits||[]).some(e=>e.type==='add_subtitles');let vf='null';if(lyrics&&($('#burnLyrics').checked||$('#useSourceTranscript').checked||subtitlesEdit)){await ff.writeFile('lyrics.srt',new TextEncoder().encode(lyrics));vf="subtitles=lyrics.srt:force_style='FontSize="+Math.max(18,Math.round(H/38))+",Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=3,Shadow=1,Alignment=2,MarginV="+Math.round(H*.08)+"'";}const gradeEdit=(S.edits||[]).some(e=>e.type==='grade');if(gradeEdit)vf=(vf==='null'?'':vf+',')+'eq=brightness=0.035:saturation=1.22';const cameraEdit=(S.edits||[]).some(e=>e.type==='camera_motion');if(cameraEdit&&S.source)vf=(vf==='null'?'':vf+',')+`scale=${Math.round(W*1.06)}:${Math.round(H*1.06)},crop=${W}:${H}:x='(iw-ow)/2+sin(t*1.4)*iw*0.006':y='(ih-oh)/2+cos(t*1.1)*ih*0.006'`;if(subtitlesEdit&&!p.lines.length)throw Error('Добавление субтитров требует текста в поле «Текст трека». Это приложение не выдаёт равномерную разбивку за распознавание речи.');
-progress(42,'Добавляю музыку и титры…',audioMode==='mix'&&useSourceAudio?'Смешиваю исходный звук с музыкой.':audioMode==='original'&&useSourceAudio?'Сохраняю оригинальный звук источника.':'Добавляю музыкальную дорожку.');args.push('-vf',vf,'-map','0:v:0');if(useSourceAudio&&audioMode==='mix'){args.push('-filter_complex','[1:a:0]aresample=48000,volume='+sourceGain+'[src];[2:a:0]aresample=48000,volume='+musicGain+'[music];[src][music]amix=inputs=2:duration=longest:dropout_transition=2,alimiter=limit=0.95[aout]','-map','[aout]');}else if(useSourceAudio&&audioMode==='original'){args.push('-filter_complex','[1:a:0]aresample=48000,volume='+sourceGain+',alimiter=limit=0.95[aout]','-map','[aout]');}else args.push('-map','1:a:0','-af','volume='+musicGain);args.push('-t',String(r.duration),'-c:v','libx264','-preset','ultrafast','-crf',p.resolution>720?'22':'26','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','-movflags','+faststart','-y','export.mp4');if(await ff.exec(args)!==0)throw Error('Не удалось финализировать MP4. Попробуй более короткий отрывок или 480p.');progress(97,'Проверяю результат…','Читаю созданный MP4.');const data=await ff.readFile('export.mp4');if(!data||data.length<1000)throw Error('Файл MP4 пуст или некорректен.');progress(98,'Проверяю контейнер MP4…','Проверяю сигнатуру, аудио/видеопотоки, разрешение и длительность.');const mp4Head=Array.from(data.slice(4,8),x=>String.fromCharCode(x)).join('');if(mp4Head!=='ftyp')throw Error('Экспорт не прошёл проверку MP4: отсутствует заголовок ftyp.');const blob=new Blob([data],{type:'video/mp4'});await validateExportMedia(blob,W,H,r.duration);if(S.output)URL.revokeObjectURL(S.output);S.output=URL.createObjectURL(blob);S.outputName='NOVEX_'+new Date().toISOString().replace(/[:.]/g,'-')+'.mp4';const v=$('#previewVideo');delete v.dataset.referencePlaylist;delete v.dataset.referenceIndex;v.classList.remove('preview-fade-out');v.src=S.output;v.hidden=false;$('#previewStage .preview-placeholder').hidden=true;$('#previewStage').classList.add('has-preview');fitPreviewStage();$('#exportMeta').textContent='MP4 · H.264/AAC · '+size(blob.size)+' · '+W+'×'+H;$('#exportResult').classList.remove('hidden');$('#renderStatus').textContent='ГОТОВО';$('#renderStatus').className='render-status is-done';progress(100,'Экспорт готов','MP4 создан. Нажми «Скачать MP4».');toast('MP4 готов: '+size(blob.size),'success');}catch(e){console.error(e);$('#renderStatus').textContent='ОШИБКА';$('#renderStatus').className='render-status has-error';progress(0,'Рендер не завершён',e?.message||String(e)||'Неизвестная ошибка FFmpeg');toast(e?.message||String(e)||'Неизвестная ошибка FFmpeg','error')}finally{await cleanupRenderArtifacts();S.busy=false;busy(b,false);}};
+const graphicEdits=(S.edits||[]).filter(e=>e.type==='add_motion_graphic');
+for(let gi=0;gi<graphicEdits.length;gi++){
+ const edit=graphicEdits[gi],overlayStart=Math.max(0,Number(edit.start)||0);
+ if(overlayStart>=r.duration)continue;
+ const graphicDuration=Math.min(Math.max(.25,Number(edit.duration)||1.2),Math.max(.1,r.duration-overlayStart)),fps=30,frames=Math.max(1,Math.min(180,Math.ceil(graphicDuration*fps)));
+ progress(41,'Рендерю графические акценты…',(gi+1)+' / '+graphicEdits.length+' · '+String(edit.graphic||'ring'));
+ await exportMotionGraphic({graphic:edit.graphic||'ring',width:W,height:H,duration:graphicDuration,fps,color:edit.color||'#6ce7ff',writeFrame:async(i,bytes)=>ff.writeFile('graphic_'+String(i).padStart(4,'0')+'.png',bytes)});
+ const graphicArgs=['-i','silent.mp4','-itsoffset',String(overlayStart),'-framerate',String(fps),'-start_number','0','-i','graphic_%04d.png','-filter_complex',"[0:v][1:v]overlay=0:0:enable='between(t,"+overlayStart.toFixed(3)+","+(overlayStart+graphicDuration).toFixed(3)+")':eof_action=pass:shortest=0,format=yuv420p[v]",'-map','[v]','-an','-c:v','libx264','-preset','ultrafast','-crf','24','-t',String(r.duration),'-y','graphic-composite.mp4'];
+ if(await ff.exec(graphicArgs)!==0)throw Error('Не удалось наложить графический акцент.');
+ await ff.writeFile('silent.mp4',await ff.readFile('graphic-composite.mp4'));
+ for(let i=0;i<frames;i++)try{await ff.deleteFile('graphic_'+String(i).padStart(4,'0')+'.png')}catch{}
+}
+const motionAudio=createMotionDirector({duration:r.duration,fps:30});
+if(threeDEdit){const at=Math.max(0,Number(threeDEdit.start)||0);motionAudio.hit(at,'l').sfx('whoosh',at,{gain:-12,duration:.45});}
+for(const edit of titleEdits){const at=Math.max(0,Number(edit.start)||0);if(at<r.duration)motionAudio.sfx('pop',at,{gain:-7,duration:.14});}
+for(const edit of graphicEdits){const at=Math.max(0,Number(edit.start)||0);if(at<r.duration)motionAudio.sfx(edit.graphic==='ring'?'whoosh':'tick',at,{gain:-8,duration:.18});}
+const motionAudioCues=motionAudio.compile().audio;
+if(motionAudioCues.length)await ff.writeFile('motion-sfx.wav',motionAudio.synthesizeAudio({sampleRate:24000,masterGain:.24}));
+const audioMode=radio('audioMode')||'music',mixSourceRequested=audioMode!=='music';if(mixSourceRequested&&(!sourceAudioInput||!$('#useSourceVideo').checked))throw Error('Для режимов «Оригинал» и «Смешать» включи использование видео-источника.');let useSourceAudio=mixSourceRequested;if(useSourceAudio){let probeLog='';const capture=({message=''})=>{probeLog+=message+'\n';};ff.on('log',capture);try{await ff.exec(['-hide_banner','-i',sourceAudioInput]);}catch{}finally{ff.off('log',capture);}useSourceAudio=/\bAudio:\s/i.test(probeLog);if(!useSourceAudio)toast('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.','warn');}const sourceGain=Math.max(0,Math.min(1,(Number($('#sourceAudioVolume').value)||0)/100)),musicGain=Math.max(0,Math.min(1,(Number($('#musicAudioVolume').value)||0)/100));const ext=(S.track.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,'');await ff.writeFile('music.'+ext,await fetchFile(S.track));const args=['-i','silent.mp4'];let inputIndex=1,sourceAudioIndex=null,musicAudioIndex=null,sfxAudioIndex=null;if(useSourceAudio){args.push('-ss',String(sourceAudioSeek),'-t',String(r.duration),'-i',sourceAudioInput);sourceAudioIndex=inputIndex++;}const includeMusic=audioMode!=='original'||!useSourceAudio;if(includeMusic){args.push('-ss',String(r.start),'-t',String(r.duration),'-i','music.'+ext);musicAudioIndex=inputIndex++;}if(motionAudioCues.length){args.push('-i','motion-sfx.wav');sfxAudioIndex=inputIndex++;}const lyrics=p.lines.map((l,i)=>(i+1)+'\n'+srt(Math.max(0,l.start-r.start))+' --> '+srt(Math.max(.1,l.end-r.start))+'\n'+l.text).join('\n\n');const subtitlesEdit=(S.edits||[]).some(e=>e.type==='add_subtitles');let vf='null';if(lyrics&&($('#burnLyrics').checked||$('#useSourceTranscript').checked||subtitlesEdit)){await ff.writeFile('lyrics.srt',new TextEncoder().encode(lyrics));vf="subtitles=lyrics.srt:force_style='FontSize="+Math.max(18,Math.round(H/38))+",Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=3,Shadow=1,Alignment=2,MarginV="+Math.round(H*.08)+"'";}const gradeEdit=(S.edits||[]).some(e=>e.type==='grade');if(gradeEdit)vf=(vf==='null'?'':vf+',')+'eq=brightness=0.035:saturation=1.22';const cameraEdit=(S.edits||[]).some(e=>e.type==='camera_motion');if(cameraEdit&&S.source)vf=(vf==='null'?'':vf+',')+`scale=${Math.round(W*1.06)}:${Math.round(H*1.06)},crop=${W}:${H}:x='(iw-ow)/2+sin(t*1.4)*iw*0.006':y='(ih-oh)/2+cos(t*1.1)*ih*0.006'`;if(subtitlesEdit&&!p.lines.length)throw Error('Добавление субтитров требует текста в поле «Текст трека». Это приложение не выдаёт равномерную разбивку за распознавание речи.');
+progress(42,'Добавляю музыку, эффекты и титры…',motionAudioCues.length?'Смешиваю выбранные аудиодорожки и процедурные звуковые акценты.':audioMode==='mix'&&useSourceAudio?'Смешиваю исходный звук с музыкой.':audioMode==='original'&&useSourceAudio?'Сохраняю оригинальный звук источника.':'Добавляю музыкальную дорожку.');args.push('-vf',vf,'-map','0:v:0');const audioFilters=[],audioLabels=[];if(useSourceAudio){audioFilters.push('['+sourceAudioIndex+':a:0]aresample=48000,volume='+sourceGain+'[src]');audioLabels.push('[src]');}if(includeMusic){audioFilters.push('['+musicAudioIndex+':a:0]aresample=48000,volume='+musicGain+'[music]');audioLabels.push('[music]');}if(sfxAudioIndex!==null){audioFilters.push('['+sfxAudioIndex+':a:0]aresample=48000,volume=0.85[sfx]');audioLabels.push('[sfx]');}if(audioLabels.length>1)audioFilters.push(audioLabels.join('')+'amix=inputs='+audioLabels.length+':duration=longest:dropout_transition=0,alimiter=limit=0.95[aout]');else audioFilters.push(audioLabels[0]+'alimiter=limit=0.95[aout]');args.push('-filter_complex',audioFilters.join(';'),'-map','[aout]');args.push('-t',String(r.duration),'-c:v','libx264','-preset','ultrafast','-crf',p.resolution>720?'22':'26','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','-movflags','+faststart','-y','export.mp4');if(await ff.exec(args)!==0)throw Error('Не удалось финализировать MP4. Попробуй более короткий отрывок или 480p.');progress(97,'Проверяю результат…','Читаю созданный MP4.');const data=await ff.readFile('export.mp4');if(!data||data.length<1000)throw Error('Файл MP4 пуст или некорректен.');progress(98,'Проверяю контейнер MP4…','Проверяю сигнатуру, аудио/видеопотоки, разрешение и длительность.');const mp4Head=Array.from(data.slice(4,8),x=>String.fromCharCode(x)).join('');if(mp4Head!=='ftyp')throw Error('Экспорт не прошёл проверку MP4: отсутствует заголовок ftyp.');const blob=new Blob([data],{type:'video/mp4'});await validateExportMedia(blob,W,H,r.duration);if(S.output)URL.revokeObjectURL(S.output);S.output=URL.createObjectURL(blob);S.outputName='NOVEX_'+new Date().toISOString().replace(/[:.]/g,'-')+'.mp4';const v=$('#previewVideo');delete v.dataset.referencePlaylist;delete v.dataset.referenceIndex;v.classList.remove('preview-fade-out');v.src=S.output;v.hidden=false;$('#previewStage .preview-placeholder').hidden=true;$('#previewStage').classList.add('has-preview');fitPreviewStage();$('#exportMeta').textContent='MP4 · H.264/AAC · '+size(blob.size)+' · '+W+'×'+H;$('#exportResult').classList.remove('hidden');$('#renderStatus').textContent='ГОТОВО';$('#renderStatus').className='render-status is-done';progress(100,'Экспорт готов','MP4 создан. Нажми «Скачать MP4».');toast('MP4 готов: '+size(blob.size),'success');}catch(e){console.error(e);$('#renderStatus').textContent='ОШИБКА';$('#renderStatus').className='render-status has-error';progress(0,'Рендер не завершён',e?.message||String(e)||'Неизвестная ошибка FFmpeg');toast(e?.message||String(e)||'Неизвестная ошибка FFmpeg','error')}finally{await cleanupRenderArtifacts();S.busy=false;busy(b,false);}};
 
 // Natural-language motion commands: validated project patches, never eval/model code execution.
 const EDIT_PRESETS={
   '3d':{type:'add_3d_title',label:'3D-логотип',text:'NOVEX',start:0,duration:2.8,style:{geometry:'extruded-text',material:'chrome',camera:'slow-orbit',lighting:'cinematic-rim',depth:1}},
   'titles':{type:'add_kinetic_title',label:'Кинетический текст',text:'',start:0,duration:2,style:{entrance:'spring-up',exit:'fade-out',easing:'back-out'}},
-  'subtitles':{type:'add_subtitles',label:'Субтитры',start:0,duration:0,style:{position:'safe-bottom',highlight:'active-word'}}
+  'subtitles':{type:'add_subtitles',label:'Субтитры',start:0,duration:0,style:{position:'safe-bottom',highlight:'active-word'}},
+  'graphic':{type:'add_motion_graphic',label:'Графический акцент',graphic:'ring',start:0,duration:1.2,color:'#6ce7ff',style:{entrance:'draw-on',exit:'fade-out',easing:'expo-out'}}
 };
 let motion3d=null;
 function start3DPreview(label='NOVEX'){
@@ -413,6 +469,7 @@ function commandToPatch(raw){
   if(!q)throw Error('Напиши, что нужно изменить.');
   if(/\b(отмен|undo|верни предыдущ|откат)\b/.test(q))return {type:'undo',label:'Отменить последнюю правку'};
   if(/\b(3d|3д|объ[её]мн|тр[её]хмер|камера (?:облет|облёт|вращ)|экструд)/.test(q)){const quoted=raw.match(/[«"]([^»"]{1,32})[»"]/);const named=raw.match(/(?:логотип|слово)\s+([\p{L}\p{N}_-]{2,24})/iu);return {...EDIT_PRESETS['3d'],text:(quoted?.[1]||named?.[1]||'NOVEX').trim()};}
+  if(/кольц|обвод|подчерк|стрелк|вспыш|лучи|графическ/.test(q)){const graphic=/подчерк/.test(q)?'underline':/стрелк/.test(q)?'arrow':/вспыш|лучи/.test(q)?'burst':/обвод/.test(q)?'circle':'ring';return {...EDIT_PRESETS.graphic,graphic,label:({underline:'Волновое подчёркивание',arrow:'Анимированная стрелка',burst:'Вспышка и лучи',circle:'Обводка',ring:'Кольцевой акцент'})[graphic]};}
   if(/субтитр|подсвечивай слово|караоке/.test(q))return {...EDIT_PRESETS.subtitles};
   if(/титр|текст|надпис|типограф|букв/.test(q)){const quoted=raw.match(/[«"]([^»"]{1,120})[»"]/);const named=raw.match(/(?:текст|надпись)\s*[:—-]\s*(.{1,120})$/iu);return {...EDIT_PRESETS.titles,text:(quoted?.[1]||named?.[1]||'NOVEX').trim()};}
   if(/ярче|цвет|свет|свечение|glow|неон/.test(q))return {type:'grade',label:'Свет и цвет',style:{look:'neon-glow'}};
@@ -436,12 +493,12 @@ function applyDirectorCommand(raw){
  if(!S.plan&&!S.refs.length&&!S.source)throw Error('Сначала добавь исходное видео или референс, затем можно планировать правки.');
  S.editHistory.push(S.edits.map(x=>({...x})));
  patch.id='edit-'+Date.now()+'-'+S.edits.length;
- patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · облёт камеры':patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.label;
+ patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · облёт камеры':patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.type==='add_motion_graphic'?'Графика: '+patch.graphic+' · '+patch.duration+' с':patch.label;
  S.edits.push(patch);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX');if(patch.type==='add_subtitles')$('#burnLyrics').checked=true;renderDirectorPlan();$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';
  if(S.plan){S.plan=makePlan();S.plan.edits=S.edits.map(x=>({...x}));showPlan(S.plan);}
 }
 $('#applyEditCommand').onclick=()=>{try{applyDirectorCommand($('#editCommand').value);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
-$$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({'3d':'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.'})[k];if(k==='3d')start3DPreview('NOVEX');});
+$$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({'3d':'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.',graphic:'Добавь графический акцент-кольцо с плавным появлением.'})[k];if(k==='3d')start3DPreview('NOVEX');});
 
 function srt(t){const ms=Math.round(Math.max(0,t)*1000),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),z=ms%1000;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(z).padStart(3,'0')}
 $('#downloadBtn').onclick=async()=>{
