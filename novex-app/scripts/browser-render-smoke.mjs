@@ -359,7 +359,7 @@ try {
       portraitFit.objectPosition !== '50% 50%' || portraitFit.centerError > 1) {
     throw new Error('Portrait reference drifted inside the preview stage: ' + JSON.stringify(portraitFit));
   }
-  if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
+  if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
   console.log('BROWSER RENDER SMOKE: PASS — dark cyberpunk theme, centered upload CTA and aligned animated play ring, real lyrics splitting, keyboard preview seek, mobile menu/backdrop/Escape, landscape and portrait reference fitting, multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, project/media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC export with automatic motion SFX and transcript subtitles, independent audio playback, two MP4 exports and download metadata.');
 
 } finally {
