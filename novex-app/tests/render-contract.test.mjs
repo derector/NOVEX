@@ -441,7 +441,7 @@ test('source transcript option rejects an empty transcript instead of silently o
 test('source-only mode can be selected before analysis when a source video is uploaded', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(html, /<div id="sourceTranscriptWrap" class="source-transcript hidden"><label class="check-row"><input type="checkbox" id="useSourceVideo">/);
-  assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="sourceTranscript"[\s\S]*?name="audioMode"[\s\S]*?value="mix"/);
+  assert.match(html, /id="sourceTranscriptWrap"[\s\S]*?id="sourceTranscript"[\s\S]*?id="sourceAudioPreview"/);
   assert.equal((html.match(/id="useSourceVideo"/g) || []).length, 1);
 });
 
@@ -458,4 +458,17 @@ test('audio controls expose music/original/mix modes, source preview and adjusta
   assert.match(main, /audioMode==='mix'\)\{args\.push\('-filter_complex'/);
   assert.match(main, /sourceAudioPreview'\)\.onerror/);
   assert.match(css, /\.audio-volume-grid input\[type="range"\]/);
+});
+
+
+test('music volume is available with a track, while source modes activate only for selected source footage', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="audioExportControls" class="audio-export-controls" hidden/);
+  assert.match(html, /name="audioMode" value="original" disabled/);
+  assert.match(html, /name="audioMode" value="mix" disabled/);
+  assert.match(html, /id="musicAudioVolume" type="range" min="0" max="100" step="1" value="85" disabled/);
+  assert.match(main, /\\$\\('#audioExportControls'\\)\\.hidden=false;\\$\\('#musicAudioVolume'\\)\\.disabled=false/);
+  assert.match(main, /function syncSourceAudioControls\\(\\)\\{const enabled=!!S\\.source&&\\$\\('#useSourceVideo'\\)\\.checked/);
+  assert.match(main, /\\$\\('#useSourceVideo'\\)\\.onchange=syncSourceAudioControls/);
+  assert.match(main, /\\$\\('#audioExportControls'\\)\\.hidden=true;\\$\\('#musicAudioVolume'\\)\\.disabled=true/);
 });
