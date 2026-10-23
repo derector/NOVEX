@@ -267,7 +267,7 @@ async function cleanupRenderArtifacts(){
   for(const entry of entries){
    if(entry.isDir)continue;
    const name=entry.name||'';
-   if(!/^(?:silent|export|composite|title-composite|concat|lyrics|music|motion-sfx|source-video|source[0-9]+|part[0-9]+|ref[0-9]+|x[0-9]+|3d_[0-9]+|title_[0-9]+)(?:\.[a-z0-9]+)?$/i.test(name))continue;
+   if(!/^(?:silent|export|composite|title-composite|graphic-composite|concat|lyrics|music|motion-sfx|source-video|source[0-9]+|part[0-9]+|ref[0-9]+|x[0-9]+|3d_[0-9]+|title_[0-9]+|graphic_[0-9]+)(?:\.[a-z0-9]+)?$/i.test(name))continue;
    try{await ff.deleteFile(name)}catch{}
   }
  }catch{}
@@ -419,9 +419,22 @@ for(let ti=0;ti<titleEdits.length;ti++){
  await ff.writeFile('silent.mp4',await ff.readFile('title-composite.mp4'));
  for(let i=0;i<frames;i++)try{await ff.deleteFile('title_'+String(i).padStart(4,'0')+'.png')}catch{}
 }
+const graphicEdits=(S.edits||[]).filter(e=>e.type==='add_motion_graphic');
+for(let gi=0;gi<graphicEdits.length;gi++){
+ const edit=graphicEdits[gi],overlayStart=Math.max(0,Number(edit.start)||0);
+ if(overlayStart>=r.duration)continue;
+ const graphicDuration=Math.min(Math.max(.25,Number(edit.duration)||1.2),Math.max(.1,r.duration-overlayStart)),fps=30,frames=Math.max(1,Math.min(180,Math.ceil(graphicDuration*fps)));
+ progress(41,'Рендерю графические акценты…',(gi+1)+' / '+graphicEdits.length+' · '+String(edit.graphic||'ring'));
+ await exportMotionGraphic({graphic:edit.graphic||'ring',width:W,height:H,duration:graphicDuration,fps,color:edit.color||'#6ce7ff',writeFrame:async(i,bytes)=>ff.writeFile('graphic_'+String(i).padStart(4,'0')+'.png',bytes)});
+ const graphicArgs=['-i','silent.mp4','-itsoffset',String(overlayStart),'-framerate',String(fps),'-start_number','0','-i','graphic_%04d.png','-filter_complex',"[0:v][1:v]overlay=0:0:enable='between(t,"+overlayStart.toFixed(3)+","+(overlayStart+graphicDuration).toFixed(3)+")':eof_action=pass:shortest=0,format=yuv420p[v]",'-map','[v]','-an','-c:v','libx264','-preset','ultrafast','-crf','24','-t',String(r.duration),'-y','graphic-composite.mp4'];
+ if(await ff.exec(graphicArgs)!==0)throw Error('Не удалось наложить графический акцент.');
+ await ff.writeFile('silent.mp4',await ff.readFile('graphic-composite.mp4'));
+ for(let i=0;i<frames;i++)try{await ff.deleteFile('graphic_'+String(i).padStart(4,'0')+'.png')}catch{}
+}
 const motionAudio=createMotionDirector({duration:r.duration,fps:30});
 if(threeDEdit){const at=Math.max(0,Number(threeDEdit.start)||0);motionAudio.hit(at,'l').sfx('whoosh',at,{gain:-12,duration:.45});}
 for(const edit of titleEdits){const at=Math.max(0,Number(edit.start)||0);if(at<r.duration)motionAudio.sfx('pop',at,{gain:-7,duration:.14});}
+for(const edit of graphicEdits){const at=Math.max(0,Number(edit.start)||0);if(at<r.duration)motionAudio.sfx(edit.graphic==='ring'?'whoosh':'tick',at,{gain:-8,duration:.18});}
 const motionAudioCues=motionAudio.compile().audio;
 if(motionAudioCues.length)await ff.writeFile('motion-sfx.wav',motionAudio.synthesizeAudio({sampleRate:24000,masterGain:.24}));
 const audioMode=radio('audioMode')||'music',mixSourceRequested=audioMode!=='music';if(mixSourceRequested&&(!sourceAudioInput||!$('#useSourceVideo').checked))throw Error('Для режимов «Оригинал» и «Смешать» включи использование видео-источника.');let useSourceAudio=mixSourceRequested;if(useSourceAudio){let probeLog='';const capture=({message=''})=>{probeLog+=message+'\n';};ff.on('log',capture);try{await ff.exec(['-hide_banner','-i',sourceAudioInput]);}catch{}finally{ff.off('log',capture);}useSourceAudio=/\bAudio:\s/i.test(probeLog);if(!useSourceAudio)toast('В исходном видео нет звуковой дорожки — экспортирую музыку без смешивания.','warn');}const sourceGain=Math.max(0,Math.min(1,(Number($('#sourceAudioVolume').value)||0)/100)),musicGain=Math.max(0,Math.min(1,(Number($('#musicAudioVolume').value)||0)/100));const ext=(S.track.name.split('.').pop()||'mp3').toLowerCase().replace(/[^a-z0-9]/g,'');await ff.writeFile('music.'+ext,await fetchFile(S.track));const args=['-i','silent.mp4'];let inputIndex=1,sourceAudioIndex=null,musicAudioIndex=null,sfxAudioIndex=null;if(useSourceAudio){args.push('-ss',String(sourceAudioSeek),'-t',String(r.duration),'-i',sourceAudioInput);sourceAudioIndex=inputIndex++;}const includeMusic=audioMode!=='original'||!useSourceAudio;if(includeMusic){args.push('-ss',String(r.start),'-t',String(r.duration),'-i','music.'+ext);musicAudioIndex=inputIndex++;}if(motionAudioCues.length){args.push('-i','motion-sfx.wav');sfxAudioIndex=inputIndex++;}const lyrics=p.lines.map((l,i)=>(i+1)+'\n'+srt(Math.max(0,l.start-r.start))+' --> '+srt(Math.max(.1,l.end-r.start))+'\n'+l.text).join('\n\n');const subtitlesEdit=(S.edits||[]).some(e=>e.type==='add_subtitles');let vf='null';if(lyrics&&($('#burnLyrics').checked||$('#useSourceTranscript').checked||subtitlesEdit)){await ff.writeFile('lyrics.srt',new TextEncoder().encode(lyrics));vf="subtitles=lyrics.srt:force_style='FontSize="+Math.max(18,Math.round(H/38))+",Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=3,Shadow=1,Alignment=2,MarginV="+Math.round(H*.08)+"'";}const gradeEdit=(S.edits||[]).some(e=>e.type==='grade');if(gradeEdit)vf=(vf==='null'?'':vf+',')+'eq=brightness=0.035:saturation=1.22';const cameraEdit=(S.edits||[]).some(e=>e.type==='camera_motion');if(cameraEdit&&S.source)vf=(vf==='null'?'':vf+',')+`scale=${Math.round(W*1.06)}:${Math.round(H*1.06)},crop=${W}:${H}:x='(iw-ow)/2+sin(t*1.4)*iw*0.006':y='(ih-oh)/2+cos(t*1.1)*ih*0.006'`;if(subtitlesEdit&&!p.lines.length)throw Error('Добавление субтитров требует текста в поле «Текст трека». Это приложение не выдаёт равномерную разбивку за распознавание речи.');
