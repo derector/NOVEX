@@ -472,7 +472,7 @@ test('New Project resets the selected audio source to music', () => {
 
 test('3D export pauses the live preview and captures deterministic frame timestamps', () => {
   assert.match(motion3d, /const wasPlaying=playing;\s*if\(wasPlaying\)\{playing=false;cancelAnimationFrame\(raf\);\}/);
-  assert.match(motion3d, /const t=start\+Math\.min\(Math\.max\(0,duration\),i\/fps\);/);
+  assert.match(motion3d, /const t=Math\.min\(Math\.max\(0,duration\),i\/fps\);/);
   assert.match(motion3d, /if\(wasPlaying&&!disposed\)\{playing=true;started=performance\.now\(\);raf=requestAnimationFrame\(tick\);\}/);
 });
 
@@ -544,7 +544,7 @@ test('director accepts graphic accent commands and renders them into the final M
   assert.ok(main.includes("graphic-composite|concat"));
 });
 
-test('graphic motion accents are available from the Director quick actions',async()=>{
+test('3D camera paths and cinematic effect presets are configurable and exposed in the Director', async () => {\n  assert.match(motion3d, /setOptions\(options=\{\}\)/);\n  for (const mode of ['orbit', 'dolly-in', 'dolly-out', 'whip-pan']) assert.ok(motion3d.includes(mode), 'missing camera path ' + mode);\n  for (const effect of ['cinematic-particles', 'energy-rings', 'light-streaks']) assert.ok(motion3d.includes(effect), 'missing 3D effect ' + effect);\n  for (const preset of ['data-command=\"orbit\"', 'data-command=\"rings\"', 'data-command=\"streaks\"']) assert.ok(html.includes(preset), 'missing Director preset ' + preset);\n  assert.match(main, /motion3d\.setOptions\(threeDEdit\.style\|\|\{\}\)/);\n});\n\ntest('graphic motion accents are available from the Director quick actions',async()=>{
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
   assert.match(html,/data-command="graphic">◌ Графический акцент/);
   assert.ok(main.includes("graphic:'Добавь графический акцент-кольцо с плавным появлением.'"));
