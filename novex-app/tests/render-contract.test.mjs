@@ -398,3 +398,10 @@ test('final MP4 validation checks audio/video streams and decoded dimensions/dur
   assert.ok(main.includes("Math.abs(video.duration-duration)>Math.max(1,duration*.03)"));
   assert.ok(main.includes("await validateExportMedia(blob,W,H,r.duration)"));
 });
+
+
+test('removing reference clips preserves active playlist index and clears empty preview state', () => {
+  assert.match(main, /const v=\$\('#previewVideo'\),activePlaylist=v\.dataset\.referencePlaylist==='true',removedActive=activePlaylist&&v\.dataset\.referencePreview===x\.url/);
+  assert.match(main, /v\.dataset\.referenceIndex=String\(S\.refs\.findIndex\(y=>y\.url===v\.dataset\.referencePreview\)\)/);
+  assert.match(main, /if\(!S\.refs\.length\)\{v\.pause\(\);v\.removeAttribute\('src'\);v\.load\(\);delete v\.dataset\.referencePlaylist;delete v\.dataset\.referenceIndex;delete v\.dataset\.referencePreview/);
+});

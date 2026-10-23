@@ -63,7 +63,9 @@ try {
   await page.waitForFunction(() => {
     const video = document.querySelector('#previewVideo');
     return video?.dataset.referenceIndex === '1' &&
-      video.dataset.referencePlaylist === 'true' && video.videoWidth === 320;
+      video.dataset.referencePlaylist === 'true' && video.videoWidth === 320 &&
+      video.readyState >= 2 && video.currentSrc === video.dataset.referencePreview &&
+      video.currentTime < 1;
   }, null, { timeout: 15000 });
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -120,7 +122,7 @@ try {
   }
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — two reference uploads, sequential preview handoff, mobile viewport, analysis, plan, FFmpeg MP4 export, stream/metadata validation and download.');
+  console.log('BROWSER RENDER SMOKE: PASS — two reference uploads, loaded sequential preview handoff, mobile viewport, analysis, plan, FFmpeg MP4 export, stream/metadata validation and download.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

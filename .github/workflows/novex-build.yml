@@ -112,3 +112,34 @@ jobs:
           path: novex-app/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
+
+  android-smoke:
+    name: Install and launch Android app in emulator
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download APK from this build
+        uses: actions/download-artifact@v4
+        with:
+          name: NOVEX-Android-APK
+          path: artifacts
+      - name: Boot emulator and smoke-test NOVEX
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: |
+            adb logcat -c
+            adb install artifacts/app-debug.apk
+            adb shell monkey -p studio.novex.motion 1
+            sleep 15
+            adb shell pidof studio.novex.motion
+            adb shell dumpsys activity activities | grep -F 'studio.novex.motion'
+            if adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|Unable to load app'; then
+              echo 'Android runtime smoke test detected a fatal app error.'
+              exit 1
+            fi
