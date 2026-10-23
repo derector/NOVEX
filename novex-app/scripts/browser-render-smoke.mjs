@@ -159,7 +159,7 @@ try {
   );
   if (pageErrors.length) throw new Error('Project media restore caused browser errors: ' + pageErrors.join(' | '));
 
-  // Exercise the source-only edit path, real source-audio mixing, and transcript captions.
+  // Exercise the source-only edit path, one selected audio source plus automatic motion SFX, and transcript captions.
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('#sourceVideoInput').setInputFiles('/tmp/novex-smoke-source.mp4');
   await page.locator('#trackInput').setInputFiles('/tmp/novex-smoke-track.wav');
@@ -269,7 +269,7 @@ try {
   }, null, { timeout: 10000 });
   if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export, transcript subtitles, independent music/source audio player playback, MP4 export/download and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export with automatic animation SFX, transcript subtitles, independent music/source audio player playback, MP4 export/download and output metadata.');
 
 } finally {
   if (browser) await browser.close();
