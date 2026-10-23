@@ -70,6 +70,7 @@ export function createLogoScene(canvas){
    camera.position.z=baseZ+Math.cos(t*.42)*.22;
   }
   camera.lookAt(0,0,0);
+  if(cameraMode==='whip-pan')camera.rotation.z+=Math.sin(t*5.4)*.045*Math.exp(-t*.6);
   particles.visible=effectMode!=='none';
   ringA.visible=effectMode==='energy-rings'||effectMode==='cinematic-particles'||effectMode==='light-streaks';
   ringB.visible=ringA.visible;
@@ -117,7 +118,7 @@ export function createLogoScene(canvas){
    camera.updateProjectionMatrix();
    try{
     for(let i=0;i<frames;i++){
-     const t=start+Math.min(Math.max(0,duration),i/fps);
+     const t=Math.min(Math.max(0,duration),i/fps);
      draw(t);
      const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Не удалось получить PNG-кадр 3D')),'image/png'));
      const bytes=new Uint8Array(await blob.arrayBuffer());
