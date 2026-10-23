@@ -178,10 +178,27 @@ test('source-video editing mode can build a plan without reference clips', () =>
 
 test('email OTP flow verifies codes and hidden form sections do not block submission', async () => { const cloud=await readFile(new URL('../src/cloud.js',import.meta.url),'utf8'); const html=await readFile(new URL('../index.html',import.meta.url),'utf8'); assert.match(cloud,/cloud\.auth\.verifyOtp\(\{ email, token, type: 'email' \}\)/); assert.match(main,/cloudVerifyEmailCode\(email,token\)/); assert.match(html,/id="cloudOtpWrap" class="cloud-support hidden"/); assert.doesNotMatch(html,/id="cloudRecoveryPassword"[^>]*required/); assert.doesNotMatch(html,/id="cloudSupportSubject"[^>]*required/); });
 
-test('source video rendering seeks to the selected source offset', () => {
-  assert.match(main, /const sourceSeek=Math\.max\(0,Math\.min\(r\.start,Math\.max\(0,sourceDuration-0\.1\)\)\)/);
+test('source video rendering seeks to the editable timeline in-point', () => {
+  assert.match(main, /sourceStart:range\.start,sourceDuration:range\.duration/);
+  assert.match(main, /const sourceSeek=Math\.max\(0,Math\.min\(Number\(p\.timeline\[0\]\?\.sourceStart\?\?r\.start\)\|\|0,Math\.max\(0,sourceDuration-0\.1\)\)\)/);
   assert.match(main, /sourceAudioSeek=sourceSeek/);
   assert.match(main, /const sourceArgs=\['-ss',String\(sourceSeek\),'-i',sourceInput/);
+});
+
+test('timeline selection, trim, reorder, duplicate and delete controls mutate the rendered plan', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const cloud = await readFile(new URL('../src/cloud.js', import.meta.url), 'utf8');
+  assert.match(html, /id="timelineEditor"/);
+  assert.match(main, /trimTimelineClip\(p\.timeline,index/);
+  assert.match(main, /moveTimelineClipTo\(S\.plan\.timeline,from,index\)/);
+  assert.match(main, /duplicateTimelineClip\(p\.timeline,index\)/);
+  assert.match(main, /removeTimelineClip\(p\.timeline,index\)/);
+  assert.match(main, /function commitTimeline\(next/);
+  assert.match(main, /S\.plan\.timeline=next/);
+  assert.match(main, /function persistPlanChanges\(/);
+  assert.match(cloud, /cloud\.from\('novex_projects'\)\.update\(payload\)\.eq\('id', project\.cloudId\)/);
+  assert.match(main, /timelineVersion:2/);
+  assert.match(main, /!d\.timelineVersion&&d\.useSourceVideo&&!refs\.length/);
 });
 
 test('saved projects persist media in IndexedDB and restore reference, track and source files after reload', () => {

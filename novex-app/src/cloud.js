@@ -75,8 +75,12 @@ export async function cloudSaveProject(project) {
     summary: String(project.summary || '').slice(0, 500),
     project_data: project.project_data || {}
   };
-  const { data, error } = await cloud.from('novex_projects').insert(payload).select().single();
+  const query = project.cloudId
+    ? cloud.from('novex_projects').update(payload).eq('id', project.cloudId)
+    : cloud.from('novex_projects').insert(payload);
+  const { data, error } = await query.select().single();
   if (error) throw error;
+  project.cloudId = data.id;
   return data;
 }
 

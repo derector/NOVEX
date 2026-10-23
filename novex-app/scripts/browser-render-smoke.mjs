@@ -104,6 +104,24 @@ try {
   await page.locator('.segmented label').filter({ has: page.locator('input[name="resolution"][value="480"]') }).click();
   await page.locator('#planBtn').click();
   await page.locator('#renderPanel').waitFor({ state: 'visible', timeout: 10000 });
+  const duplicateIds = await page.evaluate(() => {
+    const ids = [...document.querySelectorAll('[id]')].map(element => element.id);
+    return ids.filter((id, index) => ids.indexOf(id) !== index);
+  });
+  if (duplicateIds.length) throw new Error('Duplicate DOM ids after rendering the timeline editor: ' + duplicateIds.join(', '));
+  const plannedClips = await page.locator('#timelineTracks > .timeline-track').first().locator('.timeline-clip').count();
+  if (plannedClips < 1) throw new Error('Editable timeline did not contain a video clip.');
+  const originalClipDuration = Number(await page.locator('#timelineClipDuration').inputValue());
+  const editedClipDuration = Math.max(0.1, originalClipDuration - 0.2);
+  await page.locator('#timelineSourceIn').fill('0.2');
+  await page.locator('#timelineClipDuration').fill(editedClipDuration.toFixed(2));
+  await page.locator('#applyTimelineTrim').click();
+  await page.waitForFunction((expected) =>
+    Math.abs(Number(document.querySelector('#timelineSourceIn')?.value) - 0.2) < 0.01 &&
+    Math.abs(Number(document.querySelector('#timelineClipDuration')?.value) - expected) < 0.01 &&
+    document.querySelector('#timelineRuler span:last-child')?.textContent === '00:02',
+    editedClipDuration, { timeout: 10000 }
+  );
   await page.locator('#renderBtn').click();
 
   await page.waitForFunction(() => {
@@ -269,7 +287,7 @@ try {
   }, null, { timeout: 10000 });
   if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export with automatic animation SFX, transcript subtitles, independent music/source audio player playback, MP4 export/download and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, local project and media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC audio export with automatic animation SFX, transcript subtitles, independent music/source audio player playback, MP4 export/download and output metadata.');
 
 } finally {
   if (browser) await browser.close();
