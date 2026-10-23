@@ -267,3 +267,8 @@ test('failed audio replacement clears stale duration and refreshes dependent UI'
   assert.match(main, /S\.trackUrl=null;S\.track=null;S\.duration=0;au\.removeAttribute\('src'\)/);
   assert.match(main, /\$\('#fullDurationLabel'\)\.textContent='Вся длительность · 00:00';stats\(\);library\(\);toast\(err\.message,'error'\)/);
 });
+
+
+test('reference preview advances only when multiple videos are queued', () => {
+  assert.match(main, /\$\('#previewVideo'\)\.onended=\(\)=>\{const v=\$\('#previewVideo'\);if\(v\.dataset\.referencePlaylist==='true'&&S\.refs\.length>1\)\{const current=Number\(v\.dataset\.referenceIndex\)\|\|0;playReferenceAt\(current\+1,true,true\);return;\}\$\('#playPreview'\)\.textContent='▶';\};/);
+});
