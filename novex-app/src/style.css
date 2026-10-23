@@ -415,3 +415,8 @@ input,textarea,select,button{max-width:100%}
 
 /* Smooth, cinematic handoff between reference clips in the live preview. */
 #previewVideo{opacity:1;transition:opacity .22s ease-in-out}#previewVideo.preview-fade-out{opacity:0}#previewStage.has-preview{overflow:hidden}#previewVideo{will-change:opacity}
+
+
+/* Keyboard focus: keep every interactive control visible against NOVEX's dark surfaces. */
+:where(a,button,input,textarea,select,[tabindex]):focus-visible{outline:2px solid #6ce7ff;outline-offset:3px}
+@media(forced-colors:active){:where(a,button,input,textarea,select,[tabindex]):focus-visible{outline:2px solid CanvasText;outline-offset:3px}}
