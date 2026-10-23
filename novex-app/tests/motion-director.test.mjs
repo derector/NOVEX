@@ -57,3 +57,20 @@ test('Motion Director synthesizes its scheduled SFX into a PCM WAV',()=>{
  assert.equal(String.fromCharCode(...wav.slice(0,4)),'RIFF');
  assert.equal(wav.length,44+8000*2);
 });
+
+test('timeline validation detects audio and visual cues that exceed project duration',()=>{
+ const M=createMotionDirector({duration:1,fps:30});
+ M.sfx('whoosh',.9,{duration:.3});
+ M.draw.ring('#target',{at:.8,duration:.4});
+ const result=M.check();
+ assert.equal(result.ok,false);
+ assert.ok(result.issues.some(issue=>issue.code==='past-duration'&&issue.id.startsWith('sfx-')));
+ assert.ok(result.issues.some(issue=>issue.code==='past-duration'&&issue.id.startsWith('motion-')));
+});
+
+test('timeline validation accepts cues ending exactly at project duration',()=>{
+ const M=createMotionDirector({duration:1,fps:30});
+ M.sfx('pop',.8,{duration:.2});
+ M.draw.ring('#target',{at:.5,duration:.5});
+ assert.equal(M.check().ok,true);
+});
