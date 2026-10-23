@@ -246,11 +246,11 @@ test('default Supabase SMTP restriction gives a setup-specific message', () => {
 
 
 
-test('audio uploads release the previous object URL and report unreadable files', () => {
-  assert.match(main, /if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\)/);
+test('audio uploads validate replacement before releasing the current track', () => {
+  assert.match(main, /candidate\.onerror=\(\)=>reject\(new Error\(/);
   assert.match(main, /Не удалось прочитать аудиофайл\. Попробуй MP3 или WAV/);
-  assert.match(main, /au\.onerror=\(\)=>reject\(new Error\(/);
-  assert.match(main, /au\.hidden=true;\$\('#trackName'\)\.textContent='Загрузи трек'/);
+  assert.match(main, /URL\.revokeObjectURL\(nextUrl\);e\.target\.value='';\s*toast\(err\.message,'error'\);return/);
+  assert.match(main, /au\.pause\(\);if\(S\.trackUrl\)URL\.revokeObjectURL\(S\.trackUrl\);\s*S\.track=f;S\.trackUrl=nextUrl/);
 });
 
 
