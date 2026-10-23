@@ -539,6 +539,6 @@ test('browser smoke verifies saved source/audio settings after a full reload', a
   assert.match(smoke, /sourceAudioVolume/);
   assert.match(smoke, /musicAudioVolume/);
   assert.match(smoke, /audioMode === 'mix'/);
-  assert.match(smoke, /useSourceVideo\)\?\.checked === true/);
+  assert.match(smoke, /document\.querySelector\('#useSourceVideo'\)\?\.checked === true/);
   assert.match(smoke, /source\/audio settings restoration/);
 });
