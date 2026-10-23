@@ -31,7 +31,7 @@ try {
   await page.waitForFunction(() =>
     document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference.mp4') &&
     document.querySelector('#trackName')?.textContent === 'novex-smoke-track.wav',
-    { timeout: 20000 }
+    null, { timeout: 20000 }
   );
 
   await page.locator('#analyzeBtn').click();
@@ -45,7 +45,7 @@ try {
   await page.waitForFunction(() => {
     const status = document.querySelector('#renderStatus')?.textContent?.trim() || '';
     return status.includes('ГОТОВО') || status.includes('ОШИБКА');
-  }, { timeout: 180000 });
+  }, null, { timeout: 180000 });
 
   const status = (await page.locator('#renderStatus').innerText()).trim();
   if (!status.includes('ГОТОВО')) {
@@ -61,7 +61,7 @@ try {
     const video = document.querySelector('#previewVideo');
     return video && !video.hidden && video.videoWidth === 854 && video.videoHeight === 480 &&
       Number.isFinite(video.duration) && video.duration > 2.5 && video.duration < 3.5;
-  }, { timeout: 15000 });
+  }, null, { timeout: 15000 });
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
   console.log('BROWSER RENDER SMOKE: PASS — uploaded video + audio, analysis, plan, FFmpeg MP4 export, stream/metadata validation, preview playback metadata.');
