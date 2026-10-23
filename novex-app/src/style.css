@@ -470,3 +470,57 @@ input,textarea,select,button{max-width:100%}
 .timeline-clip:active{cursor:grabbing}
 .timeline-clip:focus-visible{outline:2px solid #f1eaff;outline-offset:2px;z-index:3}
 @media(max-width:560px){.timeline-editor{padding:11px}.timeline-editor-head{display:block}.timeline-editor-head>span{display:block;margin-top:6px;text-align:left}.timeline-editor-fields{grid-template-columns:1fr 1fr}.timeline-editor-fields .btn{grid-column:1/-1;width:100%}.timeline-editor-actions .btn{flex:1 1 calc(50% - 7px)}}
+
+
+/* NOVEX preview correction: true video ratio, no artificial dimming or offset. */
+#previewStage.preview-stage{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:100%!important;
+  max-width:100%!important;
+  min-height:0;
+  height:auto;
+  max-height:none!important;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  isolation:isolate;
+  background:#05070c;
+  aspect-ratio:var(--preview-ratio,16/9);
+  transform:none;
+}
+#previewStage.preview-stage.has-preview{
+  background:#05070c;
+  box-shadow:0 8px 28px #0003;
+}
+#previewStage #previewVideo{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  object-fit:contain;
+  object-position:50% 50%;
+  background:transparent;
+  border:0;
+  filter:none!important;
+  opacity:1;
+  transform:none!important;
+}
+#previewStage #previewVideo[hidden]{display:none!important}
+#previewStage .preview-placeholder{position:relative;z-index:1}
+.preview-panel{min-width:0;overflow:hidden}
+.preview-controls{width:100%;min-width:0;box-sizing:border-box}
+.preview-track{min-width:0;cursor:pointer;touch-action:pan-y}
+.preview-controls #previewClock{font-variant-numeric:tabular-nums}
+@media(max-width:560px){
+  .preview-panel{padding:14px}
+  #previewStage.preview-stage{border-radius:14px;aspect-ratio:var(--preview-ratio,16/9)}
+  .preview-controls{gap:8px;padding:10px 0 13px}
+  .preview-controls #previewClock{font-size:8px}
+}
