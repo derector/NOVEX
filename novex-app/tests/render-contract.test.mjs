@@ -297,6 +297,15 @@ test('source audio mixing falls back to music-only export when the source has no
 });
 
 
+test('render temporary files are cleaned after success or failure and reference cache is reset', () => {
+  assert.match(main, /async function cleanupRenderArtifacts\(\)/);
+  assert.match(main, /const entries=await ff\.listDir\('\/'\)/);
+  assert.match(main, /await ff\.deleteFile\(name\)/);
+  assert.match(main, /finally\{S\.refs\.forEach\(ref=>\{delete ref\._ff;\}\);\}/);
+  assert.match(main, /finally\{await cleanupRenderArtifacts\(\);S\.busy=false;busy\(b,false\);\}/);
+  assert.match(main, /source\\\\d\+\|part\\\\d\+\|ref\\\\d\+/);
+});
+
 test('mobile navigation exposes state and closes with Escape', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(html, /id="mobileMenu"[^>]*aria-label="Открыть меню навигации"/);
