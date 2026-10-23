@@ -567,3 +567,14 @@ test('motion sound effects are synthesized deterministically and mixed into the 
   assert.ok(main.includes("audioLabels.join('')+'amix=inputs='+audioLabels.length"));
   assert.ok(main.includes("audioMode==='mix'"));
 });
+
+test('director accepts graphic accent commands and renders them into the final MP4',()=>{
+  assert.ok(main.includes("type:'add_motion_graphic'"));
+  assert.ok(main.includes("/кольц|обвод|подчерк|стрелк|вспыш|лучи|графическ/.test(q)"));
+  assert.ok(main.includes("async function exportMotionGraphic"));
+  assert.ok(main.includes("filter(e=>e.type==='add_motion_graphic')"));
+  assert.ok(main.includes("ff.writeFile('graphic_'+String(i).padStart(4,'0')+'.png'"));
+  assert.ok(main.includes("overlay=0:0:enable='between(t,"));
+  assert.ok(main.includes("graphic-composite.mp4"));
+  assert.ok(main.includes("graphic-composite|concat"));
+});
