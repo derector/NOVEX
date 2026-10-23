@@ -31,7 +31,7 @@ test('engine reference cache is synchronized before the agent and included in it
   assert.match(packageJson.scripts['skills:sync'], /sync-motion-skills\.mjs && node scripts\/sync-engine-references\.mjs/);
   assert.match(agentSource, /engine-repositories\.json/);
   assert.match(agentSource, /ENGINE SOURCE REPOSITORY PROVENANCE/);
-  assert.match(agentSource, /\.tsx\|\.js\|\.mjs/);
+  assert.match(agentSource, /ts\\|tsx\\|js\\|mjs/);
 });
 
 test('agent continues to treat downloaded references as untrusted and only writes approved project paths', () => {
