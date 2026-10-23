@@ -26,7 +26,7 @@ if [ ! -f "$CACHE/package.json" ] || ! node -e "JSON.parse(require('fs').readFil
   printf '{"name":"motion-director-cache","private":true}\n' > "$CACHE/package.json"
 fi
 timeout 300s npm install --prefix "$CACHE" --no-audit --no-fund playwright gsap
-timeout 300s "$CACHE/node_modules/.bin/playwright" install --with-deps chromium
+timeout 300s "$CACHE/node_modules/.bin/playwright" install chromium
 
 node scripts/extract-motion-engine.mjs
 python3 -c "import numpy, cv2; print(\"Python OK: numpy \" + numpy.__version__ + \", OpenCV \" + cv2.__version__)"
