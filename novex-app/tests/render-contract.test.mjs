@@ -466,6 +466,11 @@ test('audio controls expose music/original/mix modes, source preview and adjusta
 });
 
 
+test('reset safely disables non-music audio modes without treating a single element as a collection', () => {
+  assert.match(main, /\$\$\('input\\[name="audioMode"\\]'\)\.filter\(x=>x\.value!=='music'\)\.forEach\(x=>x\.disabled=true\)/);
+  assert.doesNotMatch(main, /\$\('input\\[name="audioMode"\\]'\)\.filter\(x=>x\.value!=='music'\)/);
+});
+
 test('music volume is available with a track, while source modes activate only for selected source footage', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(html, /id="audioExportControls" class="audio-export-controls" hidden/);
