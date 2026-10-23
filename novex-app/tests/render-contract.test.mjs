@@ -9,8 +9,12 @@ const motion3d = await readFile(new URL('../src/motion3d.js', import.meta.url), 
 
 test('FFmpeg ESM core is loaded through MIME-typed module URLs for WebView compatibility', async () => {
   assert.match(main, /import \{ fetchFile, toBlobURL \} from '@ffmpeg\/util'/);
-  assert.match(main, /toBlobURL\(URL\.createObjectURL\(coreBlob\), 'text\/javascript'\)/);
-  assert.match(main, /toBlobURL\(URL\.createObjectURL\(wasmBlob\), 'application\/wasm'\)/);
+  assert.match(main, /const coreSourceUrl=URL\.createObjectURL\(coreBlob\),wasmSourceUrl=URL\.createObjectURL\(wasmBlob\)/);
+  assert.match(main, /toBlobURL\(coreSourceUrl,'text\/javascript'\)/);
+  assert.match(main, /toBlobURL\(wasmSourceUrl,'application\/wasm'\)/);
+  assert.match(main, /URL\.revokeObjectURL\(coreSourceUrl\)/);
+  assert.match(main, /URL\.revokeObjectURL\(wasmSourceUrl\)/);
+  assert.match(main, /Promise\.allSettled\(/);
   assert.match(main, /ff\.load\(\{coreURL:coreModuleUrl,wasmURL:wasmModuleUrl\}\)/);
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   assert.match(pkg.scripts['copy-core'], /dist\/esm\/ffmpeg-core\.js/);
