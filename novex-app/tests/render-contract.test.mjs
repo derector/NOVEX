@@ -305,6 +305,7 @@ test('render temporary files are cleaned after success or failure and reference 
   assert.match(main, /await ff\.deleteFile\(name\)/);
   assert.match(main, /finally\{S\.refs\.forEach\(ref=>\{delete ref\._ff;\}\);\}/);
   assert.match(main, /finally\{await cleanupRenderArtifacts\(\);S\.busy=false;busy\(b,false\);\}/);
+  assert.match(main, /ref\[0-9\]\+\|x\[0-9\]\+/);
 });
 
 test('mobile navigation exposes state and closes with Escape', async () => {
