@@ -149,7 +149,4 @@ jobs:
             sleep 15
             adb shell pidof studio.novex.motion
             adb shell dumpsys activity activities | grep -F 'studio.novex.motion'
-            if adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|Unable to load app'; then
-              echo 'Android runtime smoke test detected a fatal app error.'
-              exit 1
-            fi
+            if adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|Unable to load app'; then echo 'Android runtime smoke test detected a fatal app error.'; exit 1; fi
