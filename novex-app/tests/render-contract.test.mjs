@@ -176,7 +176,7 @@ test('source-video editing mode can build a plan without reference clips', () =>
 
 
 test('email OTP flow verifies codes and hidden form sections do not block submission', async () => { const cloud=await readFile(new URL('../src/cloud.js',import.meta.url),'utf8'); const html=await readFile(new URL('../index.html',import.meta.url),'utf8'); assert.match(cloud,/cloud\.auth\.verifyOtp\(\{ email, token, type: 'email' \}\)/); assert.match(main,/cloudVerifyEmailCode\(email,token\)/); assert.match(html,/id="cloudOtpWrap" class="cloud-support hidden"/); assert.doesNotMatch(html,/id="cloudRecoveryPassword"[^>]*required/); assert.doesNotMatch(html,/id="cloudSupportSubject"[^>]*required/); });
-test('source video rendering seeks to the selected source offset', () => {
+test('source audio toggle selects the original video audio during MP4 export', () => { assert.match(main,/let sourceAudioInput=null,sourceAudioSeek=0/); assert.match(main,/sourceAudioInput=sourceInput/); assert.match(main,/sourceAudioSeek=sourceSeek/); assert.match(main,/const useSourceAudio=\$\('#mixSourceAudio'\)\.checked/); assert.match(main,/useSourceAudio\?\['-i','silent\.mp4','-ss',String\(sourceAudioSeek\),'-t',String\(r\.duration\),'-i',sourceAudioInput\]/); assert.match(main,/Звук источника доступен только в режиме/); });\n\ntest('source video rendering seeks to the selected source offset', () => {
   assert.match(main, /const sourceSeek=Math\.max\(0,Math\.min\(r\.start/);
   assert.match(main, /const sourceArgs=\['-ss',String\(sourceSeek\),'-i',sourceInput/);
 });
