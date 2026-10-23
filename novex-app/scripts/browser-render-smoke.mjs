@@ -150,6 +150,14 @@ try {
   if (!savedProjectName || restoredProjectName !== savedProjectName) {
     throw new Error('Local project metadata did not survive reload: ' + JSON.stringify({ savedProjectName, restoredProjectName }));
   }
+  await page.locator('#projectsGrid .project-open').first().click();
+  await page.waitForFunction(() =>
+    document.querySelector('#trackName')?.textContent === 'novex-smoke-track.wav' &&
+    document.querySelectorAll('#referenceList .media-item-rich').length === 2 &&
+    document.querySelector('#referenceList')?.textContent.includes('novex-smoke-reference-2.webm'),
+    null, { timeout: 20000 }
+  );
+  if (pageErrors.length) throw new Error('Project media restore caused browser errors: ' + pageErrors.join(' | '));
 
   // Exercise the source-only edit path, real source-audio mixing, and transcript captions.
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -218,7 +226,7 @@ try {
   }, null, { timeout: 15000 });
 
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
-  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project persistence across reload, source-only edit, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, music and source-audio player playback, MP4 export/download and output metadata.');
+  console.log('BROWSER RENDER SMOKE: PASS — multi-reference sequential preview, mobile viewport, local project and media restoration across reload, source-only edit, real Three.js 3D frame capture/compositing, AAC source-audio mixing, transcript subtitles, music and source-audio player playback, MP4 export/download and output metadata.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
