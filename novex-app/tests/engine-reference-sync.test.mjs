@@ -9,7 +9,7 @@ const packageJson = JSON.parse(await readFile(new URL('package.json', root), 'ut
 
 test('engine reference sync uses a bounded explicit allowlist and rejects arbitrary repositories', () => {
   assert.match(syncSource, /motion-canvas\/motion-canvas/);
-  assert.match(syncSource, /remotion-dev\/remotion/);
+  assert.match(syncSource, /motiondivision\\/motion/);
   assert.match(syncSource, /pmndrs\/react-three-fiber/);
   assert.match(syncSource, /approved\.has\(repo\)/);
   assert.match(syncSource, /repositories\.length>8/);
