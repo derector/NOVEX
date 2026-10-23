@@ -584,3 +584,9 @@ test('graphic motion accents are available from the Director quick actions',asyn
   assert.match(html,/data-command="graphic">◌ Графический акцент/);
   assert.ok(main.includes("graphic:'Добавь графический акцент-кольцо с плавным появлением.'"));
 });
+
+test('browser render smoke exercises the animated graphic overlay export path',async()=>{
+  const smoke=await readFile(new URL('../scripts/browser-render-smoke.mjs',import.meta.url),'utf8');
+  assert.match(smoke,/Добавь графический акцент-кольцо с плавным появлением/);
+  assert.match(smoke,/directorPlan.*Кольцевой акцент/);
+});
