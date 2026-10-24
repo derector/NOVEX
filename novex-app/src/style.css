@@ -434,3 +434,14 @@ input,textarea,select,button{max-width:100%}
 /* Keyboard focus: keep every interactive control visible against NOVEX's dark surfaces. */
 :where(a,button,input,textarea,select,[tabindex]):focus-visible{outline:2px solid #6ce7ff;outline-offset:3px}
 @media(forced-colors:active){:where(a,button,input,textarea,select,[tabindex]):focus-visible{outline:2px solid CanvasText;outline-offset:3px}}
+
+/* Motion Director workflow: accessible, stateful and restrained. */
+.motion-director-workflow{margin-top:14px;padding:13px 14px;border:1px solid #39314f;border-radius:10px;background:linear-gradient(135deg,#171425,#11131c);animation:motion-director-enter .24s cubic-bezier(.2,.75,.25,1) both}
+.motion-director-workflow p{margin:0;color:#c8c7dc;font-size:11px;line-height:1.75;white-space:pre-line}
+.motion-director-choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.motion-director-choices:empty{display:none}
+.motion-director-choices button{min-height:36px;padding:8px 11px;border:1px solid #46405f;border-radius:8px;background:#1a1a29;color:#ded8f4;font-size:10px;font-weight:700;transition:transform .16s ease,border-color .2s ease,background .2s ease}
+.motion-director-choices button:hover{border-color:#a98cff;background:#29223b;transform:translateY(-1px)}
+.motion-director-choices button:active{transform:scale(.98)}
+@keyframes motion-director-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.motion-director-workflow,.motion-director-choices button{animation:none!important;transition:none!important}}
