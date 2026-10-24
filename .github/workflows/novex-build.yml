@@ -64,6 +64,52 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: novex-app/dist/
+  android:
+    name: Build Android APK
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: novex-app
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: novex-app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate source and render contracts
+        run: |
+          node --check src/main.js
+          node --check src/motion-engine.js
+          node --check src/motion-director.js
+          node --check src/motion-audio.js
+          node --check src/motion3d.js
+          npm test
+      - name: Build web assets for Android
+        run: npm run build
+      - name: Generate Capacitor Android project
+        run: npx cap add android
+      - name: Sync native plugins and web assets
+        run: npx cap sync android
+      - name: Assemble debug APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Verify APK exists and is non-empty
+        run: test -s android/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NOVEX-Android-APK
+          path: novex-app/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
   deploy:
     name: Publish Web site (GitHub Pages)
     if: github.ref == 'refs/heads/main'
