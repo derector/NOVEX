@@ -569,8 +569,8 @@ input,textarea,select,button{max-width:100%}
 @media(min-width:681px){.sidebar-backdrop{display:none!important}}
 
 
-/* Reference clips must preserve their full source frame in the preview; source/output clips retain their own fit rules. */
-#previewVideo[data-preview-kind="reference"]{
-  object-fit:contain;
-  object-position:50% 50%;
+/* Reference clips must preserve their full source frame in the preview; beat stronger stage/video selector specificity. */
+#previewStage #previewVideo[data-preview-kind="reference"]{
+  object-fit:contain!important;
+  object-position:50% 50%!important;
 }
