@@ -1,7 +1,9 @@
 name: NOVEX Build
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'chore/**']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 concurrency:
   group: novex-build-v2-${{ github.ref }}
