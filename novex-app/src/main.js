@@ -549,9 +549,9 @@ function chooseMotionStyle(mode){
  const labels={faithful:'Копия референса — приоритет исходной последовательности и темпа',inspired:'По мотивам — стиль референса используется как ориентир',original:'Своя идея — новая последовательность под музыку'};
  step(2);
  $('input[name="styleMode"]').forEach(x=>{x.checked=x.value===mode;const card=x.closest('.choice-card');if(card)card.classList.toggle('selected',x.checked);});
- $('#directorStatus').textContent=labels[mode]||'Режим выбран';
  motionDirectorMessage((labels[mode]||'Режим выбран')+'. Анализ выборочных кадров завершён. Проверь параметры проекта и нажми «Собрать план». Для анализа BPM и музыкальных акцентов нужен загруженный трек.');
  if(!S.track)toast('Референс разобран. Добавь музыкальный трек в разделе «Материалы», затем выполни анализ.','warn');
+ $('#directorStatus').textContent=labels[mode]||'Режим выбран';
 }
 
 async function runMotionDirector(raw){
