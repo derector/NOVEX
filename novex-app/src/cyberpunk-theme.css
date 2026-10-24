@@ -798,7 +798,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Final layout correction: match the preview canvas to the active video's exact aspect ratio. */
 #previewStage.preview-stage{
-  width:min(100%,calc(min(64dvh,520px)*var(--preview-ratio,1.7778)))!important;
+  width:var(--preview-width,100%)!important;
   max-width:100%!important;
   height:auto!important;
   min-height:0!important;
@@ -902,7 +902,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 #renderStatus.render-status{display:none!important}
 
 @media(max-width:560px){
-  #previewStage.preview-stage{width:min(100%,calc(min(58dvh,440px)*var(--preview-ratio,1.7778)))!important}
+  #previewStage.preview-stage{width:var(--preview-width,100%)!important}
   .media-item-rich{grid-template-columns:88px minmax(0,1fr) auto!important;gap:8px!important;padding:8px!important}
   .ref-preview{width:88px!important}
   .media-actions .ref-open{width:100%;justify-content:center}
