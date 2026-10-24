@@ -127,3 +127,11 @@ This ledger is the operational checklist for the current implementation pass. A 
 - [ ] Confirm Android SDK setup, Capacitor project generation, Gradle build, APK artifact upload, and installation smoke test.
 - [ ] Check dependency audit warnings from the CI log (2 npm audit findings were reported during temporary browser-test tool installation) and determine exact affected packages before changing dependency versions.
 
+
+
+### Browser smoke test follow-up — 2026-10-24
+- [x] Confirmed Android debug APK build and artifact upload succeeded in run #434. Artifact: `NOVEX-Android-APK` (debug build, not a signed production release).
+- [x] Retrieved the exact web smoke failure: the mobile navigation backdrop was unstyled, so the test could not confirm backdrop dismissal after tapping outside the sidebar.
+- [x] Added a fixed, viewport-covering mobile backdrop with explicit stacking, topbar clearance, and hidden-state rules in `novex-app/src/style.css`.
+- [ ] Re-run browser smoke test and confirm backdrop tap, Escape focus restoration, and all later render checks pass.
+- [ ] Only publish Pages after the full web smoke test passes; APK artifact alone does not establish app runtime correctness.
