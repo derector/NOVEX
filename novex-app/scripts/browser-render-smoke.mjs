@@ -440,7 +440,40 @@ try {
       portraitFit.objectPosition !== '50% 50%' || portraitFit.centerError > 1) {
     throw new Error('Portrait reference drifted inside the preview stage: ' + JSON.stringify(portraitFit));
   }
-  if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
+  const portraitStageRatio = await page.locator('#previewStage').evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return box.width / box.height;
+  });
+  if (Math.abs(portraitStageRatio - 180 / 320) > 0.02) {
+    throw new Error('Portrait preview stage does not follow the source aspect ratio: ' + portraitStageRatio);
+  }
+  await page.locator('#newProjectTop').click();
+  await page.locator('#referenceInput').setInputFiles('/tmp/novex-smoke-square.webm');
+  await page.waitForFunction(() => {
+    const video = document.querySelector('#previewVideo');
+    return document.querySelector('#referenceList')?.textContent.includes('novex-smoke-square.webm') &&
+      video?.dataset.previewKind === 'reference' && video.videoWidth === 240 && video.videoHeight === 240 &&
+      video.readyState >= 2;
+  }, null, { timeout: 15000 });
+  const squareStage = await page.evaluate(() => {
+    const stage = document.querySelector('#previewStage');
+    const video = document.querySelector('#previewVideo');
+    const stageBox = stage.getBoundingClientRect();
+    const videoBox = video.getBoundingClientRect();
+    return {
+      sourceRatio: video.videoWidth / video.videoHeight,
+      stageRatio: stageBox.width / stageBox.height,
+      squareClass: stage.classList.contains('preview-square'),
+      objectFit: getComputedStyle(video).objectFit,
+      centerError: Math.max(Math.abs((videoBox.left + videoBox.width / 2) - (stageBox.left + stageBox.width / 2)),
+        Math.abs((videoBox.top + videoBox.height / 2) - (stageBox.top + stageBox.height / 2)))
+    };
+  });
+  if (Math.abs(squareStage.stageRatio - squareStage.sourceRatio) > 0.02 ||
+      !squareStage.squareClass || squareStage.objectFit !== 'contain' || squareStage.centerError > 1) {
+    throw new Error('Square preview stage does not match source dimensions: ' + JSON.stringify(squareStage));
+  }
+  if (pageErrors.length) throw new Error('Uncaught browser errors after aspect-ratio checks: ' + pageErrors.join(' | '));
   console.log('BROWSER RENDER SMOKE: PASS — dark cyberpunk theme, centered upload CTA and aligned animated play ring, real lyrics splitting, keyboard preview seek, mobile menu/backdrop/Escape, landscape and portrait reference fitting, multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, project/media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC export with automatic motion SFX and transcript subtitles, independent audio playback, two MP4 exports and download metadata.');
 
 } finally {
