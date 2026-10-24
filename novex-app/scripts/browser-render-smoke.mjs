@@ -96,10 +96,13 @@ try {
   }, null, { timeout: 30000 });
   await page.locator('#motionDirectorChoices button').filter({ hasText: 'По мотивам' }).click();
   await page.waitForFunction(() =>
-    document.querySelector('input[name="styleMode"][value="inspired"]')?.checked === true &&
     document.querySelector('#directorStatus')?.textContent.includes('По мотивам'),
     null, { timeout: 10000 }
   );
+  const selectedMotionStyle = await page.locator('input[name="styleMode"][value="inspired"]').isChecked();
+  if (!selectedMotionStyle) {
+    throw new Error('Motion Director action did not select the inspired style mode.');
+  }
   const motionDirectorReport = await page.locator('#motionDirectorMessage').innerText();
   if (!motionDirectorReport.includes('novex-smoke-reference.webm') ||
       !motionDirectorReport.includes('novex-smoke-reference-2.webm')) {
