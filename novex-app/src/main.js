@@ -695,3 +695,23 @@ function novexSetRenderingState(){
 if(novexRenderWrap)new MutationObserver(novexSetRenderingState).observe(novexRenderWrap,{attributes:true,attributeFilter:['class']});const novexExportResult=document.querySelector('#exportResult');if(novexExportResult)new MutationObserver(novexSetRenderingState).observe(novexExportResult,{attributes:true,attributeFilter:['class']});
 novexRenderButton?.addEventListener('click',()=>{document.body.classList.add('is-rendering');});
 novexSetRenderingState();
+
+
+// NOVEX preview + persistent Buddy correction (shared by PWA and Android WebView).
+// The stage follows the active media's real dimensions so the frame and image stay aligned.
+fitPreviewStage = function(){
+ const video=$('#previewVideo'),stage=$('#previewStage');
+ if(!stage)return;
+ const ratio=video.videoWidth>0&&video.videoHeight>0
+   ? video.videoWidth/video.videoHeight
+   : Number(stage.style.getPropertyValue('--preview-ratio'))||16/9;
+ const safeRatio=Math.max(.2,Math.min(5,ratio));
+ stage.style.setProperty('--preview-ratio',String(safeRatio));
+ stage.style.aspectRatio=safeRatio+' / 1';
+ stage.classList.toggle('preview-landscape',safeRatio>1.15);
+ stage.classList.toggle('preview-square',safeRatio>=.85&&safeRatio<=1.15);
+ stage.classList.toggle('preview-portrait',safeRatio<.85);
+};
+$('#previewVideo')?.addEventListener('loadedmetadata',fitPreviewStage);
+window.addEventListener('resize',fitPreviewStage);
+if($('#previewVideo')?.readyState>=1)fitPreviewStage();
