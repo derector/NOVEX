@@ -67,6 +67,9 @@ try {
     throw new Error('Uploaded music player did not play: ' + JSON.stringify(musicPlayer));
   }
 
+  // Re-select the first clip after upload/audio checks so the playlist assertion
+  // starts from a known state even if automatic preview playback has already advanced.
+  await page.locator('#referenceList .ref-preview').first().click();
   await page.waitForFunction(() => {
     const video = document.querySelector('#previewVideo');
     return video && video.videoWidth === 320 && video.dataset.referenceIndex === '0' &&
