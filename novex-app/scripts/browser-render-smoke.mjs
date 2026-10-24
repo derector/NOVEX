@@ -78,6 +78,28 @@ try {
     throw new Error('Media upload did not complete: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
   }
 
+
+  // Exercise the integrated Motion Director command against two real reference clips.
+  await page.locator('#editCommand').fill('/motion-director');
+  await page.locator('#applyEditCommand').click();
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('#motionDirectorWorkflow');
+    return panel && !panel.classList.contains('hidden') &&
+      document.querySelector('#motionDirectorMessage')?.textContent.includes('Результат анализа:') &&
+      document.querySelectorAll('#motionDirectorChoices button').length === 3;
+  }, null, { timeout: 30000 });
+  await page.locator('#motionDirectorChoices button').filter({ hasText: 'По мотивам' }).click();
+  await page.waitForFunction(() =>
+    document.querySelector('input[name="styleMode"][value="inspired"]')?.checked === true &&
+    document.querySelector('#directorStatus')?.textContent.includes('По мотивам'),
+    null, { timeout: 10000 }
+  );
+  const motionDirectorReport = await page.locator('#motionDirectorMessage').innerText();
+  if (!motionDirectorReport.includes('novex-smoke-reference.webm') ||
+      !motionDirectorReport.includes('novex-smoke-reference-2.webm')) {
+    throw new Error('Motion Director did not report both reference clips: ' + motionDirectorReport);
+  }
+
   await page.waitForFunction(() => {
     const audio = document.querySelector('#trackAudio');
     return audio && !audio.hidden && audio.readyState >= 1 &&
