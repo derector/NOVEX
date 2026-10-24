@@ -167,7 +167,8 @@ try {
   }
 
   // Verify locally saved project metadata survives a complete browser reload.
-  await page.locator('[data-view="projects"]').click();
+  await page.locator('.nav-item[data-view="projects"]').click({ force: true });
+  await page.locator('#view-projects.active').waitFor({ state: 'attached', timeout: 5000 });
   try {
     await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
   } catch (error) {
@@ -182,7 +183,8 @@ try {
   }
   const savedProjectName = (await page.locator('#projectsGrid .project-card b').first().innerText()).trim();
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.locator('[data-view="projects"]').click();
+  await page.locator('.nav-item[data-view="projects"]').click({ force: true });
+  await page.locator('#view-projects.active').waitFor({ state: 'attached', timeout: 5000 });
   await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
   const restoredProjectName = (await page.locator('#projectsGrid .project-card b').first().innerText()).trim();
   if (!savedProjectName || restoredProjectName !== savedProjectName) {
