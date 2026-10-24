@@ -151,3 +151,15 @@ This ledger is the operational checklist for the current implementation pass. A 
 - [x] Corrected the CSS cascade by using the more specific `#previewStage #previewVideo[data-preview-kind="reference"]` selector and explicit `!important` for fit and position.
 - [ ] Re-run browser smoke test and verify the full end-to-end render/export sequence passes.
 - [ ] Only after all checks pass, merge the draft PR with approval and verify the published Pages URL.
+
+
+### Latest verification pass — workflow run 40050186964
+- [x] Web job passed: locked install, syntax checks, render-contract tests, Vite build, FFmpeg checks, Chromium browser render smoke, web artifact upload, and Pages artifact creation.
+- [x] Android job passed on a clean GitHub runner: locked install, contract tests, web build, Capacitor project generation/sync, Gradle `assembleDebug`, non-empty APK gate, and artifact upload.
+- [x] Downloaded the actual `NOVEX-Android-APK` artifact and verified ZIP integrity and APK structure; the APK contains `AndroidManifest.xml`, DEX files, app web assets, and FFmpeg JS/WASM assets. APK SHA-256: `f71428b9934cb8b235a45e3d7e80fe169c444eb4745e791d74f26030b94be746`.
+- [x] Confirmed APK signer is the standard Android Debug certificate. This is a debug build, not a production-signed release; no emulator/device installation test has been performed.
+- [x] Compared the saved `novex-motion-studio-source.zip` against the current branch inventory. The archive is 35,267 bytes and has only 21 entries; its `index.html`, `src/main.js`, and `src/style.css` are materially smaller than the branch versions, and it lacks the current lockfile and several current source modules. Do not overwrite the branch with this archive; reconcile by file-level diff if a newer archive is supplied.
+- [ ] Install and launch the APK on an emulator or physical Android device; test media picker, storage/share, render/export, long clips, and memory/error recovery.
+- [ ] Test the exported MP4 outside the smoke harness with ffprobe/FFmpeg for streams, dimensions, duration, frame rate, synchronization, and complete decode.
+- [ ] Audit the two npm audit findings previously seen in the temporary browser-test tooling and record exact package paths before changing dependencies.
+- [ ] Resolve PR review/release gate, merge only with explicit approval, then verify GitHub Pages deployment and public URL.
