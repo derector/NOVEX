@@ -74,6 +74,7 @@ jobs:
           path: novex-app/dist/
   android:
     name: Build Android APK
+    needs: web
     runs-on: ubuntu-22.04
     defaults:
       run:
