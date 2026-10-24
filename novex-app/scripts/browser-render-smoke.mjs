@@ -174,7 +174,17 @@ try {
   if (!(await page.locator('#view-projects.active').count())) {
     await projectsNav.evaluate(element => element.click());
   }
-  await page.locator('#view-projects.active').waitFor({ state: 'attached', timeout: 5000 });
+  try {
+    await page.locator('#view-projects.active').waitFor({ state: 'attached', timeout: 5000 });
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      views: [...document.querySelectorAll('.view')].map(el => ({ id: el.id, active: el.classList.contains('active') })),
+      nav: [...document.querySelectorAll('.nav-item')].map(el => ({ view: el.dataset.view, active: el.classList.contains('active'), ariaCurrent: el.getAttribute('aria-current'), onclick: typeof el.onclick })),
+      sidebarClass: document.querySelector('#sidebar')?.className || '',
+      pageTitle: document.title
+    }));
+    throw new Error('Projects navigation did not activate the view: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
+  }
   try {
     await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
   } catch (error) {
