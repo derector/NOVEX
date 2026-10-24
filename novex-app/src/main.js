@@ -754,10 +754,12 @@ fitPreviewStage = function(){
  const parentWidth=stage.parentElement?.clientWidth||520;
  const width=Math.max(1,Math.min(parentWidth,920,maxHeight*safeRatio));
  // Explicit dimensions override responsive min-height rules for every source ratio.
- stage.style.width='min('+width+'px, 100%)';
- stage.style.height=(width/safeRatio)+'px';
- stage.style.maxWidth='100%';
- stage.style.minHeight='0px';
+ // Lock the measured frame dimensions against the legacy responsive stage rules.
+ stage.style.setProperty('width','min('+width+'px, 100%)','important');
+ stage.style.setProperty('height',(width/safeRatio)+'px','important');
+ stage.style.setProperty('max-width','100%','important');
+ stage.style.setProperty('min-height','0px','important');
+ stage.style.setProperty('max-height','none','important');
  stage.style.setProperty('--preview-ratio',String(safeRatio));
  stage.style.setProperty('--preview-width',width+'px');
  stage.style.aspectRatio=safeRatio+' / 1';
@@ -771,6 +773,8 @@ const novexPreviewStageVideo=$('#previewVideo');
 if(novexPreviewStageVideo){
  novexPreviewStageVideo.onloadedmetadata=fitPreviewStage;
  novexPreviewStageVideo.addEventListener('loadedmetadata',fitPreviewStage);
+ // Reapply after decoded frame data is available; source swaps can race metadata callbacks.
+ novexPreviewStageVideo.addEventListener('loadeddata',fitPreviewStage);
 }
 window.addEventListener('resize',fitPreviewStage);
 if(novexPreviewStageVideo?.readyState>=1)fitPreviewStage();
