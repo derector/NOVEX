@@ -88,3 +88,33 @@ NOVEX is a reference-driven music-video studio. The core promise is: upload visu
 - [ ] Skills and reference workflow are discoverable from the README.
 - [ ] A reference can be uploaded, analyzed, reviewed, and associated with a project.
 - [ ] Validation is based on actual CI logs and artifact availability, not assumptions.
+
+## Execution ledger — 2026-10-24
+
+This ledger is the operational checklist for the current implementation pass. A checked item means the required source/configuration is present or the specified verification has actually passed; it does not imply unrelated runtime behavior is verified.
+
+### Present in the repository (source-level review)
+- [x] Canonical full product contract exists at `docs/NOVEX-FULL-SPEC.md`; it explicitly separates requirements from proven functionality.
+- [x] Main Vite + Capacitor app and npm lockfile are present under `novex-app/`.
+- [x] Contract tests exist at `novex-app/tests/render-contract.test.mjs` and are wired to `npm test`.
+- [x] Browser render smoke test exists at `novex-app/scripts/browser-render-smoke.mjs`; the web workflow invokes it and checks FFmpeg JS/WASM assets.
+- [x] Web build workflow uploads the web artifact and deploys GitHub Pages only after the web job succeeds.
+- [x] A dedicated Android job has now been added on branch `chore/novex-verification-ledger`; it installs locked dependencies, runs tests, generates the Capacitor project, assembles a debug APK, checks the APK file, and uploads it as `NOVEX-Android-APK`.
+- [x] This change is isolated on a branch and has not been merged into `main`.
+
+### Must still be verified or implemented
+- [ ] Run the updated GitHub Actions workflow and inspect each failed step's actual logs; no success is inferred from editing the YAML.
+- [ ] Confirm the Android job can generate the native project on a clean runner and produces a non-empty APK artifact.
+- [ ] Confirm the web job passes the full contract suite, Chromium smoke test, FFmpeg core checks, and creates the expected artifact.
+- [ ] Confirm the GitHub Pages deploy job succeeds and test the resulting public URL, including base-path assets and FFmpeg WASM loading.
+- [ ] Run the browser flow end-to-end: upload multiple videos and audio, metadata, sequential preview, project save/load/reload, timeline edits, director commands, draft render, final MP4 download, and error/cancel behavior.
+- [ ] Inspect a real exported MP4 with ffprobe/FFmpeg: video/audio streams, dimensions, duration, frame rate, audio synchronization, and successful decode.
+- [ ] Test on Android emulator or device: first launch, media picker, long clips, storage/Share, export, and memory/error recovery.
+- [ ] Implement and verify resumable render checkpoints/retries, long-project safeguards, and a persistent server-side queue for heavyweight jobs. These are requirements, not confirmed features.
+- [ ] Reconcile the latest user-provided source archive with the canonical repository before declaring source synchronization complete.
+- [ ] Check asset provenance/licensing and ensure reference assets are not silently bundled into production.
+- [ ] After all blocking checks pass, merge the reviewed branch, verify the production deployment, and share only verified site/APK links.
+
+### Release gate
+**No release link is considered final until the corresponding GitHub Actions job is green, its artifact exists, and the deployed site or installed APK passes the relevant smoke test.** If a runner fails, fix the specific logged cause and rerun; do not mark the step complete from source inspection alone.
+
