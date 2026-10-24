@@ -283,7 +283,7 @@ test('invalid audio replacement preserves the last valid track and player', () =
 
 
 test('reference preview advances only when multiple videos are queued', () => {
-  assert.match(main, /\$\('#previewVideo'\)\.onended=\(\)=>\{const v=\$\('#previewVideo'\);if\(v\.dataset\.referencePlaylist==='true'&&S\.refs\.length>1\)\{const current=Number\(v\.dataset\.referenceIndex\)\|\|0;playReferenceAt\(current\+1,true,true\);return;\}\$\('#playPreview'\)\.textContent='▶';\};/);
+  assert.match(main, /\$\('#previewVideo'\)\.onended=\(\)=>\{const v=\$\('#previewVideo'\);if\(v\.dataset\.referencePlaylist==='true'&&S\.refs\.length>1\)\{if\(v\.dataset\.advancePending==='true'\)return;v\.dataset\.advancePending='true';const current=Number\(v\.dataset\.referenceIndex\)\|\|0;playReferenceAt\(current\+1,true,true\);return;\}\$\('#playPreview'\)\.textContent='▶';\};/);
 });
 
 
