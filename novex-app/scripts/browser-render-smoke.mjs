@@ -95,10 +95,21 @@ try {
       document.querySelectorAll('#motionDirectorChoices button').length === 3;
   }, null, { timeout: 30000 });
   await page.locator('#motionDirectorChoices button').filter({ hasText: 'По мотивам' }).click();
-  await page.waitForFunction(() =>
-    document.querySelector('#directorStatus')?.textContent.includes('По мотивам'),
-    null, { timeout: 10000 }
-  );
+  try {
+    await page.waitForFunction(() =>
+      document.querySelector('#directorStatus')?.textContent.includes('По мотивам'),
+      null, { timeout: 10000 }
+    );
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      directorStatus: document.querySelector('#directorStatus')?.textContent || '',
+      selectedStyle: document.querySelector('input[name="styleMode"]:checked')?.value || '',
+      choices: [...document.querySelectorAll('#motionDirectorChoices button')].map(button => button.textContent),
+      workflowMessage: document.querySelector('#motionDirectorMessage')?.textContent || '',
+      workflowHidden: document.querySelector('#motionDirectorWorkflow')?.classList.contains('hidden') ?? true
+    }));
+    throw new Error('Motion Director style choice did not update the workflow: ' + JSON.stringify(state) + '; ' + error.message);
+  }
   const selectedMotionStyle = await page.locator('input[name="styleMode"][value="inspired"]').isChecked();
   if (!selectedMotionStyle) {
     throw new Error('Motion Director action did not select the inspired style mode.');
