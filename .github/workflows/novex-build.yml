@@ -37,11 +37,17 @@ jobs:
           VITE_BASE_PATH: /NOVEX/
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://jtkpydprgqccxxkqcvou.supabase.co' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HbBlyHbGCY6SFmoo9qL1eg_p6jOYVEO' }}
+      - name: Audit locked application dependency tree
+        run: |
+          npm audit --json > /tmp/novex-audit-locked.json || true
+          node --input-type=commonjs -e 'const a=require("/tmp/novex-audit-locked.json"); console.log(JSON.stringify({scope:"locked application dependencies",summary:a.metadata?.vulnerabilities,findings:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,via:v.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,url:x.url,range:x.range}),fixAvailable:v.fixAvailable}))},null,2))'
       - name: Install media tools and Chromium for browser render smoke test
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           npm install --no-save --package-lock=false playwright ffmpeg-static ffprobe-static
+          npm audit --json > /tmp/novex-audit-smoke-tools.json || true
+          node --input-type=commonjs -e 'const a=require("/tmp/novex-audit-smoke-tools.json"); console.log(JSON.stringify({scope:"application plus temporary smoke-test tools",summary:a.metadata?.vulnerabilities,findings:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,via:v.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,url:x.url,range:x.range}),fixAvailable:v.fixAvailable}))},null,2))'
           npx playwright install --only-shell chromium
           node -e 'console.log(require("path").dirname(require("ffmpeg-static")))' >> "$GITHUB_PATH"
           node -e 'console.log(require("path").dirname(require("ffprobe-static").path))' >> "$GITHUB_PATH"
