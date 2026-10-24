@@ -455,3 +455,8 @@ button:not(:disabled):active{transform:scale(.985)}
 .choice-card:hover,.media-item:hover{border-color:#51466f}
 .nav-item:hover{background-color:#171522}
 @media(prefers-reduced-motion:reduce){.view.active,#materialsPanel,#directionPanel,#renderPanel,.preview-panel,.ai-director{animation:none!important}.nav-item,.media-item,.choice-card,.panel,.text-button,.icon-btn,.dropzone,button{transition:none!important}button:not(:disabled):active{transform:none}}
+
+
+/* Preview always mirrors the selected export canvas; crop overflow instead of letterboxing. */
+#previewStage{aspect-ratio:var(--preview-ratio,.5625);}
+#previewStage video{object-fit:cover!important;object-position:center center;background:transparent;}
