@@ -706,7 +706,11 @@ fitPreviewStage = function(){
    ? video.videoWidth/video.videoHeight
    : Number(stage.style.getPropertyValue('--preview-ratio'))||16/9;
  const safeRatio=Math.max(.2,Math.min(5,ratio));
+ const maxHeight=Math.min(520,Math.max(180,window.innerHeight*.64));
+ const parentWidth=stage.parentElement?.clientWidth||520;
+ const width=Math.max(1,Math.min(parentWidth,920,maxHeight*safeRatio));
  stage.style.setProperty('--preview-ratio',String(safeRatio));
+ stage.style.setProperty('--preview-width',width+'px');
  stage.style.aspectRatio=safeRatio+' / 1';
  stage.classList.toggle('preview-landscape',safeRatio>1.15);
  stage.classList.toggle('preview-square',safeRatio>=.85&&safeRatio<=1.15);
