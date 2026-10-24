@@ -538,8 +538,51 @@ function commandToPatch(raw){
 function planWithDirectorEdits(nextEdits){const previous=S.plan,burn=$('#burnLyrics').checked;if(nextEdits.some(edit=>edit.type==='add_subtitles'))$('#burnLyrics').checked=true;let candidate;try{candidate=makePlan(nextEdits);}finally{$('#burnLyrics').checked=burn;}if(previous){const duration=timelineDuration(previous.timeline);candidate.timeline=previous.timeline.map(clip=>({...clip}));candidate.range={...previous.range,duration};candidate.lines=retimeCaptionLines(candidate.lines,previous.range,duration);candidate.aspect=previous.aspect;candidate.resolution=previous.resolution;candidate.mode=previous.mode;}candidate.edits=nextEdits.map(x=>({...x}));return candidate;}
 function commitDirectorEdits(nextEdits,nextPlan){S.editHistory.push({edits:S.edits.map(x=>({...x})),burnLyrics:$('#burnLyrics').checked});S.edits=nextEdits.map(x=>({...x}));if(S.edits.some(edit=>edit.type==='add_subtitles'))$('#burnLyrics').checked=true;if(nextPlan){S.plan=nextPlan;showPlan(S.plan);persistPlanChanges();}renderDirectorPlan();}
 function renderDirectorPlan(){const box=$('#directorPlan');if(!box)return;box.classList.toggle('hidden',!S.edits.length);box.innerHTML=S.edits.map((edit,index)=>'<div class="director-edit"><span class="director-edit-number">'+(index+1)+'</span><div><b>'+esc(edit.label)+'</b><small>'+esc(edit.description||edit.summary||'Правка добавлена в план проекта')+'</small></div><button type="button" class="director-remove" data-edit-index="'+index+'" aria-label="Удалить правку">×</button></div>').join('');box.querySelectorAll('[data-edit-index]').forEach(button=>button.onclick=()=>{try{const next=S.edits.filter((_,i)=>i!==Number(button.dataset.editIndex)),candidate=S.plan?planWithDirectorEdits(next):null;commitDirectorEdits(next,candidate);}catch(error){toast(error.message||String(error),'warn');}});}
+function motionDirectorMessage(message,choices=[]){
+ const wrap=$('#motionDirectorWorkflow'),text=$('#motionDirectorMessage'),box=$('#motionDirectorChoices');
+ if(!wrap||!text||!box)return;
+ text.textContent=message;box.replaceChildren();wrap.classList.remove('hidden');
+ for(const choice of choices){const b=document.createElement('button');b.type='button';b.textContent=choice.label;b.addEventListener('click',choice.action);box.append(b);}
+}
+
+function chooseMotionStyle(mode){
+ $('input[name="styleMode"]').forEach(x=>{x.checked=x.value===mode;const card=x.closest('.choice-card');if(card)card.classList.toggle('selected',x.checked);});
+ const labels={faithful:'Копия референса — приоритет исходной последовательности и темпа',inspired:'По мотивам — стиль референса используется как ориентир',original:'Своя идея — новая последовательность под музыку'};
+ step(2);$('#directorStatus').textContent=labels[mode]||'Режим выбран';
+ motionDirectorMessage((labels[mode]||'Режим выбран')+'. Анализ выборочных кадров завершён. Проверь параметры проекта и нажми «Собрать план». Для анализа BPM и музыкальных акцентов нужен загруженный трек.');
+ if(!S.track)toast('Референс разобран. Добавь музыкальный трек в разделе «Материалы», затем выполни анализ.','warn');
+}
+
+async function runMotionDirector(raw){
+ const command=String(raw||'').trim(),button=$('#applyEditCommand');
+ if(!S.refs.length){toast('Для /motion-director сначала добавь видео-референс в «Материалы проекта».','warn');step(1);return;}
+ button.disabled=true;button.textContent='Анализ референса…';
+ try{
+  motionDirectorMessage('Этап 1/2 · Анализирую длительность, формат и выборочные кадры референсов. Это локальный анализ загруженных файлов; покадровое сравнение движения пока не заявляется.');
+  const report=[];
+  for(const ref of S.refs){
+   if(!ref.a)ref.a=await analyzeFrames(ref);
+   report.push(ref.file.name+' — '+clock(ref.duration)+', '+ref.w+'×'+ref.h+', '+ref.a.frames+' выборочных кадров, '+ref.a.cuts+' ориентировочных смен, '+ref.a.orientation);
+  }
+  refList();
+  const exact=/один в один|1\s*:?\s*1|точн(?:о|ая) копи|скопируй|повтори|точно так же|сделай так же|как в референс/i.test(command);
+  const inspired=/по мотивам|вдохнов|похож(?:ий|ую)|в стиле/i.test(command);
+  const original=/с нуля|сво(?:я|ю) иде|нов(?:ый|ую) ролик/i.test(command);
+  const summary='Результат анализа:\n'+report.join('\n')+'\n\n';
+  if(exact){motionDirectorMessage(summary+'Запрос явно требует точного повторения, поэтому выбран режим «Почти 1:1». Важно: этот анализ фиксирует метаданные и выборочные кадры, но ещё не измеряет все кривые движения и не доказывает пиксельное совпадение.',[{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('faithful')}]);return;}
+  if(inspired){motionDirectorMessage(summary+'Выбран режим «По мотивам».', [{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('inspired')}]);return;}
+  if(original){motionDirectorMessage(summary+'Выбран режим «Своя идея».', [{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('original')}]);return;}
+  motionDirectorMessage(summary+'Этап 2/2 · Как обращаться с движением референса?',[
+   {label:'Копия 1:1',action:()=>chooseMotionStyle('faithful')},
+   {label:'По мотивам',action:()=>chooseMotionStyle('inspired')},
+   {label:'Новая идея с нуля',action:()=>chooseMotionStyle('original')}
+  ]);
+ }catch(error){motionDirectorMessage('Не удалось проанализировать референс: '+(error?.message||error)+'. Проверь файл и повтори команду.');toast('Ошибка анализа референса.','error');}
+ finally{button.disabled=false;button.textContent='Разобрать команду ↗';}
+}
+
 function applyDirectorCommand(raw){const patch=commandToPatch(raw);if(patch.type==='camera_motion'&&!S.source)throw Error('Движение камеры сейчас доступно только для загруженного исходного видео. Для монтажа одних референсов команда не применяется — загрузи исходник или выбери другую правку.');if(patch.type==='undo'){if(!S.editHistory.length)throw Error('Пока нечего отменять.');const record=S.editHistory[S.editHistory.length-1],previous=Array.isArray(record)?record:record.edits,oldBurn=$('#burnLyrics').checked;if(typeof record.burnLyrics==='boolean')$('#burnLyrics').checked=record.burnLyrics;let candidate;try{candidate=S.plan?planWithDirectorEdits(previous):null;}catch(error){$('#burnLyrics').checked=oldBurn;throw error;}S.editHistory.pop();S.edits=previous.map(x=>({...x}));if(typeof record.burnLyrics==='boolean')$('#burnLyrics').checked=record.burnLyrics;if(candidate){S.plan=candidate;showPlan(S.plan);persistPlanChanges();}renderDirectorPlan();$('#directorStatus').textContent='Последняя правка отменена';return;}if(!S.plan&&!S.refs.length&&!S.source)throw Error('Сначала добавь исходное видео или референс, затем можно планировать правки.');patch.id='edit-'+Date.now()+'-'+S.edits.length;patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · камера: '+({orbit:'облёт','slow-orbit':'медленная орбита','dolly-in':'наезд','dolly-out':'отъезд','whip-pan':'рывок'}[patch.style?.camera]||'медленная орбита')+' · эффекты: '+({'cinematic-particles':'частицы и кольца','energy-rings':'энергетические кольца','light-streaks':'световые лучи',none:'без частиц'}[patch.style?.effect]||'частицы и кольца'):patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.type==='add_motion_graphic'?'Графика: '+patch.graphic+' · '+patch.duration+' с':patch.label;const next=[...S.edits,patch],candidate=S.plan?planWithDirectorEdits(next):null;commitDirectorEdits(next,candidate);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX',patch.style||{});$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';}
-$('#applyEditCommand').onclick=()=>{try{applyDirectorCommand($('#editCommand').value);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
+$('#applyEditCommand').onclick=async()=>{const raw=$('#editCommand').value.trim();try{if(/^\\/motion-director\\b/i.test(raw)){await runMotionDirector(raw);return;}applyDirectorCommand(raw);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
 $$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({'3d':'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',orbit:'Добавь 3D-логотип NOVEX с полным облётом камеры и частицами.',rings:'Добавь 3D-логотип NOVEX с энергетическими кольцами и кинематографическим светом.',streaks:'Добавь 3D-логотип NOVEX со световыми лучами и быстрым движением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.',graphic:'Добавь графический акцент-кольцо с плавным появлением.'})[k];if(k==='3d'||k==='orbit'||k==='rings'||k==='streaks')start3DPreview('NOVEX',k==='orbit'?{camera:'orbit',effect:'cinematic-particles'}:k==='rings'?{camera:'slow-orbit',effect:'energy-rings'}:k==='streaks'?{camera:'whip-pan',effect:'light-streaks'}:{});});
 
 function srt(t){const ms=Math.round(Math.max(0,t)*1000),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),z=ms%1000;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(z).padStart(3,'0')}
