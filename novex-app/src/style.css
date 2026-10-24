@@ -420,8 +420,8 @@ body{overscroll-behavior-x:none}
 .cloud-dialog{padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain}
 .cloud-card{width:min(100%,460px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;backdrop-filter:blur(28px) saturate(135%);-webkit-backdrop-filter:blur(28px) saturate(135%)}
 input,textarea,select,button{max-width:100%}
-@media(max-width:900px){.studio-grid{grid-template-columns:minmax(0,1fr)}.preview-column{grid-template-columns:minmax(0,1fr)}.preview-stage{width:100%!important;max-width:100%}}
-@media(max-width:680px){.topbar{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));gap:8px}.topbar-right{min-width:0;gap:5px}.topbar-right #newProjectTop{display:none}.topbar-right .profile-button{display:inline-flex;max-width:116px}.topbar-right #mobileMenu{flex:0 0 36px}.main{width:100%;max-width:100%;padding-left:12px;padding-right:12px}.studio-grid{display:flex;flex-direction:column}.preview-column{display:flex;flex-direction:column;width:100%;order:0}.preview-panel{width:100%;max-width:100%}.preview-stage{width:100%!important;max-width:100%;max-height:58dvh}.preview-stage video{width:100%;height:100%}.page-heading h1{overflow-wrap:anywhere}.cloud-card{padding:20px 16px;border-radius:22px}.timeline-track{min-width:460px}}
+@media(max-width:900px){.studio-grid{grid-template-columns:minmax(0,1fr)}.preview-column{grid-template-columns:minmax(0,1fr)}.preview-stage{max-width:100%}}
+@media(max-width:680px){.topbar{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));gap:8px}.topbar-right{min-width:0;gap:5px}.topbar-right #newProjectTop{display:none}.topbar-right .profile-button{display:inline-flex;max-width:116px}.topbar-right #mobileMenu{flex:0 0 36px}.main{width:100%;max-width:100%;padding-left:12px;padding-right:12px}.studio-grid{display:flex;flex-direction:column}.preview-column{display:flex;flex-direction:column;width:100%;order:0}.preview-panel{width:100%;max-width:100%}.preview-stage{max-width:100%;max-height:58dvh}.preview-stage video{width:100%;height:100%}.page-heading h1{overflow-wrap:anywhere}.cloud-card{padding:20px 16px;border-radius:22px}.timeline-track{min-width:460px}}
 @media(prefers-reduced-motion:reduce){.topbar,.sidebar,.nav-item,.btn,.icon-btn,.choice-card,.panel{transition:none!important}}
 
 /* NOVEX audio player — native playback with the studio glass treatment. */
@@ -477,7 +477,7 @@ input,textarea,select,button{max-width:100%}
   position:relative;
   display:grid;
   place-items:center;
-  width:100%!important;
+  width:auto;
   max-width:100%!important;
   min-height:0;
   height:auto;
@@ -574,3 +574,15 @@ input,textarea,select,button{max-width:100%}
   object-fit:contain!important;
   object-position:50% 50%!important;
 }
+
+
+/* Motion Director workflow: accessible, stateful and restrained. */
+.motion-director-workflow{margin-top:14px;padding:13px 14px;border:1px solid #39314f;border-radius:10px;background:linear-gradient(135deg,#171425,#11131c);animation:motion-director-enter .24s cubic-bezier(.2,.75,.25,1) both}
+.motion-director-workflow p{margin:0;color:#c8c7dc;font-size:11px;line-height:1.75;white-space:pre-line}
+.motion-director-choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.motion-director-choices:empty{display:none}
+.motion-director-choices button{min-height:36px;padding:8px 11px;border:1px solid #46405f;border-radius:8px;background:#1a1a29;color:#ded8f4;font-size:10px;font-weight:700;transition:transform .16s ease,border-color .2s ease,background .2s ease}
+.motion-director-choices button:hover{border-color:#a98cff;background:#29223b;transform:translateY(-1px)}
+.motion-director-choices button:active{transform:scale(.98)}
+@keyframes motion-director-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.motion-director-workflow,.motion-director-choices button{animation:none!important;transition:none!important}}

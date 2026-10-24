@@ -561,7 +561,7 @@ test('browser smoke validates exclusive source-audio selection and no audio mixi
   assert.match(smoke, /audioMode === 'source'/);
   assert.doesNotMatch(smoke, /sourceAudioVolume|musicAudioVolume|audioMode === 'mix'/);
   assert.match(smoke, /exclusive audio-source restoration/);
-  assert.match(smoke, /Uncaught browser errors after New Project reset/);
+  assert.match(smoke, /Uncaught browser errors after aspect-ratio checks/);
 });
 
 test('automatic motion SFX are synthesized and layered over the single chosen audio source', () => {

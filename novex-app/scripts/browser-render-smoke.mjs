@@ -78,13 +78,76 @@ try {
     throw new Error('Media upload did not complete: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
   }
 
+
+  // The edit-command field is revealed after the initial reference analysis.
+  await page.locator('#analyzeBtn').click();
+  await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
+  await page.locator('#editCommand').waitFor({ state: 'visible', timeout: 60000 });
+  await page.locator('#editCommand').scrollIntoViewIfNeeded();
+
+  // Exercise the integrated Motion Director command against two real reference clips.
+  await page.locator('#editCommand').fill('/motion-director');
+  await page.locator('#applyEditCommand').click();
+  try {
+    await page.waitForFunction(() => {
+      const panel = document.querySelector('#motionDirectorWorkflow');
+      return panel && !panel.classList.contains('hidden') &&
+        document.querySelector('#motionDirectorMessage')?.textContent.includes('Результат анализа:') &&
+        document.querySelectorAll('#motionDirectorChoices button').length === 3;
+    }, null, { timeout: 30000 });
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      workflowHidden: document.querySelector('#motionDirectorWorkflow')?.classList.contains('hidden') ?? true,
+      workflowMessage: document.querySelector('#motionDirectorMessage')?.textContent || '',
+      choices: [...document.querySelectorAll('#motionDirectorChoices button')].map(button => button.textContent),
+      status: document.querySelector('#directorStatus')?.textContent || '',
+      alerts: [...document.querySelectorAll('.toast,.toast-message,[role="alert"]')].map(el => el.textContent)
+    }));
+    throw new Error('Motion Director analysis did not produce style choices: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
+  }
+  const motionDirectorReport = await page.locator('#motionDirectorMessage').innerText();
+  if (!motionDirectorReport.includes('novex-smoke-reference.webm') ||
+      !motionDirectorReport.includes('novex-smoke-reference-2.webm')) {
+    throw new Error('Motion Director did not report both reference clips: ' + motionDirectorReport);
+  }
+
+  await page.locator('#motionDirectorChoices button').filter({ hasText: 'По мотивам' }).click();
+  try {
+    await page.waitForFunction(() =>
+      document.querySelector('#directorStatus')?.textContent.includes('По мотивам'),
+      null, { timeout: 10000 }
+    );
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      directorStatus: document.querySelector('#directorStatus')?.textContent || '',
+      selectedStyle: document.querySelector('input[name="styleMode"]:checked')?.value || '',
+      choices: [...document.querySelectorAll('#motionDirectorChoices button')].map(button => button.textContent),
+      workflowMessage: document.querySelector('#motionDirectorMessage')?.textContent || '',
+      workflowHidden: document.querySelector('#motionDirectorWorkflow')?.classList.contains('hidden') ?? true,
+      buttonHtml: [...document.querySelectorAll('#motionDirectorChoices button')].map(button => ({text:button.textContent,html:button.outerHTML,disabled:button.disabled})),
+      statusVisible: (()=>{const el=document.querySelector('#directorStatus');return el?{html:el.outerHTML,visible:!!(el.offsetWidth||el.offsetHeight||el.getClientRects().length)}:null})(),
+      alerts: [...document.querySelectorAll('.toast,[role=alert]')].map(el=>el.textContent)
+    }));
+    throw new Error('Motion Director style choice did not update the workflow: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
+  }
+  const selectedMotionStyle = await page.locator('input[name="styleMode"][value="inspired"]').isChecked();
+  if (!selectedMotionStyle) {
+    throw new Error('Motion Director action did not select the inspired style mode.');
+  }
   await page.waitForFunction(() => {
     const audio = document.querySelector('#trackAudio');
     return audio && !audio.hidden && audio.readyState >= 1 &&
       Number.isFinite(audio.duration) && audio.duration > 2.5;
   }, null, { timeout: 15000 });
-  await page.locator('#lyrics').fill('Тихий свет приходит к нам сегодня вечером и открывает все дороги для нового движения');
-  await page.locator('#syncLyrics').click();
+  // The lyrics editor belongs to a later studio step and is intentionally hidden
+  // while Motion Director settings are open. Exercise its real input handler without
+  // forcing a user-visible step transition in the middle of this independent smoke check.
+  await page.locator('#lyrics').evaluate((el, value) => {
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, 'Тихий свет приходит к нам сегодня вечером и открывает все дороги для нового движения');
+  await page.locator('#syncLyrics').evaluate(el => el.click());
   const lyricResult = await page.evaluate(() => ({
     lines: document.querySelector('#lyrics').value.split('\n').filter(Boolean),
     status: document.querySelector('#lyricsStatus').textContent
@@ -92,7 +155,11 @@ try {
   if (lyricResult.lines.length < 2 || !lyricResult.status.includes('строк готовы')) {
     throw new Error('Lyrics split control did not create editable lines: ' + JSON.stringify(lyricResult));
   }
-  await page.locator('#lyrics').fill('');
+  await page.locator('#lyrics').evaluate(el => {
+    el.value = '';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   const musicPlayer = await page.evaluate(async () => {
     const audio = document.querySelector('#trackAudio');
     audio.pause();
@@ -119,6 +186,13 @@ try {
     return video && video.videoWidth === 320 && video.dataset.referenceIndex === '0' &&
       video.dataset.referencePlaylist === 'true';
   }, null, { timeout: 15000 });
+  const landscapeStageRatio = await page.locator('#previewStage').evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return box.width / box.height;
+  });
+  if (Math.abs(landscapeStageRatio - 320 / 180) > 0.02) {
+    throw new Error('Landscape preview stage does not follow the source aspect ratio: ' + landscapeStageRatio);
+  }
   await page.evaluate(() => document.querySelector('#previewVideo').pause());
   await page.locator('.preview-track').focus();
   await page.keyboard.press('End');
@@ -159,6 +233,8 @@ try {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.waitForFunction(() => !document.querySelector('#sidebar')?.inert && !document.querySelector('#sidebar')?.hasAttribute('aria-hidden'));
 
+  // Motion Director leaves the UI on step 2; return to materials before testing analysis.
+  await page.locator('#backToMaterials').evaluate(el => el.click());
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
   await page.locator('label.choice-card').filter({ has: page.locator('input[name="styleMode"][value="faithful"]') }).click();
@@ -371,7 +447,40 @@ try {
       portraitFit.objectPosition !== '50% 50%' || portraitFit.centerError > 1) {
     throw new Error('Portrait reference drifted inside the preview stage: ' + JSON.stringify(portraitFit));
   }
-  if (pageErrors.length) throw new Error('Uncaught browser errors after New Project reset: ' + pageErrors.join(' | '));
+  const portraitStageRatio = await page.locator('#previewStage').evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return box.width / box.height;
+  });
+  if (Math.abs(portraitStageRatio - 180 / 320) > 0.02) {
+    throw new Error('Portrait preview stage does not follow the source aspect ratio: ' + portraitStageRatio);
+  }
+  await page.locator('#newProjectTop').click();
+  await page.locator('#referenceInput').setInputFiles('/tmp/novex-smoke-square.webm');
+  await page.waitForFunction(() => {
+    const video = document.querySelector('#previewVideo');
+    return document.querySelector('#referenceList')?.textContent.includes('novex-smoke-square.webm') &&
+      video?.dataset.previewKind === 'reference' && video.videoWidth === 240 && video.videoHeight === 240 &&
+      video.readyState >= 2;
+  }, null, { timeout: 15000 });
+  const squareStage = await page.evaluate(() => {
+    const stage = document.querySelector('#previewStage');
+    const video = document.querySelector('#previewVideo');
+    const stageBox = stage.getBoundingClientRect();
+    const videoBox = video.getBoundingClientRect();
+    return {
+      sourceRatio: video.videoWidth / video.videoHeight,
+      stageRatio: stageBox.width / stageBox.height,
+      squareClass: stage.classList.contains('preview-square'),
+      objectFit: getComputedStyle(video).objectFit,
+      centerError: Math.max(Math.abs((videoBox.left + videoBox.width / 2) - (stageBox.left + stageBox.width / 2)),
+        Math.abs((videoBox.top + videoBox.height / 2) - (stageBox.top + stageBox.height / 2)))
+    };
+  });
+  if (Math.abs(squareStage.stageRatio - squareStage.sourceRatio) > 0.02 ||
+      !squareStage.squareClass || squareStage.objectFit !== 'contain' || squareStage.centerError > 1) {
+    throw new Error('Square preview stage does not match source dimensions: ' + JSON.stringify(squareStage));
+  }
+  if (pageErrors.length) throw new Error('Uncaught browser errors after aspect-ratio checks: ' + pageErrors.join(' | '));
   console.log('BROWSER RENDER SMOKE: PASS — dark cyberpunk theme, centered upload CTA and aligned animated play ring, real lyrics splitting, keyboard preview seek, mobile menu/backdrop/Escape, landscape and portrait reference fitting, multi-reference sequential preview, editable timeline trim to MP4, mobile viewport, project/media restoration across reload, source-only edit, exclusive audio-source restoration, real Three.js 3D frame capture/compositing, single-source AAC export with automatic motion SFX and transcript subtitles, independent audio playback, two MP4 exports and download metadata.');
 
 } finally {

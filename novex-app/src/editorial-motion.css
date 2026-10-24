@@ -536,6 +536,7 @@ audio { width: 100%; margin-top: 10px; accent-color: var(--cobalt); }
   box-shadow: inset 0 0 0 5px rgba(255,255,255,.025);
 }
 .preview-stage::after { content: "LIVE / 01"; position: absolute; z-index: 2; top: 12px; left: 12px; padding: 5px 7px; color: #c9d4df; background: rgba(4,9,16,.5); border: 1px solid rgba(255,255,255,.13); border-radius: 6px; font: 700 8px ui-monospace, monospace; letter-spacing: .09em; pointer-events: none; }
+.preview-stage.has-preview { min-height: 0; }
 .preview-stage video { width: auto; max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px; transition: opacity .24s ease, transform .4s var(--ease-out); }
 .preview-stage video.preview-fade-out { opacity: 0; transform: scale(.985); }
 .preview-stage.has-preview .preview-placeholder, .preview-stage video[hidden], .preview-placeholder[hidden] { display: none !important; }

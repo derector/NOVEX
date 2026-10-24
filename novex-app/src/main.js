@@ -137,7 +137,7 @@ function bestMusicWindow(duration){const env=S.envelope;if(!env.length||!S.durat
 async function analyzeFrames(x){const v=document.createElement('video');v.muted=true;v.preload='metadata';v.src=x.url;await new Promise((r,j)=>{v.onloadedmetadata=r;v.onerror=()=>j(Error('не удалось декодировать видео'))});const c=document.createElement('canvas');c.width=48;c.height=27;const g=c.getContext('2d',{willReadFrequently:true});let prev=null,cuts=0,light=0;const scenePoints=[];const count=Math.min(12,Math.max(4,Math.ceil(x.duration/5)));for(let k=0;k<count;k++){const time=x.duration*(k+.5)/count;v.currentTime=time;await new Promise(r=>{let done=false;const finish=()=>{if(!done){done=true;r()}};v.onseeked=finish;setTimeout(finish,1600)});try{g.drawImage(v,0,0,48,27);const p=g.getImageData(0,0,48,27).data,ar=[];let l=0;for(let i=0;i<p.length;i+=4){const z=Math.round((.2126*p[i]+.7152*p[i+1]+.0722*p[i+2])/16);ar.push(z);l+=z*16}light+=l/(48*27);if(prev){let diff=0;for(let i=0;i<ar.length;i++)diff+=Math.abs(ar[i]-prev[i]);if(diff/ar.length>3.5){cuts++;scenePoints.push(Math.max(0,Math.min(Math.max(0,x.duration-0.2),time)))}}prev=ar}catch{}}return {frames:count,cuts,scenePoints:[...new Set(scenePoints)],brightness:Math.round(light/count),orientation:x.w>x.h?'Горизонтальный':x.w===x.h?'Квадратный':'Вертикальный'};}
 $('#analyzeBtn').onclick=async()=>{if((!S.refs.length&&!(S.source&&$('#useSourceVideo').checked))||!S.track){toast('Добавь музыкальный трек и референс или включи видео-источник.','warn');return;}const b=$('#analyzeBtn');busy(b,true,'Анализируем…');const a=[];try{if(S.source&&$('#useSourceVideo').checked){try{const x={file:S.source,url:S.sourceUrl,duration:Number(S.sourceMeta?.duration)||S.duration,w:Number(S.sourceMeta?.w)||0,h:Number(S.sourceMeta?.h)||0};x.a=await analyzeFrames(x);a.push({title:'Видео-источник · '+x.file.name,detail:x.a.frames+' выборочных кадров · '+x.a.orientation+' · яркость '+x.a.brightness+'/255',value:x.a.cuts+' смен',ok:true});}catch(err){a.push({title:'Видео-источник · '+S.source.name,detail:err.message,value:'Ошибка',ok:false})}}else if(S.refs.length)await Promise.all(S.refs.map(async x=>{try{x.a=await analyzeFrames(x);a.push({title:x.file.name,detail:x.a.frames+' выборочных кадров · '+x.a.orientation+' · яркость '+x.a.brightness+'/255',value:x.a.cuts+' смен',ok:true});}catch(err){a.push({title:x.file.name,detail:err.message,value:'Ошибка',ok:false})}}));const ctx=new (window.AudioContext||window.webkitAudioContext)();try{const audio=await ctx.decodeAudioData((await S.track.arrayBuffer()).slice(0));S.duration=audio.duration;S.bpm=bpmEstimate(audio);S.envelope=audioEnvelope(audio);const beatGrid=analyzeBeatGrid(S.envelope,.05,S.bpm);S.beatTimes=beatGrid.beats;S.beatPeaks=beatGrid.peaks;S.beatConfidence=beatGrid.confidence;a.push({title:'Музыкальный анализ',detail:'Web Audio · '+audio.sampleRate+' Hz · '+clock(audio.duration)+' · '+S.beatPeaks.length+' атак · '+S.beatTimes.length+' долей в сетке',value:Math.round(S.bpm||0)+' BPM',ok:true});}finally{await ctx.close()}a.push({title:'Текст',detail:$('#lyrics').value.trim()?$('#lyrics').value.trim().split(/\s+/).length+' слов · требуется сверить таймкоды':'Не добавлен — титры можно отключить',value:$('#lyrics').value.trim()?'Есть':'Нет',ok:true});S.analysis=a;signals(a);refList();step(2);toast('Анализ завершён. Это выборочная эвристика, не точная реконструкция движения.');}catch(err){toast('Анализ не завершён: '+err.message,'error')}finally{busy(b,false)}};
 $$('input[name="durationMode"]').forEach(x=>x.onchange=()=>{$('#clipControls').classList.toggle('hidden',radio('durationMode')!=='clip');$$('.choice-card').forEach(c=>{const i=c.querySelector('input');if(i?.name==='durationMode')c.classList.toggle('selected',i.checked)});});
-$$('input[name="styleMode"]').forEach(x=>x.onchange=()=>$$('.choice-card').forEach(c=>{const i=c.querySelector('input');if(i?.name==='styleMode')c.classList.toggle('selected',i.checked)}));
+$$( 'input[name="styleMode"]' ).forEach(x=>x.onchange=()=>$$('.choice-card').forEach(c=>{const i=c.querySelector('input');if(i?.name==='styleMode')c.classList.toggle('selected',i.checked)}));
 function lyricLines(){const texts=[];const lyrics=$('#lyrics').value.trim();if(lyrics&&$('#burnLyrics').checked)texts.push(lyrics);const transcript=$('#sourceTranscript').value.trim();if(transcript&&$('#useSourceTranscript').checked)texts.push(transcript);const words=texts.join(' ').replace(/\r/g,'').split(/\s+/).filter(Boolean),lines=[];for(let i=0;i<words.length;i+=5)lines.push(words.slice(i,i+5).join(' '));const range=renderRange();return lines.map((t,i)=>({text:t,start:range.start+range.duration*i/Math.max(1,lines.length),end:range.start+range.duration*(i+1)/Math.max(1,lines.length)}));}
 function renderRange(){if(radio('durationMode')==='clip'){let s=Math.max(0,Number($('#clipStart').value)||0);s=Math.min(s,Math.max(0,S.duration-1));return {start:s,duration:Math.max(1,Math.min(Number($('#clipDuration').value)||25,S.duration-s))};}return {start:0,duration:S.duration};}
 $('#syncLyrics').onclick=()=>{const field=$('#lyrics'),text=field.value.trim();if(!S.track||!text){$('#lyricsStatus').textContent='Сначала добавь трек и текст.';toast('Сначала добавь трек и текст.','warn');return}const lines=splitLyricsIntoLines(text);if(!lines.length)return;field.value=lines.join('\n');$('#lyricsStatus').textContent=lines.length+' строк готовы к редактированию. Время распределяется приблизительно.';toast('Текст разбит на '+lines.length+' строк. Проверь ритм и тайминг вручную.','success');};
@@ -538,8 +538,52 @@ function commandToPatch(raw){
 function planWithDirectorEdits(nextEdits){const previous=S.plan,burn=$('#burnLyrics').checked;if(nextEdits.some(edit=>edit.type==='add_subtitles'))$('#burnLyrics').checked=true;let candidate;try{candidate=makePlan(nextEdits);}finally{$('#burnLyrics').checked=burn;}if(previous){const duration=timelineDuration(previous.timeline);candidate.timeline=previous.timeline.map(clip=>({...clip}));candidate.range={...previous.range,duration};candidate.lines=retimeCaptionLines(candidate.lines,previous.range,duration);candidate.aspect=previous.aspect;candidate.resolution=previous.resolution;candidate.mode=previous.mode;}candidate.edits=nextEdits.map(x=>({...x}));return candidate;}
 function commitDirectorEdits(nextEdits,nextPlan){S.editHistory.push({edits:S.edits.map(x=>({...x})),burnLyrics:$('#burnLyrics').checked});S.edits=nextEdits.map(x=>({...x}));if(S.edits.some(edit=>edit.type==='add_subtitles'))$('#burnLyrics').checked=true;if(nextPlan){S.plan=nextPlan;showPlan(S.plan);persistPlanChanges();}renderDirectorPlan();}
 function renderDirectorPlan(){const box=$('#directorPlan');if(!box)return;box.classList.toggle('hidden',!S.edits.length);box.innerHTML=S.edits.map((edit,index)=>'<div class="director-edit"><span class="director-edit-number">'+(index+1)+'</span><div><b>'+esc(edit.label)+'</b><small>'+esc(edit.description||edit.summary||'Правка добавлена в план проекта')+'</small></div><button type="button" class="director-remove" data-edit-index="'+index+'" aria-label="Удалить правку">×</button></div>').join('');box.querySelectorAll('[data-edit-index]').forEach(button=>button.onclick=()=>{try{const next=S.edits.filter((_,i)=>i!==Number(button.dataset.editIndex)),candidate=S.plan?planWithDirectorEdits(next):null;commitDirectorEdits(next,candidate);}catch(error){toast(error.message||String(error),'warn');}});}
+function motionDirectorMessage(message,choices=[]){
+ const wrap=$('#motionDirectorWorkflow'),text=$('#motionDirectorMessage'),box=$('#motionDirectorChoices');
+ if(!wrap||!text||!box)return;
+ text.textContent=message;box.replaceChildren();wrap.classList.remove('hidden');
+ for(const choice of choices){const b=document.createElement('button');b.type='button';b.textContent=choice.label;b.onclick=()=>{choice.action();};box.append(b);}
+}
+
+function chooseMotionStyle(mode){
+ const labels={faithful:'Копия референса — приоритет исходной последовательности и темпа',inspired:'По мотивам — стиль референса используется как ориентир',original:'Своя идея — новая последовательность под музыку'};
+ step(2);
+ $$( 'input[name="styleMode"]' ).forEach(x=>{x.checked=x.value===mode;const card=x.closest('.choice-card');if(card)card.classList.toggle('selected',x.checked);});
+ motionDirectorMessage((labels[mode]||'Режим выбран')+'. Анализ выборочных кадров завершён. Проверь параметры проекта и нажми «Собрать план». Для анализа BPM и музыкальных акцентов нужен загруженный трек.');
+ if(!S.track)toast('Референс разобран. Добавь музыкальный трек в разделе «Материалы», затем выполни анализ.','warn');
+ $('#directorStatus').textContent=labels[mode]||'Режим выбран';
+}
+
+async function runMotionDirector(raw){
+ const command=String(raw||'').trim(),button=$('#applyEditCommand');
+ if(!S.refs.length){toast('Для /motion-director сначала добавь видео-референс в «Материалы проекта».','warn');step(1);return;}
+ button.disabled=true;button.textContent='Анализ референса…';
+ try{
+  motionDirectorMessage('Этап 1/2 · Анализирую длительность, формат и выборочные кадры референсов. Это локальный анализ загруженных файлов; покадровое сравнение движения пока не заявляется.');
+  const report=[];
+  for(const ref of S.refs){
+   if(!ref.a)ref.a=await analyzeFrames(ref);
+   report.push(ref.file.name+' — '+clock(ref.duration)+', '+ref.w+'×'+ref.h+', '+ref.a.frames+' выборочных кадров, '+ref.a.cuts+' ориентировочных смен, '+ref.a.orientation);
+  }
+  refList();
+  const exact=/один в один|1\s*:?\s*1|точн(?:о|ая) копи|скопируй|повтори|точно так же|сделай так же|как в референс/i.test(command);
+  const inspired=/по мотивам|вдохнов|похож(?:ий|ую)|в стиле/i.test(command);
+  const original=/с нуля|сво(?:я|ю) иде|нов(?:ый|ую) ролик/i.test(command);
+  const summary='Результат анализа:\n'+report.join('\n')+'\n\n';
+  if(exact){motionDirectorMessage(summary+'Запрос явно требует точного повторения, поэтому выбран режим «Почти 1:1». Важно: этот анализ фиксирует метаданные и выборочные кадры, но ещё не измеряет все кривые движения и не доказывает пиксельное совпадение.',[{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('faithful')}]);return;}
+  if(inspired){motionDirectorMessage(summary+'Выбран режим «По мотивам».', [{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('inspired')}]);return;}
+  if(original){motionDirectorMessage(summary+'Выбран режим «Своя идея».', [{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('original')}]);return;}
+  motionDirectorMessage(summary+'Этап 2/2 · Как обращаться с движением референса?',[
+   {label:'Копия 1:1',action:()=>chooseMotionStyle('faithful')},
+   {label:'По мотивам',action:()=>chooseMotionStyle('inspired')},
+   {label:'Новая идея с нуля',action:()=>chooseMotionStyle('original')}
+  ]);
+ }catch(error){motionDirectorMessage('Не удалось проанализировать референс: '+(error?.message||error)+'. Проверь файл и повтори команду.');toast('Ошибка анализа референса.','error');}
+ finally{button.disabled=false;button.textContent='Разобрать команду ↗';}
+}
+
 function applyDirectorCommand(raw){const patch=commandToPatch(raw);if(patch.type==='camera_motion'&&!S.source)throw Error('Движение камеры сейчас доступно только для загруженного исходного видео. Для монтажа одних референсов команда не применяется — загрузи исходник или выбери другую правку.');if(patch.type==='undo'){if(!S.editHistory.length)throw Error('Пока нечего отменять.');const record=S.editHistory[S.editHistory.length-1],previous=Array.isArray(record)?record:record.edits,oldBurn=$('#burnLyrics').checked;if(typeof record.burnLyrics==='boolean')$('#burnLyrics').checked=record.burnLyrics;let candidate;try{candidate=S.plan?planWithDirectorEdits(previous):null;}catch(error){$('#burnLyrics').checked=oldBurn;throw error;}S.editHistory.pop();S.edits=previous.map(x=>({...x}));if(typeof record.burnLyrics==='boolean')$('#burnLyrics').checked=record.burnLyrics;if(candidate){S.plan=candidate;showPlan(S.plan);persistPlanChanges();}renderDirectorPlan();$('#directorStatus').textContent='Последняя правка отменена';return;}if(!S.plan&&!S.refs.length&&!S.source)throw Error('Сначала добавь исходное видео или референс, затем можно планировать правки.');patch.id='edit-'+Date.now()+'-'+S.edits.length;patch.description=patch.type==='add_3d_title'?'Текст: '+patch.text+' · экструзия · хром · камера: '+({orbit:'облёт','slow-orbit':'медленная орбита','dolly-in':'наезд','dolly-out':'отъезд','whip-pan':'рывок'}[patch.style?.camera]||'медленная орбита')+' · эффекты: '+({'cinematic-particles':'частицы и кольца','energy-rings':'энергетические кольца','light-streaks':'световые лучи',none:'без частиц'}[patch.style?.effect]||'частицы и кольца'):patch.type==='add_kinetic_title'?'Анимированный текст: '+(patch.text||'из команды')+' · пружинящее появление':patch.type==='add_subtitles'?'Субтитры в безопасной нижней зоне':patch.type==='add_motion_graphic'?'Графика: '+patch.graphic+' · '+patch.duration+' с':patch.label;const next=[...S.edits,patch],candidate=S.plan?planWithDirectorEdits(next):null;commitDirectorEdits(next,candidate);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX',patch.style||{});$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';}
-$('#applyEditCommand').onclick=()=>{try{applyDirectorCommand($('#editCommand').value);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
+$('#applyEditCommand').onclick=async()=>{const raw=$('#editCommand').value.trim();try{if(/^\/motion-director\b/i.test(raw)){await runMotionDirector(raw);return;}applyDirectorCommand(raw);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
 $$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({'3d':'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',orbit:'Добавь 3D-логотип NOVEX с полным облётом камеры и частицами.',rings:'Добавь 3D-логотип NOVEX с энергетическими кольцами и кинематографическим светом.',streaks:'Добавь 3D-логотип NOVEX со световыми лучами и быстрым движением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.',graphic:'Добавь графический акцент-кольцо с плавным появлением.'})[k];if(k==='3d'||k==='orbit'||k==='rings'||k==='streaks')start3DPreview('NOVEX',k==='orbit'?{camera:'orbit',effect:'cinematic-particles'}:k==='rings'?{camera:'slow-orbit',effect:'energy-rings'}:k==='streaks'?{camera:'whip-pan',effect:'light-streaks'}:{});});
 
 function srt(t){const ms=Math.round(Math.max(0,t)*1000),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),z=ms%1000;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(z).padStart(3,'0')}
@@ -568,7 +612,7 @@ $('#downloadBtn').onclick=async()=>{
 };
 function setPreviewPlayButton(playing){const button=$('#playPreview');button.textContent=playing?'Ⅱ':'▶';button.setAttribute('aria-label',playing?'Пауза':'Воспроизвести');}
 $('#playPreview').onclick=()=>{const v=$('#previewVideo');if(v.hidden){if(!S.output&&S.refs.length){playReferenceAt(0,true,false);return;}const previewUrl=S.output||((S.source&&$('#useSourceVideo').checked)?S.sourceUrl:S.refs[0]?.url);if(!previewUrl)return toast('Сначала добавь исходное видео или референс.','warn');delete v.dataset.timelinePreviewStart;delete v.dataset.timelinePreviewEnd;v.src=previewUrl;v.hidden=false;$('#previewStage .preview-placeholder').hidden=true;$('#previewStage').classList.add('has-preview');fitPreviewStage();}if(v.paused){v.play().catch(()=>setPreviewPlayButton(false));}else{v.pause();}};
-function fitPreviewStage(){const v=$('#previewVideo'),stage=$('#previewStage');if(!stage)return;const ratio=v.videoWidth>0&&v.videoHeight>0?v.videoWidth/v.videoHeight:Number(stage.style.getPropertyValue('--preview-ratio'))||9/16;const maxHeight=Math.min(520,Math.max(180,window.innerHeight*.64));const parentWidth=stage.parentElement?.clientWidth||520;const available=Math.max(1,Math.min(parentWidth,stage.parentElement?.getBoundingClientRect().width||parentWidth));const width=Math.max(1,Math.min(available,920,maxHeight*ratio));stage.style.width='min('+width+'px, 100%)';stage.style.maxWidth='100%';stage.style.setProperty('--preview-ratio',String(ratio));stage.style.aspectRatio=ratio+' / 1';stage.classList.toggle('preview-landscape',ratio>1.15);stage.classList.toggle('preview-square',ratio>=.85&&ratio<=1.15);stage.classList.toggle('preview-portrait',ratio<.85);}
+function fitPreviewStage(){const v=$('#previewVideo'),stage=$('#previewStage');if(!stage)return;const ratio=v.videoWidth>0&&v.videoHeight>0?v.videoWidth/v.videoHeight:Number(stage.style.getPropertyValue('--preview-ratio'))||9/16;const maxHeight=Math.min(520,Math.max(180,window.innerHeight*.64));const parentWidth=stage.parentElement?.clientWidth||520;const available=Math.max(1,Math.min(parentWidth,stage.parentElement?.getBoundingClientRect().width||parentWidth));const width=Math.max(1,Math.min(available,920,maxHeight*ratio));stage.style.width='min('+width+'px, 100%)';stage.style.height=(width/ratio)+'px';stage.style.maxWidth='100%';stage.style.minHeight='0px';stage.style.setProperty('--preview-ratio',String(ratio));stage.style.aspectRatio=ratio+' / 1';stage.classList.toggle('preview-landscape',ratio>1.15);stage.classList.toggle('preview-square',ratio>=.85&&ratio<=1.15);stage.classList.toggle('preview-portrait',ratio<.85);}
 $('#previewVideo').onloadedmetadata=fitPreviewStage;window.addEventListener('resize',fitPreviewStage);
 function previewSeekRange(video){
  const start=Number(video.dataset.timelinePreviewStart),end=Number(video.dataset.timelinePreviewEnd);
@@ -709,6 +753,13 @@ fitPreviewStage = function(){
  const maxHeight=Math.min(520,Math.max(180,window.innerHeight*.64));
  const parentWidth=stage.parentElement?.clientWidth||520;
  const width=Math.max(1,Math.min(parentWidth,920,maxHeight*safeRatio));
+ // Explicit dimensions override responsive min-height rules for every source ratio.
+ // Lock the measured frame dimensions against the legacy responsive stage rules.
+ stage.style.setProperty('width','min('+width+'px, 100%)','important');
+ stage.style.setProperty('height',(width/safeRatio)+'px','important');
+ stage.style.setProperty('max-width','100%','important');
+ stage.style.setProperty('min-height','0px','important');
+ stage.style.setProperty('max-height','none','important');
  stage.style.setProperty('--preview-ratio',String(safeRatio));
  stage.style.setProperty('--preview-width',width+'px');
  stage.style.aspectRatio=safeRatio+' / 1';
@@ -716,6 +767,14 @@ fitPreviewStage = function(){
  stage.classList.toggle('preview-square',safeRatio>=.85&&safeRatio<=1.15);
  stage.classList.toggle('preview-portrait',safeRatio<.85);
 };
-$('#previewVideo')?.addEventListener('loadedmetadata',fitPreviewStage);
+const novexPreviewStageVideo=$('#previewVideo');
+// Replace the earlier onloadedmetadata property handler too: it captured the old
+// fitPreviewStage implementation and ran after the new event listener, undoing its sizing.
+if(novexPreviewStageVideo){
+ novexPreviewStageVideo.onloadedmetadata=fitPreviewStage;
+ novexPreviewStageVideo.addEventListener('loadedmetadata',fitPreviewStage);
+ // Reapply after decoded frame data is available; source swaps can race metadata callbacks.
+ novexPreviewStageVideo.addEventListener('loadeddata',fitPreviewStage);
+}
 window.addEventListener('resize',fitPreviewStage);
-if($('#previewVideo')?.readyState>=1)fitPreviewStage();
+if(novexPreviewStageVideo?.readyState>=1)fitPreviewStage();
