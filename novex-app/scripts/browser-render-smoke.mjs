@@ -75,8 +75,8 @@ try {
   await page.evaluate(async () => {
     const video = document.querySelector('#previewVideo');
     video.playbackRate = 8;
-    video.currentTime = Math.max(0, video.duration - 0.18);
     await video.play();
+    video.currentTime = Math.max(0, video.duration - 0.18);
   });
   await page.waitForFunction(() => {
     const video = document.querySelector('#previewVideo');
