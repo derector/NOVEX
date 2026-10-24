@@ -163,3 +163,10 @@ This ledger is the operational checklist for the current implementation pass. A 
 - [ ] Test the exported MP4 outside the smoke harness with ffprobe/FFmpeg for streams, dimensions, duration, frame rate, synchronization, and complete decode.
 - [ ] Audit the two npm audit findings previously seen in the temporary browser-test tooling and record exact package paths before changing dependencies.
 - [ ] Resolve PR review/release gate, merge only with explicit approval, then verify GitHub Pages deployment and public URL.
+
+
+### Dependency audit isolation — 2026-10-24
+- [x] Traced the earlier `2 vulnerabilities (1 high, 1 critical)` summary to the web job's browser-smoke setup sequence: `npm ci --no-audit --no-fund` followed by `npm install --no-save --package-lock=false playwright ffmpeg-static ffprobe-static`. The original log does not identify affected packages, so no dependency was upgraded speculatively.
+- [x] Added diagnostic `npm audit --json` summaries for the locked app dependency tree before temporary test tools are installed, and for the combined tree after they are installed. Each summary prints package names, severity, advisory title/URL/range, and fix availability while preserving the build's existing non-blocking audit behavior.
+- [ ] Inspect the next CI run's two audit summaries, determine whether the high/critical findings exist in the locked app tree or only in temporary browser-test tooling, then update only the affected dependency path and rerun tests.
+- [ ] Confirm a fresh workflow run includes the workflow and roadmap commits; the last verified run predates these audit-diagnostic changes.
