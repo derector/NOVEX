@@ -1,7 +1,9 @@
 name: NOVEX Build
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'chore/**']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 concurrency:
   group: novex-build-v2-${{ github.ref }}
@@ -35,11 +37,17 @@ jobs:
           VITE_BASE_PATH: /NOVEX/
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://jtkpydprgqccxxkqcvou.supabase.co' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HbBlyHbGCY6SFmoo9qL1eg_p6jOYVEO' }}
+      - name: Audit locked application dependency tree
+        run: |
+          npm audit --json > /tmp/novex-audit-locked.json || true
+          node --input-type=commonjs -e 'const a=require("/tmp/novex-audit-locked.json"); console.log(JSON.stringify({scope:"locked application dependencies",summary:a.metadata?.vulnerabilities,findings:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,via:v.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,url:x.url,range:x.range}),fixAvailable:v.fixAvailable}))},null,2))'
       - name: Install media tools and Chromium for browser render smoke test
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           npm install --no-save --package-lock=false playwright ffmpeg-static ffprobe-static
+          npm audit --json > /tmp/novex-audit-smoke-tools.json || true
+          node --input-type=commonjs -e 'const a=require("/tmp/novex-audit-smoke-tools.json"); console.log(JSON.stringify({scope:"application plus temporary smoke-test tools",summary:a.metadata?.vulnerabilities,findings:Object.entries(a.vulnerabilities||{}).map(([name,v])=>({name,severity:v.severity,via:v.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,url:x.url,range:x.range}),fixAvailable:v.fixAvailable}))},null,2))'
           npx playwright install --only-shell chromium
           node -e 'console.log(require("path").dirname(require("ffmpeg-static")))' >> "$GITHUB_PATH"
           node -e 'console.log(require("path").dirname(require("ffprobe-static").path))' >> "$GITHUB_PATH"
@@ -64,6 +72,54 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: novex-app/dist/
+  android:
+    name: Build Android APK
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: novex-app
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: novex-app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate source and render contracts
+        run: |
+          node --check src/main.js
+          node --check src/motion-engine.js
+          node --check src/motion-director.js
+          node --check src/motion-audio.js
+          node --check src/motion3d.js
+          npm test
+      - name: Build web assets for Android
+        run: npm run build
+      - name: Generate Capacitor Android project
+        run: npx cap add android
+      - name: Sync native plugins and web assets
+        run: npx cap sync android
+      - name: Assemble debug APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Verify APK exists and is non-empty
+        run: test -s android/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NOVEX-Android-APK
+          path: novex-app/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
   deploy:
     name: Publish Web site (GitHub Pages)
     if: github.ref == 'refs/heads/main'

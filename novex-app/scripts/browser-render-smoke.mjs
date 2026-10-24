@@ -95,7 +95,11 @@ try {
     audio.loop = true;
     audio.currentTime = 0;
     await audio.play();
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Headless Chromium may need more than one short frame to advance media time.
+    // Wait for playback to make measurable progress instead of sampling at 300 ms.
+    for (let attempt = 0; attempt < 30 && audio.currentTime <= 0.05 && !audio.paused; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     const result = { paused: audio.paused, currentTime: audio.currentTime, duration: audio.duration };
     audio.pause();
     audio.loop = false;
