@@ -753,6 +753,11 @@ fitPreviewStage = function(){
  const maxHeight=Math.min(520,Math.max(180,window.innerHeight*.64));
  const parentWidth=stage.parentElement?.clientWidth||520;
  const width=Math.max(1,Math.min(parentWidth,920,maxHeight*safeRatio));
+ // Explicit dimensions override responsive min-height rules for every source ratio.
+ stage.style.width='min('+width+'px, 100%)';
+ stage.style.height=(width/safeRatio)+'px';
+ stage.style.maxWidth='100%';
+ stage.style.minHeight='0px';
  stage.style.setProperty('--preview-ratio',String(safeRatio));
  stage.style.setProperty('--preview-width',width+'px');
  stage.style.aspectRatio=safeRatio+' / 1';
