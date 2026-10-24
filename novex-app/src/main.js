@@ -542,7 +542,7 @@ function motionDirectorMessage(message,choices=[]){
  const wrap=$('#motionDirectorWorkflow'),text=$('#motionDirectorMessage'),box=$('#motionDirectorChoices');
  if(!wrap||!text||!box)return;
  text.textContent=message;box.replaceChildren();wrap.classList.remove('hidden');
- for(const choice of choices){const b=document.createElement('button');b.type='button';b.textContent=choice.label;b.addEventListener('click',choice.action);box.append(b);}
+ for(const choice of choices){const b=document.createElement('button');b.type='button';b.textContent=choice.label;b.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();choice.action();});box.append(b);}
 }
 
 function chooseMotionStyle(mode){
