@@ -118,3 +118,12 @@ This ledger is the operational checklist for the current implementation pass. A 
 ### Release gate
 **No release link is considered final until the corresponding GitHub Actions job is green, its artifact exists, and the deployed site or installed APK passes the relevant smoke test.** If a runner fails, fix the specific logged cause and rerun; do not mark the step complete from source inspection alone.
 
+### CI failure analysis and corrective pass — 2026-10-24
+- [x] Retrieved the full job logs for run `40048043675` (run #429); the failure was reproducible and not a generic runner/log outage.
+- [x] Confirmed the web syntax checks, contract tests, Vite build, FFmpeg core checks, fixture generation, and Chromium installation all passed.
+- [x] Identified the web smoke-test failure: the music player had `paused: false` but `currentTime: 0` at the fixed 300 ms sample. Changed the test to wait up to 3 seconds for measurable playback progress before judging the player.
+- [x] Identified the Android SDK failure: `android-actions/setup-android@v3` requested the retired `tools` package, and sdkmanager returned `Failed to find package 'tools'`. Updated the job to `android-actions/setup-android@v4` and explicitly request `platform-tools`, consistent with the action's current guidance.
+- [ ] Re-run the corrected workflow and confirm the music player test passes; if it still fails, inspect browser playback state and fix the product behavior rather than weakening the assertion.
+- [ ] Confirm Android SDK setup, Capacitor project generation, Gradle build, APK artifact upload, and installation smoke test.
+- [ ] Check dependency audit warnings from the CI log (2 npm audit findings were reported during temporary browser-test tool installation) and determine exact affected packages before changing dependency versions.
+
