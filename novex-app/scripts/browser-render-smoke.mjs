@@ -79,6 +79,10 @@ try {
   }
 
 
+  // The edit-command field is revealed after the initial reference analysis.
+  await page.locator('#analyzeBtn').click();
+  await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
+
   // Exercise the integrated Motion Director command against two real reference clips.
   await page.locator('#editCommand').fill('/motion-director');
   await page.locator('#applyEditCommand').click();
