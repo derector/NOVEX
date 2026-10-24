@@ -155,7 +155,11 @@ try {
   if (lyricResult.lines.length < 2 || !lyricResult.status.includes('строк готовы')) {
     throw new Error('Lyrics split control did not create editable lines: ' + JSON.stringify(lyricResult));
   }
-  await page.locator('#lyrics').fill('');
+  await page.locator('#lyrics').evaluate(el => {
+    el.value = '';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   const musicPlayer = await page.evaluate(async () => {
     const audio = document.querySelector('#trackAudio');
     audio.pause();
