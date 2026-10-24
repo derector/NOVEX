@@ -521,6 +521,11 @@ footer, .app-footer { color: #71889d !important; border-color: #203348 !importan
   background:transparent!important;
   z-index:2!important;
 }
+/* Reference footage is a guide: retain the complete source frame, not the output crop. */
+#previewStage.preview-stage > #previewVideo[data-preview-kind="reference"]{
+  object-fit:contain!important;
+  object-position:50% 50%!important;
+}
 #previewStage.preview-stage > #previewVideo[hidden]{display:none!important}
 #previewStage.preview-stage > .preview-placeholder{
   position:relative!important;
