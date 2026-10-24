@@ -105,6 +105,12 @@ try {
     }));
     throw new Error('Motion Director analysis did not produce style choices: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
   }
+  const motionDirectorReport = await page.locator('#motionDirectorMessage').innerText();
+  if (!motionDirectorReport.includes('novex-smoke-reference.webm') ||
+      !motionDirectorReport.includes('novex-smoke-reference-2.webm')) {
+    throw new Error('Motion Director did not report both reference clips: ' + motionDirectorReport);
+  }
+
   await page.locator('#motionDirectorChoices button').filter({ hasText: 'По мотивам' }).click();
   try {
     await page.waitForFunction(() =>
@@ -128,12 +134,6 @@ try {
   if (!selectedMotionStyle) {
     throw new Error('Motion Director action did not select the inspired style mode.');
   }
-  const motionDirectorReport = await page.locator('#motionDirectorMessage').innerText();
-  if (!motionDirectorReport.includes('novex-smoke-reference.webm') ||
-      !motionDirectorReport.includes('novex-smoke-reference-2.webm')) {
-    throw new Error('Motion Director did not report both reference clips: ' + motionDirectorReport);
-  }
-
   await page.waitForFunction(() => {
     const audio = document.querySelector('#trackAudio');
     return audio && !audio.hidden && audio.readyState >= 1 &&
