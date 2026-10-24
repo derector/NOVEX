@@ -135,3 +135,10 @@ This ledger is the operational checklist for the current implementation pass. A 
 - [x] Added a fixed, viewport-covering mobile backdrop with explicit stacking, topbar clearance, and hidden-state rules in `novex-app/src/style.css`.
 - [ ] Re-run browser smoke test and confirm backdrop tap, Escape focus restoration, and all later render checks pass.
 - [ ] Only publish Pages after the full web smoke test passes; APK artifact alone does not establish app runtime correctness.
+
+
+### Preview aspect-ratio regression — 2026-10-24
+- [x] Inspected the failed browser smoke test from run #438: a portrait reference video was centered but rendered with `object-fit: cover`, contradicting the required full-frame preview behavior.
+- [x] Added a narrowly scoped rule for `#previewVideo[data-preview-kind="reference"]` to use `object-fit: contain` and centered positioning; source/output preview rules remain unchanged.
+- [ ] Re-run browser smoke test to confirm portrait/landscape fit, navigation, project restore, and actual MP4 export all pass.
+- [ ] Publish the web build only after all browser checks pass; the latest Android build succeeded but remains a debug APK.
