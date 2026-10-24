@@ -168,7 +168,18 @@ try {
 
   // Verify locally saved project metadata survives a complete browser reload.
   await page.locator('[data-view="projects"]').click();
-  await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
+  try {
+    await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      projectsText: document.querySelector('#projectsGrid')?.innerText || '',
+      localProjects: localStorage.getItem('novex.localProjects.v1'),
+      activeView: [...document.querySelectorAll('.view')].find(el => el.classList.contains('active'))?.id || '',
+      planSummary: document.querySelector('#planSummary')?.innerText || '',
+      status: document.querySelector('#renderStatus')?.innerText || ''
+    }));
+    throw new Error('Saved project missing after successful export: ' + JSON.stringify(state) + '; ' + error.message);
+  }
   const savedProjectName = (await page.locator('#projectsGrid .project-card b').first().innerText()).trim();
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('[data-view="projects"]').click();
