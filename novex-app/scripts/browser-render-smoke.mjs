@@ -74,8 +74,14 @@ try {
   }, null, { timeout: 15000 });
   await page.evaluate(async () => {
     const video = document.querySelector('#previewVideo');
-    // Exercise the real playback path. Seeking exactly to duration can leave
-    // the element at its terminal frame without producing a natural ended event.
+    // Upload starts preview playback automatically. Reset it here because the
+    // preceding audio-player checks may take longer than this short fixture.
+    video.pause();
+    if (video.currentTime > 0.05) {
+      const seeked = new Promise(resolve => video.addEventListener('seeked', resolve, { once: true }));
+      video.currentTime = 0;
+      await seeked;
+    }
     video.playbackRate = 1;
     await video.play();
   });
