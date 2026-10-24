@@ -74,17 +74,9 @@ try {
   }, null, { timeout: 15000 });
   await page.evaluate(async () => {
     const video = document.querySelector('#previewVideo');
+    // Exercise the real playback path. Seeking exactly to duration can leave
+    // the element at its terminal frame without producing a natural ended event.
     video.playbackRate = 4;
-    video.currentTime = Math.max(0, video.duration - 0.03);
-    await new Promise((resolve, reject) => {
-      if (video.seeking) {
-        video.addEventListener('seeked', resolve, { once: true });
-        video.addEventListener('error', reject, { once: true });
-      } else resolve();
-    });
-    // Drive the same near-end condition used by the player without depending
-    // on a high-speed playback tick landing inside a tiny timing window.
-    video.dispatchEvent(new Event('timeupdate'));
     await video.play();
   });
   await page.waitForFunction(() => {
@@ -101,12 +93,14 @@ try {
         currentTime: video.currentTime,
         duration: video.duration,
         readyState: video.readyState,
+        paused: video.paused,
+        ended: video.ended,
         currentSrc: video.currentSrc,
         expectedSrc: video.dataset.referencePreview,
         advancePending: video.dataset.advancePending
       };
     });
-    throw new Error('Second reference preview did not activate: ' + JSON.stringify(state) + '; ' + error.message);
+    throw new Error('Second reference preview did not activate during playback: ' + JSON.stringify(state) + '; ' + error.message);
   });
 
   await page.setViewportSize({ width: 390, height: 844 });
