@@ -74,16 +74,40 @@ try {
   }, null, { timeout: 15000 });
   await page.evaluate(async () => {
     const video = document.querySelector('#previewVideo');
-    video.playbackRate = 8;
+    video.playbackRate = 4;
+    video.currentTime = Math.max(0, video.duration - 0.03);
+    await new Promise((resolve, reject) => {
+      if (video.seeking) {
+        video.addEventListener('seeked', resolve, { once: true });
+        video.addEventListener('error', reject, { once: true });
+      } else resolve();
+    });
+    // Drive the same near-end condition used by the player without depending
+    // on a high-speed playback tick landing inside a tiny timing window.
+    video.dispatchEvent(new Event('timeupdate'));
     await video.play();
-    video.currentTime = Math.max(0, video.duration - 0.18);
   });
   await page.waitForFunction(() => {
     const video = document.querySelector('#previewVideo');
     return video?.dataset.referenceIndex === '1' &&
       video.dataset.referencePlaylist === 'true' && video.videoWidth === 320 &&
       video.readyState >= 2 && video.currentSrc === video.dataset.referencePreview;
-  }, null, { timeout: 15000 });
+  }, null, { timeout: 15000 }).catch(async error => {
+    const state = await page.evaluate(() => {
+      const video = document.querySelector('#previewVideo');
+      return video && {
+        index: video.dataset.referenceIndex,
+        playlist: video.dataset.referencePlaylist,
+        currentTime: video.currentTime,
+        duration: video.duration,
+        readyState: video.readyState,
+        currentSrc: video.currentSrc,
+        expectedSrc: video.dataset.referencePreview,
+        advancePending: video.dataset.advancePending
+      };
+    });
+    throw new Error('Second reference preview did not activate: ' + JSON.stringify(state) + '; ' + error.message);
+  });
 
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileLayout = await page.evaluate(() => ({
