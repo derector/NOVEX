@@ -477,7 +477,7 @@ input,textarea,select,button{max-width:100%}
   position:relative;
   display:grid;
   place-items:center;
-  width:100%!important;
+  width:auto;
   max-width:100%!important;
   min-height:0;
   height:auto;
