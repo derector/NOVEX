@@ -106,9 +106,12 @@ try {
       selectedStyle: document.querySelector('input[name="styleMode"]:checked')?.value || '',
       choices: [...document.querySelectorAll('#motionDirectorChoices button')].map(button => button.textContent),
       workflowMessage: document.querySelector('#motionDirectorMessage')?.textContent || '',
-      workflowHidden: document.querySelector('#motionDirectorWorkflow')?.classList.contains('hidden') ?? true
+      workflowHidden: document.querySelector('#motionDirectorWorkflow')?.classList.contains('hidden') ?? true,
+      buttonHtml: [...document.querySelectorAll('#motionDirectorChoices button')].map(button => ({text:button.textContent,html:button.outerHTML,disabled:button.disabled})),
+      statusVisible: (()=>{const el=document.querySelector('#directorStatus');return el?{html:el.outerHTML,visible:!!(el.offsetWidth||el.offsetHeight||el.getClientRects().length)}:null})(),
+      alerts: [...document.querySelectorAll('.toast,[role=alert]')].map(el=>el.textContent)
     }));
-    throw new Error('Motion Director style choice did not update the workflow: ' + JSON.stringify(state) + '; ' + error.message);
+    throw new Error('Motion Director style choice did not update the workflow: ' + JSON.stringify(state) + '; browser errors: ' + pageErrors.join(' | ') + '; ' + error.message);
   }
   const selectedMotionStyle = await page.locator('input[name="styleMode"][value="inspired"]').isChecked();
   if (!selectedMotionStyle) {
