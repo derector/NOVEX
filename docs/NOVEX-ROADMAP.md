@@ -142,3 +142,12 @@ This ledger is the operational checklist for the current implementation pass. A 
 - [x] Added a narrowly scoped rule for `#previewVideo[data-preview-kind="reference"]` to use `object-fit: contain` and centered positioning; source/output preview rules remain unchanged.
 - [ ] Re-run browser smoke test to confirm portrait/landscape fit, navigation, project restore, and actual MP4 export all pass.
 - [ ] Publish the web build only after all browser checks pass; the latest Android build succeeded but remains a debug APK.
+
+
+### Follow-up verification — 2026-10-24
+
+- [x] Android debug APK build succeeded in workflow run #442; artifact `NOVEX-Android-APK` exists and is not expired.
+- [x] Inspected the browser-smoke failure from run #442: the portrait preview computed `object-fit: cover` despite the narrower reference-only rule.
+- [x] Corrected the CSS cascade by using the more specific `#previewStage #previewVideo[data-preview-kind="reference"]` selector and explicit `!important` for fit and position.
+- [ ] Re-run browser smoke test and verify the full end-to-end render/export sequence passes.
+- [ ] Only after all checks pass, merge the draft PR with approval and verify the published Pages URL.
