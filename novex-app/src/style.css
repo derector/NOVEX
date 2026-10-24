@@ -445,3 +445,13 @@ input,textarea,select,button{max-width:100%}
 .motion-director-choices button:active{transform:scale(.98)}
 @keyframes motion-director-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.motion-director-workflow,.motion-director-choices button{animation:none!important;transition:none!important}}
+
+/* Consistent app-wide motion language. */
+@keyframes novex-view-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.view.active{animation:novex-view-enter .28s cubic-bezier(.2,.75,.25,1) both}
+#materialsPanel,#directionPanel,#renderPanel,.preview-panel,.ai-director{animation:novex-view-enter .28s cubic-bezier(.2,.75,.25,1) both}
+.nav-item,.media-item,.choice-card,.panel,.text-button,.icon-btn,.dropzone{transition:background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease,transform .16s ease}
+button:not(:disabled):active{transform:scale(.985)}
+.choice-card:hover,.media-item:hover{border-color:#51466f}
+.nav-item:hover{background-color:#171522}
+@media(prefers-reduced-motion:reduce){.view.active,#materialsPanel,#directionPanel,#renderPanel,.preview-panel,.ai-director{animation:none!important}.nav-item,.media-item,.choice-card,.panel,.text-button,.icon-btn,.dropzone,button{transition:none!important}button:not(:disabled):active{transform:none}}
