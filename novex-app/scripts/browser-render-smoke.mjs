@@ -186,6 +186,13 @@ try {
     return video && video.videoWidth === 320 && video.dataset.referenceIndex === '0' &&
       video.dataset.referencePlaylist === 'true';
   }, null, { timeout: 15000 });
+  const landscapeStageRatio = await page.locator('#previewStage').evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return box.width / box.height;
+  });
+  if (Math.abs(landscapeStageRatio - 320 / 180) > 0.02) {
+    throw new Error('Landscape preview stage does not follow the source aspect ratio: ' + landscapeStageRatio);
+  }
   await page.evaluate(() => document.querySelector('#previewVideo').pause());
   await page.locator('.preview-track').focus();
   await page.keyboard.press('End');
