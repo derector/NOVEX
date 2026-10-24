@@ -112,6 +112,29 @@ jobs:
         run: npx cap sync android
       - name: Assemble debug APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Install and launch APK in Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-boot-timeout: 600
+          script: |
+            APK="android/app/build/outputs/apk/debug/app-debug.apk"
+            test -s "$APK"
+            APP_ID="$(find "$ANDROID_HOME" -type f -name apkanalyzer 2>/dev/null | head -n 1 | xargs -r -I{} {} manifest application-id "$APK")"
+            test -n "$APP_ID"
+            echo "Testing package: $APP_ID"
+            adb install -r "$APK"
+            adb shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1
+            sleep 15
+            adb shell pidof "$APP_ID"
+            adb logcat -d -t 2500 > /tmp/novex-android-smoke-logcat.txt
+            if grep -E "FATAL EXCEPTION|AndroidRuntime.*(FATAL|Process:)" /tmp/novex-android-smoke-logcat.txt; then
+              echo "Fatal Android runtime error detected"
+              exit 1
+            fi
       - name: Verify APK exists and is non-empty
         run: test -s android/app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
