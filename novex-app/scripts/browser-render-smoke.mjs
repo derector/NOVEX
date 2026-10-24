@@ -76,7 +76,7 @@ try {
     const video = document.querySelector('#previewVideo');
     // Exercise the real playback path. Seeking exactly to duration can leave
     // the element at its terminal frame without producing a natural ended event.
-    video.playbackRate = 4;
+    video.playbackRate = 1;
     await video.play();
   });
   await page.waitForFunction(() => {
@@ -89,6 +89,7 @@ try {
       const video = document.querySelector('#previewVideo');
       return video && {
         index: video.dataset.referenceIndex,
+        referenceCount: document.querySelectorAll('#referenceList .media-item-rich').length,
         playlist: video.dataset.referencePlaylist,
         currentTime: video.currentTime,
         duration: video.duration,
