@@ -672,9 +672,9 @@ novexFullscreenButton?.addEventListener('click',()=>{
 const novexRenderWrap=document.querySelector('#renderProgressWrap');
 const novexRenderButton=document.querySelector('#renderBtn');
 function novexSetRenderingState(){
- const visible=!!novexRenderWrap&&!novexRenderWrap.classList.contains('hidden');
+ const result=document.querySelector('#exportResult');const visible=!!novexRenderWrap&&!novexRenderWrap.classList.contains('hidden')&&(!result||result.classList.contains('hidden'));
  document.body.classList.toggle('is-rendering',visible);
 }
-if(novexRenderWrap)new MutationObserver(novexSetRenderingState).observe(novexRenderWrap,{attributes:true,attributeFilter:['class']});
+if(novexRenderWrap)new MutationObserver(novexSetRenderingState).observe(novexRenderWrap,{attributes:true,attributeFilter:['class']});const novexExportResult=document.querySelector('#exportResult');if(novexExportResult)new MutationObserver(novexSetRenderingState).observe(novexExportResult,{attributes:true,attributeFilter:['class']});
 novexRenderButton?.addEventListener('click',()=>{document.body.classList.add('is-rendering');});
 novexSetRenderingState();
