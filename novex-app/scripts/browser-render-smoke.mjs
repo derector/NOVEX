@@ -226,6 +226,8 @@ try {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.waitForFunction(() => !document.querySelector('#sidebar')?.inert && !document.querySelector('#sidebar')?.hasAttribute('aria-hidden'));
 
+  // Motion Director leaves the UI on step 2; return to materials before testing analysis.
+  await page.locator('#backToMaterials').evaluate(el => el.click());
   await page.locator('#analyzeBtn').click();
   await page.locator('#directionPanel').waitFor({ state: 'visible', timeout: 60000 });
   await page.locator('label.choice-card').filter({ has: page.locator('input[name="styleMode"][value="faithful"]') }).click();
