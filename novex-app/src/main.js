@@ -634,13 +634,30 @@ function helperReply(question){
 }
 function helperMessage(text,kind){
  const box=$('#helperMessages'),node=document.createElement('div');node.className='helper-bubble '+kind;
- const p=document.createElement('p');p.textContent=text;node.append(p);box.append(node);box.scrollTop=box.scrollHeight;
+ const p=document.createElement('p');p.textContent=text;node.append(p);box.append(node);box.scrollTop=box.scrollHeight;return node;
+}
+async function askBuddy(question){
+ const q=String(question||'').trim().slice(0,1200);if(!q)return;
+ helperMessage(q,'user');
+ const pending=helperMessage('Анализирую вопрос…','bot');
+ try{
+  if(!cloud)throw new Error('Облачная связь не настроена. Пока доступна локальная справка.');
+  const {data,error}=await cloud.functions.invoke('novex-assistant',{body:{message:q}});
+  if(error)throw error;
+  if(data?.error)throw new Error(data.error);
+  if(!data?.answer)throw new Error('ИИ не вернул ответ.');
+  pending.querySelector('p').textContent=data.answer;
+ }catch(error){
+  const detail=String(error?.message||error||'').slice(0,320);
+  pending.querySelector('p').textContent=helperReply(q)+'\n\nПодключение ИИ: '+detail;
+ }
+ $('#helperMessages').scrollTop=$('#helperMessages').scrollHeight;
 }
 function closeHelperPanel(restoreFocus=false){$('#helperPanel').classList.add('hidden');$('#helperFab').setAttribute('aria-expanded','false');if(restoreFocus)$('#helperFab').focus();}
 $('#helperFab').onclick=()=>{const open=$('#helperPanel').classList.contains('hidden');$('#helperPanel').classList.toggle('hidden',!open);$('#helperFab').setAttribute('aria-expanded',String(open));if(open)$('#helperInput').focus()};
 $('#helperClose').onclick=()=>closeHelperPanel(true);
-$('#helperForm').onsubmit=e=>{e.preventDefault();const input=$('#helperInput'),q=input.value.trim();if(!q)return;helperMessage(q,'user');helperMessage(helperReply(q),'bot');input.value='';};
-$('#helperMessages').addEventListener('click',e=>{const b=e.target.closest('[data-helper-q]');if(!b)return;const q=b.dataset.helperQ;helperMessage(q,'user');helperMessage(helperReply(q),'bot');});
+$('#helperForm').onsubmit=async e=>{e.preventDefault();const input=$('#helperInput'),q=input.value.trim();if(!q)return;input.value='';const submit=$('#helperForm button[type="submit"]');input.disabled=true;if(submit)submit.disabled=true;try{await askBuddy(q);}finally{input.disabled=false;if(submit)submit.disabled=false;input.focus();}};
+$('#helperMessages').addEventListener('click',e=>{const b=e.target.closest('[data-helper-q]');if(!b)return;askBuddy(b.dataset.helperQ);});
 
 
 // Preview audio controls are shared by web and Android WebView.
