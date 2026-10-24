@@ -139,8 +139,15 @@ try {
     return audio && !audio.hidden && audio.readyState >= 1 &&
       Number.isFinite(audio.duration) && audio.duration > 2.5;
   }, null, { timeout: 15000 });
-  await page.locator('#lyrics').fill('Тихий свет приходит к нам сегодня вечером и открывает все дороги для нового движения');
-  await page.locator('#syncLyrics').click();
+  // The lyrics editor belongs to a later studio step and is intentionally hidden
+  // while Motion Director settings are open. Exercise its real input handler without
+  // forcing a user-visible step transition in the middle of this independent smoke check.
+  await page.locator('#lyrics').evaluate((el, value) => {
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, 'Тихий свет приходит к нам сегодня вечером и открывает все дороги для нового движения');
+  await page.locator('#syncLyrics').evaluate(el => el.click());
   const lyricResult = await page.evaluate(() => ({
     lines: document.querySelector('#lyrics').value.split('\n').filter(Boolean),
     status: document.querySelector('#lyricsStatus').textContent
