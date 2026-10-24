@@ -641,3 +641,40 @@ $('#helperFab').onclick=()=>{const open=$('#helperPanel').classList.contains('hi
 $('#helperClose').onclick=()=>closeHelperPanel(true);
 $('#helperForm').onsubmit=e=>{e.preventDefault();const input=$('#helperInput'),q=input.value.trim();if(!q)return;helperMessage(q,'user');helperMessage(helperReply(q),'bot');input.value='';};
 $('#helperMessages').addEventListener('click',e=>{const b=e.target.closest('[data-helper-q]');if(!b)return;const q=b.dataset.helperQ;helperMessage(q,'user');helperMessage(helperReply(q),'bot');});
+
+
+// Preview audio controls are shared by web and Android WebView.
+const novexPreviewVideo=document.querySelector('#previewVideo');
+const novexMuteButton=document.querySelector('#previewMute');
+const novexFullscreenButton=document.querySelector('#previewFullscreen');
+function novexSyncPreviewMute(){
+ if(!novexPreviewVideo||!novexMuteButton)return;
+ const muted=novexPreviewVideo.muted;
+ novexMuteButton.setAttribute('aria-pressed',String(!muted));
+ novexMuteButton.setAttribute('aria-label',muted?'Включить звук предпросмотра':'Выключить звук предпросмотра');
+ const label=novexMuteButton.querySelector('span');if(label)label.textContent=muted?'Звук выкл.':'Звук вкл.';
+ novexMuteButton.classList.toggle('is-muted',muted);
+}
+if(novexPreviewVideo&&novexMuteButton){
+ novexPreviewVideo.muted=true;novexSyncPreviewMute();
+ novexMuteButton.addEventListener('click',()=>{
+  novexPreviewVideo.muted=!novexPreviewVideo.muted;novexSyncPreviewMute();
+  if(!novexPreviewVideo.muted&&novexPreviewVideo.paused&&novexPreviewVideo.currentSrc)novexPreviewVideo.play().catch(()=>{});
+ });
+ novexPreviewVideo.addEventListener('volumechange',novexSyncPreviewMute);
+}
+novexFullscreenButton?.addEventListener('click',()=>{
+ const stage=document.querySelector('#previewStage');
+ if(document.fullscreenElement){document.exitFullscreen?.().catch(()=>{});}
+ else if(stage?.requestFullscreen)stage.requestFullscreen().catch(()=>{});
+ else if(novexPreviewVideo){novexPreviewVideo.controls=true;novexPreviewVideo.setAttribute('controls','controls');}
+});
+const novexRenderWrap=document.querySelector('#renderProgressWrap');
+const novexRenderButton=document.querySelector('#renderBtn');
+function novexSetRenderingState(){
+ const visible=!!novexRenderWrap&&!novexRenderWrap.classList.contains('hidden');
+ document.body.classList.toggle('is-rendering',visible);
+}
+if(novexRenderWrap)new MutationObserver(novexSetRenderingState).observe(novexRenderWrap,{attributes:true,attributeFilter:['class']});
+novexRenderButton?.addEventListener('click',()=>{document.body.classList.add('is-rendering');});
+novexSetRenderingState();
