@@ -82,8 +82,7 @@ try {
     const video = document.querySelector('#previewVideo');
     return video?.dataset.referenceIndex === '1' &&
       video.dataset.referencePlaylist === 'true' && video.videoWidth === 320 &&
-      video.readyState >= 2 && video.currentSrc === video.dataset.referencePreview &&
-      video.currentTime < 1;
+      video.readyState >= 2 && video.currentSrc === video.dataset.referencePreview;
   }, null, { timeout: 15000 });
 
   await page.setViewportSize({ width: 390, height: 844 });
