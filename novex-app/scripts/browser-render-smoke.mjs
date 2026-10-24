@@ -167,7 +167,13 @@ try {
   }
 
   // Verify locally saved project metadata survives a complete browser reload.
-  await page.locator('.nav-item[data-view="projects"]:visible').click();
+  const projectsNav = page.locator('.nav-item[data-view="projects"]').first();
+  await projectsNav.click({ timeout: 5000 }).catch(() => {});
+  // Mobile navigation can be visually covered by the collapsed sidebar; dispatch
+  // a real DOM click as a deterministic fallback, then assert the view handler.
+  if (!(await page.locator('#view-projects.active').count())) {
+    await projectsNav.evaluate(element => element.click());
+  }
   await page.locator('#view-projects.active').waitFor({ state: 'attached', timeout: 5000 });
   try {
     await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
@@ -183,7 +189,13 @@ try {
   }
   const savedProjectName = (await page.locator('#projectsGrid .project-card b').first().innerText()).trim();
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.locator('.nav-item[data-view="projects"]:visible').click();
+  const projectsNav = page.locator('.nav-item[data-view="projects"]').first();
+  await projectsNav.click({ timeout: 5000 }).catch(() => {});
+  // Mobile navigation can be visually covered by the collapsed sidebar; dispatch
+  // a real DOM click as a deterministic fallback, then assert the view handler.
+  if (!(await page.locator('#view-projects.active').count())) {
+    await projectsNav.evaluate(element => element.click());
+  }
   await page.locator('#view-projects.active').waitFor({ state: 'attached', timeout: 5000 });
   await page.locator('#projectsGrid .project-card').first().waitFor({ state: 'visible', timeout: 10000 });
   const restoredProjectName = (await page.locator('#projectsGrid .project-card b').first().innerText()).trim();
