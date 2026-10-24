@@ -65,7 +65,7 @@ var S={refs:[],track:null,source:null,audio:null,beats:[],bpm:null,plan:[],capti
 var timer;function toast(t){var el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(timer);timer=setTimeout(function(){el.classList.remove('show')},4000)}
 function directorMessage(text,buttons){var box=$('#directorResponse'),q=$('#directorQuestions');box.textContent=text;box.classList.remove('hidden');q.innerHTML='';q.classList.toggle('hidden',!buttons||!buttons.length);(buttons||[]).forEach(function(item){var b=document.createElement('button');b.type='button';b.className='btn secondary';b.textContent=item.label;b.addEventListener('click',item.action);q.appendChild(b)})}
 async function directorStart(){var prompt=$('#directorPrompt').value.trim();if(!prompt){directorMessage('Напиши задачу после /motion-director. Например: «Повтори референс 1:1, не меняй монтаж и добавь титры».');$('#directorPrompt').focus();return}
-if(!/^\\/motion-director\\b/i.test(prompt))prompt='/motion-director '+prompt;
+if(!/^\/motion-director\b/i.test(prompt))prompt='/motion-director '+prompt;
 $('#directorPrompt').value=prompt;
 if(!S.refs.length){directorMessage('Для анализа движения нужен видео-референс. Добавь его в блок «Референсы анимации» выше. После загрузки снова нажми «Разобрать запрос».');$('#refs').focus();return}
 var run=$('#directorRun');run.disabled=true;run.textContent='Анализирую референс…';
