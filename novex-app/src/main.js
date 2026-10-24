@@ -765,6 +765,12 @@ fitPreviewStage = function(){
  stage.classList.toggle('preview-square',safeRatio>=.85&&safeRatio<=1.15);
  stage.classList.toggle('preview-portrait',safeRatio<.85);
 };
-$('#previewVideo')?.addEventListener('loadedmetadata',fitPreviewStage);
+const novexPreviewStageVideo=$('#previewVideo');
+// Replace the earlier onloadedmetadata property handler too: it captured the old
+// fitPreviewStage implementation and ran after the new event listener, undoing its sizing.
+if(novexPreviewStageVideo){
+ novexPreviewStageVideo.onloadedmetadata=fitPreviewStage;
+ novexPreviewStageVideo.addEventListener('loadedmetadata',fitPreviewStage);
+}
 window.addEventListener('resize',fitPreviewStage);
-if($('#previewVideo')?.readyState>=1)fitPreviewStage();
+if(novexPreviewStageVideo?.readyState>=1)fitPreviewStage();
