@@ -511,6 +511,46 @@ function commandToPatch(raw){
   if(/плавн|переход|камера|зум|приближ/.test(q))return {type:'camera_motion',label:'Движение камеры',style:{move:/зум|приближ/.test(q)?'dolly-in':'smooth-transition',easing:'cinematic-ease'}};
   throw Error('Пока не распознал тип правки. Попробуй: «добавь 3D-логотип», «сделай кинетические титры», «добавь субтитры», «сделай неоновое свечение» или «сделай переход плавнее».');
 }
+function motionDirectorMessage(message,choices=[]){
+ const wrap=$('#motionDirectorWorkflow'),text=$('#motionDirectorMessage'),box=$('#motionDirectorChoices');
+ if(!wrap||!text||!box)return;
+ text.textContent=message;box.replaceChildren();wrap.classList.remove('hidden');
+ for(const choice of choices){const b=document.createElement('button');b.type='button';b.textContent=choice.label;b.addEventListener('click',choice.action);box.append(b);}
+}
+function chooseMotionStyle(mode){
+ $$('input[name="styleMode"]').forEach(x=>{x.checked=x.value===mode;const card=x.closest('.choice-card');if(card)card.classList.toggle('selected',x.checked);});
+ const labels={faithful:'Копия референса — приоритет исходной последовательности и темпа',inspired:'По мотивам — стиль референса используется как ориентир',original:'Своя идея — новая последовательность под музыку'};
+ step(2);$('#directorStatus').textContent=labels[mode]||'Режим выбран';
+ motionDirectorMessage((labels[mode]||'Режим выбран')+'. Анализ выборочных кадров завершён. Проверь параметры проекта и нажми «Собрать план». Для анализа BPM и музыкальных акцентов нужен загруженный трек.');
+ if(!S.track)toast('Референс разобран. Добавь музыкальный трек в разделе «Материалы», затем выполни анализ.','warn');
+}
+async function runMotionDirector(raw){
+ const command=String(raw||'').trim(),button=$('#applyEditCommand');
+ if(!S.refs.length){toast('Для /motion-director сначала добавь видео-референс в «Материалы проекта».','warn');step(1);return;}
+ button.disabled=true;button.textContent='Анализ референса…';
+ try{
+  motionDirectorMessage('Этап 1/2 · Анализирую длительность, формат и выборочные кадры референсов. Это локальный анализ загруженных файлов; покадровое сравнение движения пока не заявляется.');
+  const report=[];
+  for(const ref of S.refs){
+   if(!ref.a)ref.a=await analyzeFrames(ref);
+   report.push(ref.file.name+' — '+clock(ref.duration)+', '+ref.w+'×'+ref.h+', '+ref.a.frames+' выборочных кадров, '+ref.a.cuts+' ориентировочных смен, '+ref.a.orientation);
+  }
+  refList();
+  const exact=/один в один|1\s*:?\s*1|точн(?:о|ая) копи|скопируй|повтори|точно так же|сделай так же|как в референс/i.test(command);
+  const inspired=/по мотивам|вдохнов|похож(?:ий|ую)|в стиле/i.test(command);
+  const original=/с нуля|сво(?:я|ю) иде|нов(?:ый|ую) ролик/i.test(command);
+  const summary='Результат анализа:\n'+report.join('\n')+'\n\n';
+  if(exact){motionDirectorMessage(summary+'Запрос явно требует точного повторения, поэтому выбран режим «Почти 1:1». Важно: этот анализ фиксирует метаданные и выборочные кадры, но ещё не измеряет все кривые движения и не доказывает пиксельное совпадение.',[{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('faithful')}]);return;}
+  if(inspired){motionDirectorMessage(summary+'Выбран режим «По мотивам».', [{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('inspired')}]);return;}
+  if(original){motionDirectorMessage(summary+'Выбран режим «Своя идея».', [{label:'Продолжить к настройкам',action:()=>chooseMotionStyle('original')}]);return;}
+  motionDirectorMessage(summary+'Этап 2/2 · Как обращаться с движением референса?',[
+   {label:'Копия 1:1',action:()=>chooseMotionStyle('faithful')},
+   {label:'По мотивам',action:()=>chooseMotionStyle('inspired')},
+   {label:'Новая идея с нуля',action:()=>chooseMotionStyle('original')}
+  ]);
+ }catch(error){motionDirectorMessage('Не удалось проанализировать референс: '+(error?.message||error)+'. Проверь файл и повтори команду.');toast('Ошибка анализа референса.','error');}
+ finally{button.disabled=false;button.textContent='Разобрать команду ↗';}
+}
 function renderDirectorPlan(){
  const box=$('#directorPlan');if(!box)return;
  box.classList.toggle('hidden',!S.edits.length);
@@ -531,7 +571,7 @@ function applyDirectorCommand(raw){
  S.edits.push(patch);if(patch.type==='add_3d_title')start3DPreview(patch.text||'NOVEX',patch.style||{});if(patch.type==='add_subtitles')$('#burnLyrics').checked=true;renderDirectorPlan();$('#directorStatus').textContent='План обновлён · '+S.edits.length+' прав.';
  if(S.plan){S.plan=makePlan();S.plan.edits=S.edits.map(x=>({...x}));showPlan(S.plan);}
 }
-$('#applyEditCommand').onclick=()=>{try{applyDirectorCommand($('#editCommand').value);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
+$('#applyEditCommand').onclick=async()=>{const raw=$('#editCommand').value.trim();try{if(/^\\/motion-director\\b/i.test(raw)||raw==='/motion-director'){await runMotionDirector(raw);return;}applyDirectorCommand(raw);$('#directorPlan').classList.remove('hidden');toast('Команда разобрана и добавлена в план правок.','success')}catch(e){toast(e.message,'warn');$('#directorStatus').textContent=e.message}};
 $$('[data-command]').forEach(b=>b.onclick=()=>{const k=b.dataset.command;if(k==='undo'){try{applyDirectorCommand('отмени последнюю правку')}catch(e){toast(e.message,'warn')}return;}$('#editCommand').value=({'3d':'Добавь в начале объёмный 3D-логотип NOVEX с хромом и медленным вращением камеры.',orbit:'Добавь 3D-логотип NOVEX с полным облётом камеры и частицами.',rings:'Добавь 3D-логотип NOVEX с энергетическими кольцами и кинематографическим светом.',streaks:'Добавь 3D-логотип NOVEX со световыми лучами и быстрым движением камеры.',titles:'Добавь кинетические титры с пружинящим появлением.',subtitles:'Добавь субтитры в безопасной нижней зоне и подсвечивай активное слово.',graphic:'Добавь графический акцент-кольцо с плавным появлением.'})[k];if(k==='3d'||k==='orbit'||k==='rings'||k==='streaks')start3DPreview('NOVEX',k==='orbit'?{camera:'orbit',effect:'cinematic-particles'}:k==='rings'?{camera:'slow-orbit',effect:'energy-rings'}:k==='streaks'?{camera:'whip-pan',effect:'light-streaks'}:{});});
 
 function srt(t){const ms=Math.round(Math.max(0,t)*1000),h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),z=ms%1000;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(z).padStart(3,'0')}
