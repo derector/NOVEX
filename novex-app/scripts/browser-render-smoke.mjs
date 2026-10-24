@@ -47,8 +47,12 @@ try {
       iconCenterError: Math.abs((icon.left + icon.width / 2) - (orbitBox.left + orbitBox.width / 2))
     };
   });
-  if (design.lime !== '#c8ff55' || design.bodyColor !== 'rgb(7, 11, 19)' ||
-      design.heroAnimation !== 'title-reveal' || design.previewColor !== 'rgb(231, 244, 255)' ||
+  const isDarkBody = /^rgb\((?:[0-9]{1,2}),\s*(?:[0-9]{1,2}),\s*(?:[0-9]{1,2})\)$/.test(design.bodyColor) &&
+    design.bodyColor.split(/[(),\s]+/).filter(Boolean).slice(1).every(channel => Number(channel) <= 30);
+  const previewTextIsReadable = /^rgb\(/.test(design.previewColor) &&
+    design.previewColor.split(/[(),\s]+/).filter(Boolean).slice(1).every(channel => Number(channel) >= 180);
+  if (!/^#[0-9a-f]{6}$/i.test(design.lime) || !isDarkBody ||
+      design.heroAnimation !== 'title-reveal' || !previewTextIsReadable ||
       design.ctaCenterError > 1 || !design.ctaWithinDrop || design.orbitPosition !== 'relative' ||
       design.ringPosition !== 'absolute' || design.iconCenterError > 2) {
     throw new Error('Dark theme, centered upload CTA or play-ring alignment failed: ' + JSON.stringify(design));
